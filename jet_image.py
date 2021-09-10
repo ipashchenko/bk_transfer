@@ -69,6 +69,37 @@ def convert_difmap_model_file_to_CCFITS(difmap_model_file, stokes, mapsize, rest
     os.unlink(command_file)
 
 
+def resolution(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along, n_across):
+    resolutions = np.logspace(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along)
+    pixsize_array = np.tile(resolutions, n_across).reshape(n_across, n_along).T*u.mas
+
+    phi_app_max = np.arctan(np.sum(pixsize_array[-1, :int(n_across/2)]) / np.sum(pixsize_array[:, 0]))
+
+    image_size = np.max(np.cumsum(pixsize_array, axis=0)), np.max(np.cumsum(pixsize_array, axis=1))
+
+    print("Image size (along, across) : ", image_size)
+    print("Maximal apparent opening angle that can be imaged : ", phi_app_max.to(u.deg))
+
+    fig, axes = plt.subplots(1, 1)
+    axes1 = axes.twinx()
+    axes.plot(np.cumsum(pixsize_array[:, 0]),
+              np.cumsum(pixsize_array[:, :int(n_across/2)], axis=1)[:, -1],
+              color="C0", lw=3)
+    axes.set_xlabel("Along distance, mas")
+    axes.set_ylabel("Across distance, mas")
+    # axes.tick_params("y", colors="C0")
+    axes.set_aspect("auto")
+    axes.set_xscale("log")
+    axes.set_yscale("log")
+
+    axes1.plot(np.cumsum(pixsize_array[:, 0]), resolutions, color="C0", lw=3)
+    axes1.set_ylabel("Pixel size, mas")
+    # axes1.tick_params("y", colors="C1")
+    axes1.set_yscale("log")
+
+    return fig
+
+
 class JetImage(ABC):
     cosmo = cosmology.WMAP9
 
