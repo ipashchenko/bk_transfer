@@ -33,7 +33,7 @@ class ParticlesDistribution {
 
 class PowerLaw : public ParticlesDistribution {
     public:
-        PowerLaw(double s, double gamma_min, std::string plasma="normal", bool changing_s="false", double ds=0.0);
+        PowerLaw(double s, double gamma_min, std::string plasma="normal", bool changing_s=false, double ds=0.0);
         double get_s(const Vector3d &point) const;
         double get_s(Vector3d &b, Vector3d &n_los) const;
 

@@ -26,19 +26,21 @@ namespace ph = std::placeholders;
 typedef std::chrono::high_resolution_clock Clock;
 
 
-void run_on_analytic() {
+std::vector<double> run_on_analytic() {
 	auto t1 = Clock::now();
 	std::clock_t start;
 	start = std::clock();
 
 	// FIXME: z = 0 case leads to NaN intersections
     // M87
-//    double redshift = 0.00436;
-    double redshift = 0.1;
-//    double los_angle = 17.0*M_PI/180.0;
+    double redshift = 0.00436;
+//    double redshift = 0.1;
+    double los_angle = 17.0*M_PI/180.0;
+    // theta_pr = 60 deg for Gamma = 3
+//    double los_angle = 11.3*M_PI/180.0;
 
     // FIXME: tested
-    double los_angle = 0.75*M_PI/180.0;
+//    double los_angle = 0.75*M_PI/180.0;
 
 
     //double redshift = 0.01;
@@ -66,14 +68,14 @@ void run_on_analytic() {
     Vector3d origin = {0., 0., 0.};
     Vector3d direction = {0., 0., 1.};
     double big_scale = 1000*pc;
-    double cone_half_angle = 0.3*M_PI/180.0;
+    double cone_half_angle = 2.0*M_PI/180.0;
     // For sheath
     //double R = 0.15*pc;
     // For jet only
-    double R = 0.05*pc;
-    Cone geometry(origin, direction, cone_half_angle, big_scale);
-//    Cylinder geometry(origin, direction, R);
-    //Parabaloid geometry(origin, direction, 0.1*pc, big_scale);
+//    double R = 0.05*pc;
+//    Cone geometry(origin, direction, cone_half_angle, big_scale);
+//    Cylinder geometry(origin, direction, 0.125*pc);
+    Parabaloid geometry(origin, direction, 0.1*pc, big_scale);
 
     // Setting B-field
     // Value at r=1pc
@@ -120,10 +122,12 @@ void run_on_analytic() {
 
 
     // Jet B-field (inside inner cylinder)
-//    ConstCylinderBFieldZ jetbfield(0.1, 1, true, 0.0, &geometry);
+//    ConstCylinderBFieldZ jetbfield(0.01, 1, true, 0.0, &geometry);
 
     // TODO: Tested
-    HelicalConicalBField jetbfield(0.1, 1, 89.*M_PI/180., true, 0.0, &geometry);
+    HelicalConicalBField jetbfield(0.01, 0.5, 10.*M_PI/180., true, 0.0, &geometry);
+//    HelicalCylinderBField jetbfield(0.0001, 30.0*M_PI/180., true, 0.0, &geometry);
+//    ToroidalBField jetbfield(0.01, 1.0, false, 0.0, &geometry);
 
     //HelicalCylinderBField jetbfield_sheath(B_1_sheath, pitch_angle_sheath, true, 0.0,
     //                                       &geometry_in, &geometry_inner);
@@ -157,14 +161,14 @@ void run_on_analytic() {
     // Exponent of the power-law particle Lorenz factor distribution
     double s = 2.5;
     double ds = 0.0;
-    double gamma_min = 100.0;
-    PowerLaw particles(s, gamma_min, "normal");
+    double gamma_min = 1.0;
+    PowerLaw particles(s, gamma_min, "pairs");
     // Value at r=1pc
     double K_1 = 100;
     //double K_1_spine = 50;
     //double K_1_sheath = 600;
     // Exponent of the decrease
-    double n = 1.5;
+    double n = 1.0;
     // Exponent of the power-law particle Lorenz factor distribution
     //double s = 2.5;
     //double ds = 0.0;
@@ -215,8 +219,8 @@ void run_on_analytic() {
     // Setting V-field =================================================================================================
     VField* vfield;
     bool central_vfield = false;
-    double Gamma = 5.0;
-    //double Gamma = 1.56;
+    double Gamma = 3.42;
+//    double Gamma = 3.00;
     if (central_vfield) {
         vfield = new ConstCentralVField(Gamma, &geometry, 0.0);
     } else {
@@ -235,10 +239,10 @@ void run_on_analytic() {
 
     // FIXME: Put inside frequency loop for dep. on frequency
     // Setting parameters of pixels and image ==========================================================================
-    //int number_of_pixels_along = 1000;
     int number_of_pixels_along = 1000;
+//    int number_of_pixels_along = 500;
     //int number_of_pixels_across = 150;
-    int number_of_pixels_across = 400;
+    int number_of_pixels_across = 200;
     // Non-uniform pixel from ``pixel_size_mas_start`` (near BH) to ``pixel_size_mas_stop`` (image edges)
     double pixel_size_mas_start = 0.01;
     //double pixel_size_mas_start = 0.06;
@@ -312,11 +316,17 @@ void run_on_analytic() {
             auto image_tau = observation.getImage(value);
 
             value = "I";
+            double total_flux = 0.0;
             auto image_i = observation.getImage(value);
             for (unsigned long int i = 0; i < image_i.size(); ++i) {
                 for (unsigned long int j = 0; j < image_i[i].size(); ++j) {
                     image_i[i][j] = image_i[i][j]/scales[i][j];
+                    total_flux += image_i[i][j];
                 }
+            }
+
+            if(jet_side == true){
+                total_fluxes.push_back(total_flux);
             }
 
             value = "l";
@@ -437,10 +447,15 @@ void run_on_analytic() {
 						<< std::chrono::duration_cast<std::chrono::seconds>(
 								t2 - t1).count()
 						<< " s" << std::endl;
+
+    return total_fluxes;
 }
 
 int main() {
-    //run_on_simulations();
-    run_on_analytic();
+    std::vector<double> total_fluxes;
+    total_fluxes = run_on_analytic();
+    for(auto total_flux: total_fluxes){
+        std::cout << "Total flux [Jy] = " << total_flux << "\n";
+    }
     return 0;
 }

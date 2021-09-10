@@ -18,7 +18,7 @@ sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from from_fits import create_clean_image_from_fits_file
 
 
-def pol_mask(stokes_image_dict, beam_pixels, n_sigma=2., return_quantile=False):
+def pol_mask(stokes_image_dict, beam_pixels, n_sigma=2., return_quantile=False, blc=None, trc=None):
     """
     Find mask using stokes 'I' map and 'PPOL' map using specified number of
     sigma.
@@ -34,9 +34,12 @@ def pol_mask(stokes_image_dict, beam_pixels, n_sigma=2., return_quantile=False):
         Dictionary with Boolean array of masks and P quantile (optionally).
     """
     quantile_dict = {1: 0.6827, 2: 0.9545, 3: 0.9973, 4: 0.99994}
-    rms_dict = find_iqu_image_std(*[stokes_image_dict[stokes] for stokes in ('I', 'Q', 'U')],  beam_pixels)
+    rms_dict = find_iqu_image_std(*[stokes_image_dict[stokes] for stokes in ('I', 'Q', 'U')],  beam_pixels, blc=blc, trc=trc)
+
+    print("RMS_dict :", rms_dict)
 
     qu_rms = np.mean([rms_dict[stoke] for stoke in ('Q', 'U')])
+    print("QU_rms = ", qu_rms)
     ppol_quantile = qu_rms * np.sqrt(-np.log((1. - quantile_dict[n_sigma]) ** 2.))
     i_cs_mask = stokes_image_dict['I'] < n_sigma * rms_dict['I']
     ppol_cs_image = np.hypot(stokes_image_dict['Q'], stokes_image_dict['U'])
@@ -177,15 +180,16 @@ def find_image_std(image_array, beam_npixels, min_num_pixels_used_to_estimate_st
     return mad_std(outside_icn)
 
 
-def find_iqu_image_std(i_image_array, q_image_array, u_image_array, beam_npixels):
+def find_iqu_image_std(i_image_array, q_image_array, u_image_array, beam_npixels, blc=None, trc=None):
     # Robustly estimate image pixels std
     std = mad_std(i_image_array)
 
     # Find preliminary bounding box
-    blc, trc = find_bbox(i_image_array, level=4*std,
-                         min_maxintensity_mjyperbeam=4*std,
-                         min_area_pix=2*beam_npixels,
-                         delta=0)
+    if blc is None or trc is None:
+        blc, trc = find_bbox(i_image_array, level=4*std,
+                             min_maxintensity_mjyperbeam=4*std,
+                             min_area_pix=2*beam_npixels,
+                             delta=0)
 
     # Now mask out source emission using found bounding box and estimate std
     # more accurately
