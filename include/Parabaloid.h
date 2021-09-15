@@ -10,7 +10,7 @@ class Parabaloid : public Geometry {
     public:
 
         Parabaloid(const Vector3d &origin_, const Vector3d &direction_,
-                   const double &r0_, const double &big_scale_);
+                   const double &r0_, const double &big_scale_, bool with_counter_jet = false);
 
         std::list<Intersection> hit(Ray &ray) const override;
         const Vector3d &origin() const override;
@@ -25,6 +25,7 @@ class Parabaloid : public Geometry {
         Vector3d direction_;
         double r0_;
         double big_scale_;
+        bool with_counter_jet_;
 };
 
 #endif //BK_TRANSFER_PARABALOID_H

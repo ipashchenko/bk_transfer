@@ -66,17 +66,16 @@ std::vector<double> run_on_analytic() {
 
     // Setting geometry ================================================================================================
     Vector3d origin = {0., 0., 0.};
-    Vector3d direction_j = {0., 0., 1.};
-    Vector3d direction_cj = {0., 0., -1.};
+    Vector3d direction = {0., 0., 1.};
     double big_scale = 1000*pc;
     double cone_half_angle = 2.0*M_PI/180.0;
     // For sheath
     //double R = 0.15*pc;
     // For jet only
     double R_1pc = 0.1*pc;
-//    Cone geometry(origin, direction_j, cone_half_angle, big_scale);
-//    Cylinder geometry(origin, direction_j, 0.125*pc);
-    Parabaloid geometry(origin, direction_cj, R_1pc, big_scale);
+//    Cone geometry(origin, direction, cone_half_angle, big_scale);
+//    Cylinder geometry(origin, direction, 0.125*pc);
+    Parabaloid geometry(origin, direction, R_1pc, big_scale, true);
 
     // Setting B-field
     // Value at r=1pc
@@ -103,16 +102,16 @@ std::vector<double> run_on_analytic() {
     //double R_in = 0.117*pc;
 //    double R_spine = 0.09*pc;
     //double R_out = 0.15*pc;
-    //Cone geometry_in(origin, direction_j, cone_half_angle_in, big_scale);
-    //Cone geometry_out(origin, direction_j, cone_half_angle_out, big_scale);
+    //Cone geometry_in(origin, direction, cone_half_angle_in, big_scale);
+    //Cone geometry_out(origin, direction, cone_half_angle_out, big_scale);
     // Spine radius
-//    Cylinder geometry_spine(origin, direction_j, R_spine);
-    //Parabaloid geometry_spine(origin, direction_j, 0.025*pc, big_scale);
+//    Cylinder geometry_spine(origin, direction, R_spine);
+    //Parabaloid geometry_spine(origin, direction, 0.025*pc, big_scale);
     // Sheath outer radius
-//    Cylinder geometry_sheath(origin, direction_j, R);
-    //Parabaloid geometry_sheath(origin, direction_j, 0.1*pc, big_scale);
+//    Cylinder geometry_sheath(origin, direction, R);
+    //Parabaloid geometry_sheath(origin, direction, 0.1*pc, big_scale);
     // Outer sheath
-    //Cylinder geometry_out(origin, direction_j, R_out);
+    //Cylinder geometry_out(origin, direction, R_out);
 
 
     // Setting components of B-fields ==================================================================================
@@ -223,8 +222,8 @@ std::vector<double> run_on_analytic() {
     // Setting V-field =================================================================================================
     VField* vfield;
     bool central_vfield = false;
-    double Gamma = 3.42;
-//    double Gamma = 3.00;
+//    double Gamma = 3.42;
+    double Gamma = 1.20;
     if (central_vfield) {
         vfield = new ConstCentralVField(Gamma, &geometry, 0.0);
     } else {

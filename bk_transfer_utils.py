@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 
 def simulate_random_evpa(std_evpa, n_epochs=30, n_rep=1000):
@@ -169,3 +170,10 @@ def density_profile(r, r1, r2, K1, K2, b1=1.0, b2=0.0, b3=1.0):
     # All r
     y5 = y4 + 0.5*(1+l2)*(y3-y4)
     return y5
+
+
+def concatenate_jet_with_counter_jet(stokes, freq_ghz, path):
+    j = np.loadtxt(os.path.join(path, "jet_image_{}_{}.txt".format(stokes, freq_ghz)))
+    cj = np.loadtxt(os.path.join(path, "cjet_image_{}_{}.txt".format(stokes, freq_ghz)))
+    jcj = np.hstack((cj[::, ::-1], j))
+    np.savetxt(os.path.join(path, "jet_cjet_image_{}_{}.txt".format(stokes, freq_ghz)), jcj)

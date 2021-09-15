@@ -36,7 +36,7 @@ jetpol_run_directory = "/home/ilya/github/bk_transfer/Release"
 z = 0.00436
 # z = 0.1
 n_along = 512
-n_across = 80
+n_across = 64
 lg_pixel_size_mas_min = -1.5
 lg_pixel_size_mas_max = -0.5
 resolutions = np.logspace(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along)
@@ -48,7 +48,7 @@ stokes = ("I", "Q", "U", "V")
 
 if not only_plot:
     # Plot only jet emission and do not plot counter-jet?
-    jet_only = True
+    jet_only = False
     path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
     uvdata = UVData(template_uvfits)
     downscale_uvdata_by_freq_flag = downscale_uvdata_by_freq(uvdata)
@@ -60,22 +60,21 @@ if not only_plot:
     jms = [JetImage(z=z, n_along=n_along, n_across=n_across,
                     lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
                     jet_side=True, rot=np.deg2rad(rot_angle_deg)) for _ in stokes]
-    # cjms = [JetImage(z=z, n_along=n_along, n_across=n_across,
-    #                  lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
-    #                  jet_side=False) for _ in stokes]
+    cjms = [JetImage(z=z, n_along=n_along, n_across=n_across,
+                     lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
+                     jet_side=False, rot=np.deg2rad(rot_angle_deg)) for _ in stokes]
     for i, stk in enumerate(stokes):
         jms[i].load_image_stokes(stk, "{}/jet_image_{}_{}.txt".format(jetpol_run_directory, stk.lower(), freq_ghz), scale=1.0)
-        # cjms[i].load_image_stokes(stk, "../{}/cjet_image_{}_{}.txt".format(jetpol_run_directory, stk.lower(), freq_ghz), scale=1.0)
+        cjms[i].load_image_stokes(stk, "{}/cjet_image_{}_{}.txt".format(jetpol_run_directory, stk.lower(), freq_ghz), scale=1.0)
 
     # List of models (for J & CJ) for all stokes
-    # js = [TwinJetImage(jms[i], cjms[i]) for i in range(len(stokes))]
+    js = [TwinJetImage(jms[i], cjms[i]) for i in range(len(stokes))]
 
     uvdata.zero_data()
     if jet_only:
         uvdata.substitute(jms)
     else:
-        # uvdata.substitute(js)
-        pass
+        uvdata.substitute(js)
     # Optionally
     uvdata.rotate_evpa(np.deg2rad(rot_angle_deg))
     uvdata.noise_add(noise)
