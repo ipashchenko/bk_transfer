@@ -56,5 +56,5 @@ std::list<Intersection> Parabaloid::hit(Ray &ray) const {
 }
 
 double Parabaloid::radius_at_given_distance(const Vector3d &point) const {
-    return r0_*pow(point[2]/pc, 0.5);
+    return r0_*pow(abs(point[2])/pc, 0.5);
 }

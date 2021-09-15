@@ -7,7 +7,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import sys
 from jet_image import JetImage, TwinJetImage
-from vlbi_utils import find_image_std, find_bbox, pol_mask, correct_ppol_bias
+from vlbi_utils import find_image_std, find_bbox, pol_mask, correct_ppol_bias, downscale_uvdata_by_freq
 sys.path.insert(0, '../ve/vlbi_errors')
 from uv_data import UVData
 from spydiff import clean_difmap
@@ -21,9 +21,11 @@ only_plot = False
 rot_angle_deg = -107.0
 freq_ghz = 15.4
 # Directory to save files
-save_dir = "/home/ilya/github/bk_transfer/vak"
+save_dir = "/home/ilya/github/bk_transfer/pics/KH"
 # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
-template_uvfits = "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uvf"
+# template_uvfits = "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uvf"
+# template_uvfits = "/home/ilya/data/M87Lesha/to_ilya/1228+126.U.2009_05_23C_ta60.uvf_cal"
+template_uvfits = "/home/ilya/Downloads/M87uvf/1228+126.u.2008_05_01.uvf"
 # Multiplicative factor for noise added to model visibilities.
 noise_scale_factor = 1.0
 # Used in CLEAN
@@ -33,10 +35,10 @@ jetpol_run_directory = "/home/ilya/github/bk_transfer/Release"
 # C++ code run parameters
 z = 0.00436
 # z = 0.1
-n_along = 1000
-n_across = 200
-lg_pixel_size_mas_min = np.log10(0.01)
-lg_pixel_size_mas_max = np.log10(0.1)
+n_along = 512
+n_across = 80
+lg_pixel_size_mas_min = -1.5
+lg_pixel_size_mas_max = -0.5
 resolutions = np.logspace(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along)
 print("Model jet extends up to {:.1f} mas!".format(np.sum(resolutions)))
 ##############################################
@@ -49,6 +51,7 @@ if not only_plot:
     jet_only = True
     path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
     uvdata = UVData(template_uvfits)
+    downscale_uvdata_by_freq_flag = downscale_uvdata_by_freq(uvdata)
     noise = uvdata.noise(average_freq=False, use_V=False)
     # If one needs to decrease the noise this is the way to do it
     for baseline, baseline_noise_std in noise.items():
@@ -76,7 +79,8 @@ if not only_plot:
     # Optionally
     uvdata.rotate_evpa(np.deg2rad(rot_angle_deg))
     uvdata.noise_add(noise)
-    uvdata.save(os.path.join(save_dir, "template.uvf"), rewrite=True)
+    # downscale = True for Lesha's data
+    uvdata.save(os.path.join(save_dir, "template.uvf"), rewrite=True,  downscale_by_freq=False)
 
     # CLEAN synthetic UV-data
     for stk in stokes:

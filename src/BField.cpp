@@ -141,7 +141,7 @@ HelicalConicalBField::HelicalConicalBField(double b_0, double n_b, double pitch_
 
 Vector3d HelicalConicalBField::_bf(const Vector3d &point) const {
     double z = point[2];
-    double b = b_0_*pow(z/pc, -n_b_);
+    double b = b_0_*pow(abs(z)/pc, -n_b_);
     double phi = atan2(point[1], point[0]);
     double b_z = b*cos(pitch_angle_);
     double b_phi = b*sin(pitch_angle_);

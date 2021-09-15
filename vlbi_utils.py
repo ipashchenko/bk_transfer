@@ -18,6 +18,14 @@ sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from from_fits import create_clean_image_from_fits_file
 
 
+def downscale_uvdata_by_freq(uvdata):
+    if abs(uvdata.hdu.data[0][0]) > 1:
+        downscale_by_freq = True
+    else:
+        downscale_by_freq = False
+    return downscale_by_freq
+
+
 def pol_mask(stokes_image_dict, beam_pixels, n_sigma=2., return_quantile=False, blc=None, trc=None):
     """
     Find mask using stokes 'I' map and 'PPOL' map using specified number of

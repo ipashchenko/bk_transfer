@@ -103,5 +103,5 @@ std::list<Intersection> Cone::hit(Ray &ray) const {
 
 double Cone::radius_at_given_distance(const Vector3d &point) const {
     // Assuming Cone origin (0, 0, 0) and direction (0, 0, 1)
-    return point[2]*tan(angle_);
+    return abs(point[2])*tan(angle_);
 }

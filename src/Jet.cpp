@@ -177,6 +177,7 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
     //}
     // NaN means something is wrong!
     if(b_prime.norm() < eps_B) {
+//        std::cout << "B-field = " << b_prime.norm() << "\n";
         return 0.0;
     }
 

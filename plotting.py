@@ -174,7 +174,7 @@ if __name__ == '__main__':
     freq_ghz_high = 15.4
     freq_ghz_low = 8.1
 
-    save_dir = "/home/ilya/github/bk_transfer/pics"
+    save_dir = "/home/ilya/github/bk_transfer/pics/KH"
     txt_dir = "/home/ilya/github/bk_transfer/Release"
 
     i_image = np.loadtxt(os.path.join(txt_dir, 'jet_image_i_{}.txt'.format(freq_ghz_high)))

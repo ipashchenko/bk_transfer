@@ -64,6 +64,8 @@ pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection>
 		Vector3d point_in = borders.first;
 		Vector3d point_out = borders.second;
 
+//		std::cout << "In = " << point_in/pc << ", Out = " << point_out/pc << "\n";
+
 		double length = (point_out - point_in).norm();
 		double dt = length/n;
 
@@ -321,6 +323,9 @@ void Observation::observe_single_pixel(Ray &ray, Pixel &pxl,  double tau_min, do
                 integrate_faraday_rotation_depth_adaptive(list_intersect, ray_direction, nu, n, background_taufr,
                                                           dt_max, relerr);
             }
+        }
+        else{
+            std::cout << "Tau = " << background_tau << "\n";
         }
 //        std::cout << "I is done!" << "\n";
 

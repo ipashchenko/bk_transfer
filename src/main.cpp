@@ -66,16 +66,17 @@ std::vector<double> run_on_analytic() {
 
     // Setting geometry ================================================================================================
     Vector3d origin = {0., 0., 0.};
-    Vector3d direction = {0., 0., 1.};
+    Vector3d direction_j = {0., 0., 1.};
+    Vector3d direction_cj = {0., 0., -1.};
     double big_scale = 1000*pc;
     double cone_half_angle = 2.0*M_PI/180.0;
     // For sheath
     //double R = 0.15*pc;
     // For jet only
-//    double R = 0.05*pc;
-//    Cone geometry(origin, direction, cone_half_angle, big_scale);
-//    Cylinder geometry(origin, direction, 0.125*pc);
-    Parabaloid geometry(origin, direction, 0.1*pc, big_scale);
+    double R_1pc = 0.1*pc;
+//    Cone geometry(origin, direction_j, cone_half_angle, big_scale);
+//    Cylinder geometry(origin, direction_j, 0.125*pc);
+    Parabaloid geometry(origin, direction_cj, R_1pc, big_scale);
 
     // Setting B-field
     // Value at r=1pc
@@ -102,16 +103,16 @@ std::vector<double> run_on_analytic() {
     //double R_in = 0.117*pc;
 //    double R_spine = 0.09*pc;
     //double R_out = 0.15*pc;
-    //Cone geometry_in(origin, direction, cone_half_angle_in, big_scale);
-    //Cone geometry_out(origin, direction, cone_half_angle_out, big_scale);
+    //Cone geometry_in(origin, direction_j, cone_half_angle_in, big_scale);
+    //Cone geometry_out(origin, direction_j, cone_half_angle_out, big_scale);
     // Spine radius
-//    Cylinder geometry_spine(origin, direction, R_spine);
-    //Parabaloid geometry_spine(origin, direction, 0.025*pc, big_scale);
+//    Cylinder geometry_spine(origin, direction_j, R_spine);
+    //Parabaloid geometry_spine(origin, direction_j, 0.025*pc, big_scale);
     // Sheath outer radius
-//    Cylinder geometry_sheath(origin, direction, R);
-    //Parabaloid geometry_sheath(origin, direction, 0.1*pc, big_scale);
+//    Cylinder geometry_sheath(origin, direction_j, R);
+    //Parabaloid geometry_sheath(origin, direction_j, 0.1*pc, big_scale);
     // Outer sheath
-    //Cylinder geometry_out(origin, direction, R_out);
+    //Cylinder geometry_out(origin, direction_j, R_out);
 
 
     // Setting components of B-fields ==================================================================================
@@ -164,11 +165,11 @@ std::vector<double> run_on_analytic() {
     double gamma_min = 1.0;
     PowerLaw particles(s, gamma_min, "pairs");
     // Value at r=1pc
-    double K_1 = 100;
+    double K_1 = 500;
     //double K_1_spine = 50;
     //double K_1_sheath = 600;
     // Exponent of the decrease
-    double n = 1.0;
+    double n = 1.5;
     // Exponent of the power-law particle Lorenz factor distribution
     //double s = 2.5;
     //double ds = 0.0;
@@ -177,6 +178,9 @@ std::vector<double> run_on_analytic() {
 
     // TODO: Tested
     BKNField power_law_nfield_spine(K_1, n, &particles, true, &geometry);
+    power_law_nfield_spine.set_spiral(0.0, 30.0*R_1pc, 0.9*R_1pc);
+    power_law_nfield_spine.set_spiral(M_PI, 30.0*R_1pc, 0.9*R_1pc);
+    power_law_nfield_spine.set_spiral(M_PI/6.0, 10.0*R_1pc, 0.5*R_1pc);
 //    power_law_nfield_spine.set_heating_profile(0.95, 0.01, 0.01);
 
     //SheathPowerLawNField power_law_nfield_sheath(2*0.875, 1, true, 2.1, 150,
@@ -224,7 +228,7 @@ std::vector<double> run_on_analytic() {
     if (central_vfield) {
         vfield = new ConstCentralVField(Gamma, &geometry, 0.0);
     } else {
-        vfield = new ConstFlatVField(Gamma, &geometry, 0.0);
+        vfield = new ConstFlatVField(Gamma, &geometry, 0.05);
     }
     //vfield = new ConstFlatVField(Gamma, &geometry, 0.0);
     //vfield = new SheathFlatVField(2.0, 3.4, &geometry_spine, &geometry_sheath,
@@ -239,14 +243,14 @@ std::vector<double> run_on_analytic() {
 
     // FIXME: Put inside frequency loop for dep. on frequency
     // Setting parameters of pixels and image ==========================================================================
-    int number_of_pixels_along = 1000;
+    int number_of_pixels_along = 512;
 //    int number_of_pixels_along = 500;
     //int number_of_pixels_across = 150;
-    int number_of_pixels_across = 200;
+    int number_of_pixels_across = 64;
     // Non-uniform pixel from ``pixel_size_mas_start`` (near BH) to ``pixel_size_mas_stop`` (image edges)
-    double pixel_size_mas_start = 0.01;
+    double pixel_size_mas_start = pow(10.0, -1.5);
     //double pixel_size_mas_start = 0.06;
-    double pixel_size_mas_stop = 0.1;
+    double pixel_size_mas_stop = pow(10.0, -0.5);
     //double pixel_size_mas_stop = 0.06;
     auto image_size = std::make_pair(number_of_pixels_across, number_of_pixels_along);
     auto pc_in_mas = mas_to_pc(redshift);
@@ -259,9 +263,9 @@ std::vector<double> run_on_analytic() {
     for(auto jet_side : {true, false}) {
 
         // Ignore CJ
-        if(jet_side == false) {
-            continue;
-        }
+//        if(jet_side == false) {
+//            continue;
+//        }
 
         ImagePlane imagePlane(image_size, lg_pixel_size_start, lg_pixel_size_stop, los_angle, jet_side);
         // Array of pixel sizes in cm
@@ -296,7 +300,7 @@ std::vector<double> run_on_analytic() {
         double tau_max = 10;
         double dt_max_pc = 0.01;
         double dt_max = pc*dt_max_pc;
-        double tau_min_log10 = -10.0;
+        double tau_min_log10 = -20.0;
         double tau_min = pow(10.,tau_min_log10);
         int n_ = 100;
         double relerr = 1e-10;

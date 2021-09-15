@@ -34,7 +34,7 @@ const double to_jy = 1E+23;
 const double pi = boost::math::constants::pi<double>();
 
 // Minimal value of B to calculate transfer coefficients
-const double eps_B = 1E-10;
+const double eps_B = 1E-15;
 
 double density_profile(double r, double r1, double r2, double K1, double K2, double b1=1.0, double b2=0.0, double b3=1.0);
 

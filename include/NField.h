@@ -37,13 +37,31 @@ class BKNField: public NField {
                  Geometry* geometry_out, Geometry* geometry_in = nullptr);
         double _nf(const Vector3d &point) const override;
         void set_heating_profile(double r_mean, double r_width, double background_fraction = 0.0);
+        void set_spiral(double phase_0, double lambda_0, double amp_0);
+        int number_of_spirals() const {
+            return lambdas_0_.size();
+        }
+
     private:
         double n_0_;
         double n_n_;
+        // Heating profile
         double r_mean_;
         double r_width_;
         double background_fraction_;
         bool is_profile_set_;
+        // Spirals
+//        std::vector<double> zs_0_;
+        std::vector<double> phases_0_;
+        std::vector<double> lambdas_0_;
+        std::vector<double> amps_0_;
+        // Radius of spiral at z0 (~0.9*r(z0))
+//        double C_amp_;
+        // Wavelength of spiral at z0 (~30*r(z0))
+//        double C_lambda_;
+        double k_;
+        double spiral_width_frac_;
+        bool is_spirals_present_;
 };
 
 

@@ -94,7 +94,8 @@ Vector3d ConstCentralVField::vf(const Vector3d &point) const {
     if(z > 0) {
         return {v_r*(x-origin_[0])/r - sin(phi)*v_phi, v_r*(y-origin_[1])/r + cos(phi)*v_phi, v_r*(z-origin_[2])/r};
     } else {
-        return {v_r*(x-origin_[0])/r + sin(phi)*v_phi, v_r*(y-origin_[1])/r - cos(phi)*v_phi, v_r*(z-origin_[2])/r};
+        // FIXME: z < 0
+        return {v_r*(x-origin_[0])/r + sin(phi)*v_phi, v_r*(y-origin_[1])/r - cos(phi)*v_phi, v_r*(abs(z)-origin_[2])/r};
     }
 };
 
