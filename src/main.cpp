@@ -125,7 +125,7 @@ std::vector<double> run_on_analytic() {
 //    ConstCylinderBFieldZ jetbfield(0.01, 1, true, 0.0, &geometry);
 
     // TODO: Tested
-    HelicalConicalBField jetbfield(0.01, 0.5, 10.*M_PI/180., true, 0.0, &geometry);
+    HelicalConicalBField jetbfield(0.05, 0.5, 10.*M_PI/180., true, 0.0, &geometry);
 //    HelicalCylinderBField jetbfield(0.0001, 30.0*M_PI/180., true, 0.0, &geometry);
 //    ToroidalBField jetbfield(0.01, 1.0, false, 0.0, &geometry);
 
@@ -245,7 +245,7 @@ std::vector<double> run_on_analytic() {
     int number_of_pixels_along = 512;
 //    int number_of_pixels_along = 500;
     //int number_of_pixels_across = 150;
-    int number_of_pixels_across = 64;
+    int number_of_pixels_across = 80;
     // Non-uniform pixel from ``pixel_size_mas_start`` (near BH) to ``pixel_size_mas_stop`` (image edges)
     double pixel_size_mas_start = pow(10.0, -1.5);
     //double pixel_size_mas_start = 0.06;
