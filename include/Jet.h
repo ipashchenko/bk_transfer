@@ -11,7 +11,7 @@
 
 class Jet {
     public:
-        Jet(BaseGeometry* geo, VField* vfield, std::vector<VectorBField*> bFields, std::vector<NField*> nFields);
+        Jet(BaseGeometry* geo, VField* vfield, std::vector<ScalarBField*> sbFields, std::vector<VectorBField*> bFields, std::vector<NField*> nFields);
 
         // Get all coefficients
         std::tuple<double, double, double, double, double, double, double, double, double, double, double> get_transport_coefficients(Vector3d &point, Vector3d &n_los, double nu);
@@ -33,10 +33,10 @@ class Jet {
         // Vector of the bulk motion speed (in cm/s) in the lab frame at point ``point``.
         Vector3d getV(const Vector3d& point);
 
-        // B-field in the plasma frame at point ``point``.
+        // Vector component of the B-field in the plasma frame at point ``point``.
         const Vector3d getB(const Vector3d& point);
 
-        // Unit vector of B-field in the lab frame at point ``point``.
+        // Unit vector of the Vector B-field component in the lab frame at point ``point``.
         const Vector3d getBhat(const Vector3d& point);
 
 
@@ -44,6 +44,7 @@ class Jet {
         BaseGeometry* geometry_;
         VField* vfield_;
         std::vector<VectorBField*> bfields_;
+        std::vector<ScalarBField*> sbfields_;
         std::vector<NField*> nfields_;
 };
 

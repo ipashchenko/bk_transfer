@@ -5,9 +5,10 @@
 using Eigen::Vector3d;
 
 
-Jet::Jet(BaseGeometry *newgeo, VField *newvfield, std::vector<VectorBField*> newbFields, std::vector<NField*> newnFields) {
+Jet::Jet(BaseGeometry *newgeo, VField *newvfield, std::vector<ScalarBField*> newsbFields, std::vector<VectorBField*> newbFields, std::vector<NField*> newnFields) {
     geometry_ = newgeo;
     vfield_ = newvfield;
+    sbfields_ = newsbFields;
     bfields_ = newbFields;
     nfields_ = newnFields;
 }
@@ -35,10 +36,10 @@ std::tuple<double, double, double, double, double, double, double, double, doubl
         b_prime_tangled += local_b_prime.norm()*bfield_->get_tangled_fraction(point);
     }
 
-    //if(b_prime.norm() < eps_B || isnan(b_prime.norm())) {
-    //    return std::make_tuple(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    //}
-    // NaN means something is wrong!
+    for (auto sbfield_: sbfields_) {
+        b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
+    }
+
     if(b_prime.norm() < eps_B) {
         return std::make_tuple(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
@@ -110,10 +111,11 @@ std::tuple<double, double> Jet::get_stokes_I_transport_coefficients(Vector3d &po
         b_prime += local_b_prime;
         b_prime_tangled += local_b_prime.norm()*bfield_->get_tangled_fraction(point);
     }
+    for (auto sbfield_: sbfields_) {
+        b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
+    }
 
-//    std::cout << "B'[G] = " << b_prime.norm() << "\n";
-
-    if(b_prime.norm() < eps_B) {
+    if(b_prime.norm() < eps_B && b_prime_tangled < eps_B){
         return std::make_tuple(0.0, 0.0);
     }
 
@@ -128,17 +130,13 @@ std::tuple<double, double> Jet::get_stokes_I_transport_coefficients(Vector3d &po
     double n_prime = 0.0;
     for(auto nfield_: nfields_) {
         n_prime = nfield_->nf_plasma_frame(point, gamma);
-//        std::cout << "N' = " << n_prime << "\n";
         k_i_prime += nfield_->particles_->k_i(b_prime, n_los_prime, nu_prime, n_prime);
         k_i_prime += nfield_->particles_->k_i(b_prime_tangled, n_los_prime, nu_prime, n_prime);
         eta_i_prime += nfield_->particles_->eta_i(b_prime, n_los_prime, nu_prime, n_prime);
         eta_i_prime += nfield_->particles_->eta_i(b_prime_tangled, n_los_prime, nu_prime, n_prime);
     }
 
-//    std::cout << "=== k, eta = " << k_i_prime/D << ", " << eta_i_prime*D*D << "\n";
-
     return std::make_tuple(k_i_prime/D, eta_i_prime*D*D);
-//    return std::make_tuple(1E+23*k_i_prime/D, 1e+23*eta_i_prime*D*D);
 }
 
 
@@ -156,9 +154,7 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
     // n_prime = f(n, v) = n/Gamma
 
     Vector3d v = getV(point);
-//    std::cout << "V = " << v/c << "\n";
     auto gamma = getG(v);
-//    std::cout << "Gamma = " << gamma << "\n";
 
     Vector3d b_prime{0.0, 0.0, 0.0};
     Vector3d local_b_prime{0.0, 0.0, 0.0};
@@ -168,21 +164,15 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
         b_prime += local_b_prime;
         b_prime_tangled += local_b_prime.norm()*bfield_->get_tangled_fraction(point);
     }
+    for (auto sbfield_: sbfields_) {
+        b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
+    }
 
-//    std::cout << "b_prime[G] = " << b_prime.norm() << "\n";
-//    std::cout << "b_prime_tangled = " << b_prime_tangled << "\n";
-
-    //if(b_prime.norm() < eps_B || isnan(b_prime.norm())) {
-    //    return 0.0;
-    //}
-    // NaN means something is wrong!
-    if(b_prime.norm() < eps_B) {
-//        std::cout << "B-field = " << b_prime.norm() << "\n";
+    if(b_prime.norm() < eps_B && b_prime_tangled < eps_B) {
         return 0.0;
     }
 
     auto D = getD(n_los, v);
-//    std::cout << "D = " << D << "\n";
     auto nu_prime = nu/D;
     auto n_los_prime = get_n_los_prime(n_los, v);
 
@@ -191,7 +181,6 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
     double n_prime;
     for(auto nfield_: nfields_) {
         n_prime = nfield_->nf_plasma_frame(point, gamma);
-//        std::cout << "N' = " << n_prime << "\n";
         k_i_prime += nfield_->particles_->k_i(b_prime, n_los_prime, nu_prime, n_prime);
         k_i_prime += nfield_->particles_->k_i(b_prime_tangled, n_los_prime, nu_prime, n_prime);
     }
@@ -199,7 +188,6 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
     if(isnan(result)) {
         std::cout << "NaN in k_I!" << std::endl;
     }
-//    std::cout << "k_I = " << result << "\n";
     return result;
 }
 
@@ -225,8 +213,11 @@ double Jet::getEtaI(Vector3d &point, Vector3d &n_los, double nu) {
         b_prime += local_b_prime;
         b_prime_tangled += local_b_prime.norm()*bfield_->get_tangled_fraction(point);
     }
+    for (auto sbfield_: sbfields_) {
+        b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
+    }
 
-    if(b_prime.norm() < eps_B || isnan(b_prime.norm())) {
+    if(b_prime.norm() < eps_B && b_prime_tangled < eps_B) {
         return 0.0;
     }
 
@@ -235,7 +226,7 @@ double Jet::getEtaI(Vector3d &point, Vector3d &n_los, double nu) {
     auto n_los_prime = get_n_los_prime(n_los, v);
 
     double eta_i_prime = 0.0;
-    double n_prime = 0.0;
+    double n_prime;
     for(auto nfield_: nfields_) {
         n_prime = nfield_->nf_plasma_frame(point, gamma);
         eta_i_prime += nfield_->particles_->eta_i(b_prime, n_los_prime, nu_prime, n_prime);
@@ -262,7 +253,7 @@ double Jet::getKF(Vector3d &point, Vector3d &n_los, double nu) {
         b_prime += local_b_prime;
     }
 
-    if(b_prime.norm() < eps_B || isnan(b_prime.norm())) {
+    if(b_prime.norm() < eps_B) {
         return 0.0;
     }
 
@@ -271,13 +262,13 @@ double Jet::getKF(Vector3d &point, Vector3d &n_los, double nu) {
     auto n_los_prime = get_n_los_prime(n_los, v);
 
     double k_F_prime = 0.0;
-    double n_prime = 0.0;
+    double n_prime;
     for(auto nfield_: nfields_) {
-        double n_prime = nfield_->nf_plasma_frame(point, gamma);
+        // FIXME: Here different particles distribution results in different k_F values. Thus, we add k_F_prime.
+        n_prime = nfield_->nf_plasma_frame(point, gamma);
         k_F_prime += nfield_->particles_->k_F(b_prime, n_los_prime, nu_prime, n_prime);
     }
     auto result = k_F_prime/D;
-    //std::cout << "k_F = " << result << std::endl;
     if(isnan(result)) {
         std::cout << "NaN in k_F!" << std::endl;
     }
