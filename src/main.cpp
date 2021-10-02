@@ -124,6 +124,9 @@ std::vector<double> run_on_analytic() {
     // Jet B-field (inside inner cylinder)
 //    ConstCylinderBFieldZ jetbfield(0.01, 1, true, 0.0, &geometry);
 
+
+    BKScalarBField bk_bfield(0.025, 1.0, &geometry);
+
     // TODO: Tested
     HelicalConicalBField jetbfield(0.05, 0.5, 10.*M_PI/180., true, 0.0, &geometry);
 //    HelicalCylinderBField jetbfield(0.0001, 30.0*M_PI/180., true, 0.0, &geometry);
@@ -152,10 +155,12 @@ std::vector<double> run_on_analytic() {
     //LenaMHDBFieldShell bfield(0.0, -0.02, 0.1, 0.15, 0.0);
 
     std::vector<VectorBField*> vbfields;
-    vbfields.push_back(&jetbfield);
+//    vbfields.push_back(&jetbfield);
     //bfields.push_back(&jetbfield_sheath);
     //bfields.push_back(&jetbfield_spine);
     //bfields.push_back(&rotm_screen_bfield);
+    std::vector<ScalarBField*> sbfields;
+    sbfields.push_back(&bk_bfield);
 
     // Setting components of N-fields ==================================================================================
     // Exponent of the power-law particle Lorenz factor distribution
@@ -164,7 +169,9 @@ std::vector<double> run_on_analytic() {
     double gamma_min = 1.0;
     PowerLaw particles(s, gamma_min, "pairs");
     // Value at r=1pc
-    double K_1 = 500;
+    double K_1 = 2;
+    // Working with spirals
+//    double K_1 = 500;
     //double K_1_spine = 50;
     //double K_1_sheath = 600;
     // Exponent of the decrease
@@ -177,9 +184,12 @@ std::vector<double> run_on_analytic() {
 
     // TODO: Tested
     BKNField power_law_nfield_spine(K_1, n, &particles, true, &geometry);
-    power_law_nfield_spine.set_spiral(0.0, 30.0*R_1pc, 0.9*R_1pc);
-    power_law_nfield_spine.set_spiral(M_PI, 30.0*R_1pc, 0.9*R_1pc);
-    power_law_nfield_spine.set_spiral(M_PI/6.0, 10.0*R_1pc, 0.5*R_1pc);
+
+    // Working spirals implementation
+//    power_law_nfield_spine.set_spiral(0.0, 30.0*R_1pc, 0.9*R_1pc);
+//    power_law_nfield_spine.set_spiral(M_PI, 30.0*R_1pc, 0.9*R_1pc);
+//    power_law_nfield_spine.set_spiral(M_PI/6.0, 10.0*R_1pc, 0.5*R_1pc);
+
 //    power_law_nfield_spine.set_heating_profile(0.95, 0.01, 0.01);
 
     //SheathPowerLawNField power_law_nfield_sheath(2*0.875, 1, true, 2.1, 150,
@@ -221,9 +231,10 @@ std::vector<double> run_on_analytic() {
 
     // Setting V-field =================================================================================================
     VField* vfield;
-    bool central_vfield = false;
-//    double Gamma = 3.42;
-    double Gamma = 1.20;
+    bool central_vfield = true;
+    double Gamma = 3.42;
+    // Working with spirals
+//    double Gamma = 1.20;
     if (central_vfield) {
         vfield = new ConstCentralVField(Gamma, &geometry, 0.0);
     } else {
@@ -238,7 +249,7 @@ std::vector<double> run_on_analytic() {
     //vfield = new SheathCentralVField(3.0, 1.4, cone_half_angle);
     //vfield = new ShearedCentralVField(2.0, 15.0, cone_half_angle);
 
-    Jet bkjet(&geometry, vfield, vbfields, nfields);
+    Jet bkjet(&geometry, vfield, sbfields, vbfields, nfields);
 
     // FIXME: Put inside frequency loop for dep. on frequency
     // Setting parameters of pixels and image ==========================================================================
@@ -305,8 +316,8 @@ std::vector<double> run_on_analytic() {
         double relerr = 1e-10;
 
         // Solve for all Stokes parameters ("full") or only full intensity ("I")?
-//        string polarization = "I";
-        string polarization = "full";
+        string polarization = "I";
+//        string polarization = "full";
 
         for(int i_nu=0; i_nu < nu_observed_ghz.size(); i_nu++) {
             if(jet_side) {
