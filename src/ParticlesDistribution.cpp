@@ -49,6 +49,10 @@ double PowerLaw::get_s(Vector3d &b, Vector3d &n_los) const {
 }
 
 double PowerLaw::k_i(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const {
+    // If only scalar field is supplied
+    if(b.norm() < eps_B) {
+        return 0.0;
+    }
     double factor_ki;
     double s;
     if (changing_s_) {
@@ -90,6 +94,10 @@ double PowerLaw::k_i(double b, Vector3d &n_los, double nu, double n_nt) const {
 }
 
 double PowerLaw::k_q(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const {
+    // If only scalar field is supplied
+    if(b.norm() < eps_B) {
+        return 0.0;
+    }
     double s;
     if (changing_s_) {
         s = get_s(b, n_los);
@@ -104,6 +112,10 @@ double PowerLaw::k_u(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const
 }
 
 double PowerLaw::k_v(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const {
+    // If only scalar field is supplied
+    if(b.norm() < eps_B) {
+        return 0.0;
+    }
     if (plasma_ == "pairs") {
         return 0.0;
     }
@@ -129,6 +141,10 @@ double PowerLaw::k_v(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const
 }
 
 double PowerLaw::k_F(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const {
+    // If only scalar field is supplied
+    if(b.norm() < eps_B) {
+        return 0.0;
+    }
     if (plasma_ == "pairs") {
         return 0.0;
     }
@@ -145,6 +161,10 @@ double PowerLaw::k_F(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const
 }
 
 double PowerLaw::k_C(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const {
+    // If only scalar field is supplied
+    if(b.norm() < eps_B) {
+        return 0.0;
+    }
     double s;
     if (changing_s_) {
         s = get_s(b, n_los);
@@ -189,7 +209,10 @@ double PowerLaw::h_Q(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const
 
 double PowerLaw::eta_i(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const {
     //double factor = pow(3., s_/2.)/(2.*(s_+1))*tgamma(s_/4.+19./12.)*tgamma(s_/4.-1./12.);
-
+    // If only scalar field is supplied
+    if(b.norm() < eps_B) {
+        return 0.0;
+    }
     double factor_etai;
     double s;
     if (changing_s_) {
@@ -225,6 +248,10 @@ double PowerLaw::eta_i(double b, Vector3d &n_los, double nu, double n_nt) const 
 }
 
 double PowerLaw::eta_q(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const {
+    // If only scalar field is supplied
+    if(b.norm() < eps_B) {
+        return 0.0;
+    }
     double s;
     if (changing_s_) {
         s = get_s(b, n_los);
@@ -239,6 +266,10 @@ double PowerLaw::eta_u(Vector3d &b, Vector3d &n_los, double nu, double n_nt) con
 }
 
 double PowerLaw::eta_v(Vector3d &b, Vector3d &n_los, double nu, double n_nt) const {
+    // If only scalar field is supplied
+    if(b.norm() < eps_B) {
+        return 0.0;
+    }
     if (plasma_ == "pairs") {
         return 0.0;
     }
