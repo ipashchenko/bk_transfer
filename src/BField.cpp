@@ -7,6 +7,48 @@
 using Eigen::Vector3d;
 
 
+ScalarBField::ScalarBField(Geometry *geometry_out, Geometry *geometry_in) {
+    geometry_in_ = geometry_in;
+    geometry_out_ = geometry_out;
+}
+
+// Always specified in plasma frame
+double ScalarBField::bf_plasma_frame(const Vector3d &point, Vector3d &v) const {
+    return bf(point);
+}
+
+double ScalarBField::bf(const Vector3d &point) const {
+    double x = point[0];
+    double y = point[1];
+    double r_point = sqrt(x*x + y*y);
+
+    if(geometry_out_) {
+        // Find radius of outer surface at given point
+        double r_border_out = geometry_out_->radius_at_given_distance(point);
+        if (r_point > r_border_out) {
+            return 0.0;
+        }
+    }
+    if(geometry_in_) {
+        // Find radius of inner surface at given point
+        double r_border_in = geometry_in_->radius_at_given_distance(point);
+        if (r_point < r_border_in) {
+            return 0.0;
+        }
+    }
+    return _bf(point);
+}
+
+BKScalarBField::BKScalarBField(double b_0, double m_b, Geometry* geometry_out, Geometry* geometry_in) :
+        ScalarBField(geometry_out, geometry_in), b_0_(b_0), m_b_(m_b) {}
+
+double BKScalarBField::_bf(const Vector3d &point) const {
+    double r = point.norm();
+    return b_0_ * pow(r/pc, -m_b_);
+};
+
+
+
 VectorBField::VectorBField(bool in_plasma_frame, double tangled_fraction, Geometry* geometry_out, Geometry* geometry_in) :
     in_plasma_frame_(in_plasma_frame),
     tangled_fraction_(tangled_fraction) {

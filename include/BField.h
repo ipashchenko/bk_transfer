@@ -7,6 +7,30 @@
 using Eigen::Vector3d;
 
 
+// B-field that has no preferred direction, e.g. random. Specified in plasma frame
+// as it can't be transferred to the plasma frame if specified in a lab frame.
+class ScalarBField {
+    public:
+        virtual double _bf(const Vector3d &point) const = 0 ;
+        double bf(const Vector3d &point) const;
+        // In plasma frame
+        double bf_plasma_frame(const Vector3d &point, Vector3d &v) const;
+    protected:
+        ScalarBField(Geometry* geometry_out=nullptr, Geometry* geometry_in=nullptr);
+        Geometry* geometry_in_;
+        Geometry* geometry_out_;
+};
+
+class BKScalarBField : public ScalarBField {
+    public:
+        BKScalarBField(double b_0, double m_b, Geometry* geometry_out=nullptr, Geometry* geometry_in=nullptr);
+        double _bf(const Vector3d &point) const override;
+    private:
+        double b_0_;
+        double m_b_;
+};
+
+
 // B-field with vector values, e.g. ordered component or ordered component with cells, with specified fraction of the
 // completely tangled component. Vector component can be specified in any frame (plasma or lab). It is essential to
 // specify field in the lab (BH) frame. Tangled component is specified only in plasma frame as some fraction of the
