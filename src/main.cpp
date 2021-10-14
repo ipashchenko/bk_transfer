@@ -382,7 +382,7 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
         vfield = new ConstFlatVField(Gamma, &geometry, 0.05);
     }
 
-    double frac_amp, t_start_month, flare_width_pc, t_start;
+    double frac_amp, t_start_month, flare_width_pc;
     int num_flares = flare_params.size()/3;
     std::vector<NField*> nfields;
     nfields.push_back(&bk_stat_nfield);
