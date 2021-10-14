@@ -25,7 +25,7 @@ def mas_to_pc(mas_coordinates, z):
     return (mas_coordinates * u.mas * ang_to_dist(z)).to(u.pc).value
 
 
-def get_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along, n_across):
+def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along, n_across):
     resolutions = np.logspace(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along)
     pixsize_array = np.tile(resolutions, n_across).reshape(n_across, n_along).T
     intensity_factor = (pixsize_array/np.min(pixsize_array))**2
@@ -63,14 +63,14 @@ def get_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixel_siz
     print("Tau at max I stripe = ", tau_at_max_I_stripe)
     print("Tau at max I mean = ", tau_at_max_I_mean)
 
-    pos_tau_1_1 = mas_to_pc(pixel_coordinates[idx_tau_1], z)
-    pos_tau_1_2 = None
+    pos_tau_1_1_pc = mas_to_pc(pixel_coordinates[idx_tau_1], z)
+    pos_tau_1_2_pc = None
     if idx_tau_1_2 is not None:
-        pos_tau_1_2 = mas_to_pc(pixel_coordinates[idx_tau_1_2], z)
-    pos_max_I_stripe = mas_to_pc(pixel_coordinates[idx_max_I_stripe], z)
-    pos_max_I_mean = mas_to_pc(pixel_coordinates[idx_max_I_mean], z)
+        pos_tau_1_2_pc = mas_to_pc(pixel_coordinates[idx_tau_1_2], z)
+    pos_max_I_stripe_pc = mas_to_pc(pixel_coordinates[idx_max_I_stripe], z)
+    pos_max_I_mean_pc = mas_to_pc(pixel_coordinates[idx_max_I_mean], z)
 
-    return {"tau_1_1": pos_tau_1_1, "tau_1_2": pos_tau_1_2, "max_I_stripe": pos_max_I_stripe, "max_I_mean": pos_max_I_mean}
+    return {"tau_1_1": pos_tau_1_1_pc, "tau_1_2": pos_tau_1_2_pc, "max_I_stripe": pos_max_I_stripe_pc, "max_I_mean": pos_max_I_mean_pc}
 
 
 
