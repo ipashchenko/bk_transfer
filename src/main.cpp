@@ -346,6 +346,7 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
 
     // Observed frequencies in GHz
     std::vector<double> nu_observed_ghz{2.2, 8.4};
+    std::vector<std::string> nu_observed_band{"S", "X"};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
@@ -492,12 +493,10 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
             auto image_l = observation.getImage(value);
 
             std::fstream fs;
-            // Remove trailing zeros: https://stackoverflow.com/a/46424921
-            std::ostringstream oss, oss2;
-            oss << std::setprecision(8) << std::noshowpoint << nu_observed_ghz[i_nu];
-            std::string freq_name = oss.str();
-            oss2 << std::setprecision(3) << std::noshowpoint << t_obs;
-            std::string epoch_obs = oss2.str();
+            std::stringstream ss;
+            std::string freq_name = nu_observed_band[i_nu];
+            ss << std::fixed << std::setprecision(1) << std::showpoint << t_obs;
+            std::string epoch_obs = ss.str();
 
             std::string file_tau, file_tau_fr, file_i, file_q, file_u, file_v, file_l;
             if(jet_side) {
