@@ -65,7 +65,7 @@ std::tuple<double, double, double, double, double, double, double, double, doubl
 
     double n_prime = 0.0;
     for(auto nfield_: nfields_) {
-        n_prime = nfield_->nf_plasma_frame(point, gamma);
+        n_prime = nfield_->nf_plasma_frame(point, gamma, t_obs_);
         k_i_prime += nfield_->particles_->k_i(b_prime, n_los_prime, nu_prime, n_prime);
         k_i_prime += nfield_->particles_->k_i(b_prime_tangled, n_los_prime, nu_prime, n_prime);
         k_q_prime += nfield_->particles_->k_q(b_prime, n_los_prime, nu_prime, n_prime);
@@ -131,7 +131,7 @@ std::tuple<double, double> Jet::get_stokes_I_transport_coefficients(Vector3d &po
 
     double n_prime = 0.0;
     for(auto nfield_: nfields_) {
-        n_prime = nfield_->nf_plasma_frame(point, gamma);
+        n_prime = nfield_->nf_plasma_frame(point, gamma, t_obs_);
         k_i_prime += nfield_->particles_->k_i(b_prime, n_los_prime, nu_prime, n_prime);
         k_i_prime += nfield_->particles_->k_i(b_prime_tangled, n_los_prime, nu_prime, n_prime);
         eta_i_prime += nfield_->particles_->eta_i(b_prime, n_los_prime, nu_prime, n_prime);
@@ -187,7 +187,7 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
 
     double n_prime;
     for(auto nfield_: nfields_) {
-        n_prime = nfield_->nf_plasma_frame(point, gamma);
+        n_prime = nfield_->nf_plasma_frame(point, gamma, t_obs_);
         k_i_prime += nfield_->particles_->k_i(b_prime, n_los_prime, nu_prime, n_prime);
         k_i_prime += nfield_->particles_->k_i(b_prime_tangled, n_los_prime, nu_prime, n_prime);
     }
@@ -240,7 +240,7 @@ double Jet::getEtaI(Vector3d &point, Vector3d &n_los, double nu) {
     double eta_i_prime = 0.0;
     double n_prime;
     for(auto nfield_: nfields_) {
-        n_prime = nfield_->nf_plasma_frame(point, gamma);
+        n_prime = nfield_->nf_plasma_frame(point, gamma, t_obs_);
         eta_i_prime += nfield_->particles_->eta_i(b_prime, n_los_prime, nu_prime, n_prime);
         eta_i_prime += nfield_->particles_->eta_i(b_prime_tangled, n_los_prime, nu_prime, n_prime);
     }
@@ -277,7 +277,7 @@ double Jet::getKF(Vector3d &point, Vector3d &n_los, double nu) {
     double n_prime;
     for(auto nfield_: nfields_) {
         // FIXME: Here different particles distribution results in different k_F values. Thus, we add k_F_prime.
-        n_prime = nfield_->nf_plasma_frame(point, gamma);
+        n_prime = nfield_->nf_plasma_frame(point, gamma, t_obs_);
         k_F_prime += nfield_->particles_->k_F(b_prime, n_los_prime, nu_prime, n_prime);
     }
     auto result = k_F_prime/D;
