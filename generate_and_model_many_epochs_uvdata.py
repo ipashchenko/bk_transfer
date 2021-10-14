@@ -20,17 +20,17 @@ lg_pixsize_min = -2.0
 lg_pixsize_max = -1.0
 
 rot_angle_deg = 0.0
-freqs_ghz = [2.4, 8.1]
+freqs_ghz = [2.2, 8.4]
 # Directory to save files
 save_dir = "/home/ilya/data/rfc/results"
 # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
-template_uvfits = {2.4: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis.fits",
-                   8.1: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis.fits"}
+template_uvfits = {2.2: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis.fits",
+                   8.4: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis.fits"}
 # Multiplicative factor for noise added to model visibilities.
 noise_scale_factor = 1.0
 # CLEAN image parameters
 # FIXME: Plavin+ used (2048, 0.05)
-mapsizes = {2.4: (2048, 0.05,), 8.1: (2048, 0.05,)}
+mapsizes = {2.2: (2048, 0.05,), 8.4: (2048, 0.05,)}
 # Directory with C++ generated txt-files with model images
 jetpol_run_directory = "/home/ilya/github/bk_transfer/Release"
 path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"

@@ -345,12 +345,12 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
     double los_angle = los_angle_deg*M_PI/180.0;
 
     // Observed frequencies in GHz
-    std::vector<double> nu_observed_ghz{2.4, 8.1};
+    std::vector<double> nu_observed_ghz{2.2, 8.4};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
     for(auto nu_obs_ghz : nu_observed_ghz) {
-        nu_bh.push_back(nu_obs_ghz*1E+09*(1+redshift));
+        nu_bh.push_back(nu_obs_ghz*1E+09*(1.0+redshift));
     }
 
     // Setting geometry ================================================================================================
