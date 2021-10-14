@@ -34,5 +34,5 @@ with open("parallels_run.txt".format(source_template), "w") as fo:
 exec_dir = "/home/ilya/github/bk_transfer/Release"
 os.chdir(exec_dir)
 
-os.system("parallel --files --results t_obs_{11} --joblog log --jobs 1"
+os.system("parallel --files --results t_obs_{11} --joblog log --jobs 4"
           " -a /home/ilya/github/bk_transfer/parallels_run.txt -n 1 -m --colsep ' ' \"./bk_transfer\"")
