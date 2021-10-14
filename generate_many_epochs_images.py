@@ -20,10 +20,10 @@ flare_params = [5.0, 10.0, 2.0, 10.0, 30.0, 2.5]
 # Construct params file
 with open("parallels_run.txt".format(source_template), "w") as fo:
     for t_obs_month in ts_obs_month[:n_first]:
-        fo.write("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, ".format(redshift, los_angle_deg, cone_half_angle_deg,
-                                                                       B_1, K_1, Gamma, n_along, n_across,
-                                                                       lg_pixsize_min_mas, lg_pixsize_max_mas,
-                                                                       t_obs_month))
+        fo.write("{} {} {} {} {} {} {} {} {} {} {} ".format(redshift, los_angle_deg, cone_half_angle_deg,
+                                                            B_1, K_1, Gamma, n_along, n_across,
+                                                            lg_pixsize_min_mas, lg_pixsize_max_mas,
+                                                            t_obs_month))
         # Write flare parameters
         for flare_param in flare_params[:-1]:
             fo.write("{}, ".format(flare_param))
