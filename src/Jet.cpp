@@ -5,7 +5,9 @@
 using Eigen::Vector3d;
 
 
-Jet::Jet(BaseGeometry *newgeo, VField *newvfield, std::vector<ScalarBField*> newsbFields, std::vector<VectorBField*> newbFields, std::vector<NField*> newnFields) {
+Jet::Jet(BaseGeometry *newgeo, VField *newvfield, std::vector<ScalarBField*> newsbFields,
+         std::vector<VectorBField*> newbFields, std::vector<NField*> newnFields) :
+         t_obs_(0.0) {
     geometry_ = newgeo;
     vfield_ = newvfield;
     sbfields_ = newsbFields;
@@ -155,6 +157,7 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
 
     Vector3d v = getV(point);
     auto gamma = getG(v);
+//    std::cout << "G = " << gamma << "\n";
 
     Vector3d b_prime{0.0, 0.0, 0.0};
     Vector3d local_b_prime{0.0, 0.0, 0.0};
@@ -168,11 +171,15 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
         b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
     }
 
+//    std::cout << "B' = " << b_prime_tangled << "\n";
+
+    // FIXME: DEBUG
     if(b_prime.norm() < eps_B && b_prime_tangled < eps_B) {
         return 0.0;
     }
 
     auto D = getD(n_los, v);
+//    std::cout << "D = " << D << "\n";
     auto nu_prime = nu/D;
     auto n_los_prime = get_n_los_prime(n_los, v);
 
@@ -184,9 +191,14 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
         k_i_prime += nfield_->particles_->k_i(b_prime, n_los_prime, nu_prime, n_prime);
         k_i_prime += nfield_->particles_->k_i(b_prime_tangled, n_los_prime, nu_prime, n_prime);
     }
+//    std::cout << "n' = " << n_prime << "\n";
     auto result = k_i_prime/D;
+//    std::cout << "k_I = " << result << "\n";
     if(isnan(result)) {
         std::cout << "NaN in k_I!" << std::endl;
+    }
+    if(result < 0){
+        throw NegativeKI();
     }
     return result;
 }
@@ -316,4 +328,8 @@ const Vector3d Jet::getBhat(const Vector3d &point) {
         Bhat += bfield_->bhat_lab_frame(point, v);
     }
     return Bhat;
+}
+
+void Jet::set_t_obs(double t_obs) {
+    t_obs_ = t_obs;
 }

@@ -2,10 +2,13 @@
 #define BK_TRANSFER_BFIELD_H
 
 #include <Eigen/Eigen>
+#include "utils.h"
 #include "Geometry.h"
 
 using Eigen::Vector3d;
 
+
+const double l_eps_B = 0.001*pc;
 
 // B-field that has no preferred direction, e.g. random. Specified in plasma frame
 // as it can't be transferred to the plasma frame if specified in a lab frame.

@@ -3,40 +3,39 @@
 #include "MyExceptions.h"
 
 
-NField::NField(bool in_plasma_frame, ParticlesDistribution* particles, Geometry* geometry_out, Geometry* geometry_in) :
+NField::NField(bool in_plasma_frame, ParticlesDistribution* particles, Geometry* geometry_out, Geometry* geometry_in,
+               VField* vfield) :
     in_plasma_frame_(in_plasma_frame) {
     particles_ = particles;
     geometry_in_ = geometry_in;
     geometry_out_ = geometry_out;
+    vfield_ = vfield;
 }
 
-double NField::nf(const Vector3d &point) const {
-    double x, y, r_point, r_border, result;
+double NField::nf(const Vector3d &point, const double t) const {
+    double x, y, r_point, r_border;
     x = point[0];
     y = point[1];
     r_point = sqrt(x*x + y*y);
+    double factor = 1.0;
 
     if(geometry_out_) {
-//        std::cout << "Zeroing N' because of the OUTER geometry!" << "\n";
-        // Find radius of outer border at given point
         r_border = geometry_out_->radius_at_given_distance(point);
         if (r_point > r_border) {
-            return 0.0;
+            factor = exp(-pow(r_point - r_border, 2.0)/l_eps_N/l_eps_N);
         }
     }
     if(geometry_in_) {
-//        std::cout << "Zeroing N' because of the INNER geometry!" << "\n";
-        // Find radius of inner border at given point
         r_border = geometry_in_->radius_at_given_distance(point);
         if (r_point < r_border) {
-            return 0.0;
+            factor = exp(-pow(r_point - r_border, 2.0)/l_eps_N/l_eps_N);
         }
     }
-    return _nf(point);
+    return _nf(point, t)*factor;
 }
 
-double NField::nf_plasma_frame(const Vector3d &point, double &gamma) const {
-    double n = nf(point);
+double NField::nf_plasma_frame(const Vector3d &point, const double gamma, const double t) const {
+    double n = nf(point, t);
     if (in_plasma_frame_) {
         return n;
     } else {
@@ -46,26 +45,23 @@ double NField::nf_plasma_frame(const Vector3d &point, double &gamma) const {
 
 
 BKNField::BKNField(double n_0, double n_n, ParticlesDistribution* particles, bool in_plasma_frame,
-                   Geometry* geometry_out, Geometry* geometry_in) :
-        NField(in_plasma_frame, particles, geometry_out, geometry_in),
+                   Geometry* geometry_out, Geometry* geometry_in, VField* vfield) :
+        NField(in_plasma_frame, particles, geometry_out, geometry_in, vfield),
         n_0_(n_0),
         n_n_(n_n),
         r_mean_(0.0),
         r_width_(0.0),
         background_fraction_(0.025),
         is_profile_set_(false),
-//        zs_0_(),
         phases_0_(),
         lambdas_0_(),
         amps_0_(),
-//        C_amp_(0.0),
-//        C_lambda_(0.0),
         k_(0.5),
         spiral_width_frac_(0.1),
         is_spirals_present_(false) {}
 
 
-double BKNField::_nf(const Vector3d &point) const {
+double BKNField::_nf(const Vector3d &point, const double t) const {
     double r = point.norm();
     double raw_density = n_0_ * pow(r / pc, -n_n_);
     bool in_spiral = false;
@@ -76,9 +72,6 @@ double BKNField::_nf(const Vector3d &point) const {
         double y = point[1];
         double R_cur = hypot(x, y);
         double R_out = geometry_out_->radius_at_given_distance(point);
-//        if(R_cur/R_out < 0.25){
-//            std::cout << R_cur/R_out << "\n";
-//        }
         return (generalized1_gaussian1d(R_cur / R_out, r_mean_, r_width_, 2) + background_fraction_) * raw_density;
     }
     // If we are modelling KH modes
@@ -125,4 +118,34 @@ void BKNField::set_spiral(double phase_0, double lambda_0, double amp_0) {
     lambdas_0_.push_back(lambda_0);
     amps_0_.push_back(amp_0);
     is_spirals_present_ = true;
+}
+
+
+FlareBKNField::FlareBKNField(double n_0, double n_n, double t_start, double width_pc, ParticlesDistribution* particles,
+                             bool in_plasma_frame, double theta_los, double z,
+                             Geometry* geometry_out, Geometry* geometry_in, VField* vfield) :
+        NField(in_plasma_frame, particles, geometry_out, geometry_in, vfield),
+        n_0_(n_0),
+        n_n_(n_n),
+        t_start_(t_start),
+        width_pc_(width_pc),
+        z_(z),
+        theta_los_(theta_los)
+        {}
+
+double FlareBKNField::_nf(const Vector3d &point, const double t) const {
+    // Direction to the observer
+    Vector3d n_los = {sin(theta_los_), 0, cos(theta_los_)};
+//    Vector3d v = vfield_->vf(point).normalized();
+    Vector3d v = vfield_->vf(point);
+    Vector3d v_hat = v.normalized();
+    double cos_theta_local = v_hat.dot(n_los);
+    double sin_theta_local = sqrt(1.0 - cos_theta_local*cos_theta_local);
+    double beta = v.norm()/c;
+    double beta_app = beta/(1.0 - beta*cos_theta_local)/(1.0 + z_);
+
+//    std::cout << "beta_app = " << beta_app << "\n";
+
+    double r = point.norm();
+    return n_0_ * pow(r/pc, -n_n_) * exp(-pow(r*sin_theta_local - beta_app*c*(t + t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
 }

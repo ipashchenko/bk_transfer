@@ -18,25 +18,28 @@ double ScalarBField::bf_plasma_frame(const Vector3d &point, Vector3d &v) const {
 }
 
 double ScalarBField::bf(const Vector3d &point) const {
+    double r_border;
     double x = point[0];
     double y = point[1];
     double r_point = sqrt(x*x + y*y);
 
+    double factor = 1.0;
+
     if(geometry_out_) {
         // Find radius of outer surface at given point
-        double r_border_out = geometry_out_->radius_at_given_distance(point);
-        if (r_point > r_border_out) {
-            return 0.0;
+        r_border = geometry_out_->radius_at_given_distance(point);
+        if (r_point > r_border) {
+            factor = exp(-pow(r_point - r_border, 2.0)/l_eps_B/l_eps_B);
         }
     }
     if(geometry_in_) {
         // Find radius of inner surface at given point
-        double r_border_in = geometry_in_->radius_at_given_distance(point);
-        if (r_point < r_border_in) {
-            return 0.0;
+        r_border = geometry_in_->radius_at_given_distance(point);
+        if (r_point < r_border) {
+            factor = exp(-pow(r_point - r_border, 2.0)/l_eps_B/l_eps_B);
         }
     }
-    return _bf(point);
+    return _bf(point)*factor;
 }
 
 BKScalarBField::BKScalarBField(double b_0, double m_b, Geometry* geometry_out, Geometry* geometry_in) :

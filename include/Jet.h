@@ -39,6 +39,7 @@ class Jet {
         // Unit vector of the Vector B-field component in the lab frame at point ``point``.
         const Vector3d getBhat(const Vector3d& point);
 
+        void set_t_obs(double t_obs);
 
     private:
         BaseGeometry* geometry_;
@@ -46,6 +47,7 @@ class Jet {
         std::vector<VectorBField*> bfields_;
         std::vector<ScalarBField*> sbfields_;
         std::vector<NField*> nfields_;
+        double t_obs_;
 };
 
 

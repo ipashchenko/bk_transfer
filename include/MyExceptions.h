@@ -72,4 +72,10 @@ class BadHeatingProfileParameters : public std::exception {
         }
 };
 
+class NegativeKI : public std::exception {
+        const char * what () const noexcept override {
+            return "k_I < 0!";
+        }
+};
+
 #endif //MHD_TRANSFER_INCLUDE_MYEXCEPTIONS_H

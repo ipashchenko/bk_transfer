@@ -2,25 +2,29 @@
 #define JETPOL_NFIELD_H
 
 #include <Eigen/Eigen>
+#include "utils.h"
 #include "Geometry.h"
+#include "VField.h"
 #include "ParticlesDistribution.h"
 
 using Eigen::Vector3d;
 
+const double l_eps_N = 0.001*pc;
 
 class NField {
         friend class Jet;
     public:
-        virtual double _nf(const Vector3d &point) const = 0;
-        double nf(const Vector3d &point) const;
-        double nf_plasma_frame(const Vector3d &point, double &gamma) const;
+        virtual double _nf(const Vector3d &point, double t = 0.0) const = 0;
+        double nf(const Vector3d &point, double t = 0.0) const;
+        double nf_plasma_frame(const Vector3d &point, double gamma, double t = 0.0) const;
 
 
     protected:
         explicit NField(bool in_plasma_frame,
                         ParticlesDistribution* particles,
+                        Geometry* geometry_out = nullptr,
                         Geometry* geometry_in = nullptr,
-                        Geometry* geometry_out = nullptr);
+                        VField* vfield = nullptr);
         bool in_plasma_frame_;
         ParticlesDistribution* particles_;
 
@@ -28,14 +32,16 @@ class NField {
         Geometry* geometry_in_;
         // Outer border
         Geometry* geometry_out_;
+        // Velocity considered in non-stationary case
+        VField* vfield_;
 };
 
 
 class BKNField: public NField {
     public:
         BKNField(double n_0, double n_n, ParticlesDistribution* particles, bool in_plasma_frame,
-                 Geometry* geometry_out, Geometry* geometry_in = nullptr);
-        double _nf(const Vector3d &point) const override;
+                 Geometry* geometry_out, Geometry* geometry_in = nullptr, VField* vfield = nullptr);
+        double _nf(const Vector3d &point, const double t = 0.0) const override;
         void set_heating_profile(double r_mean, double r_width, double background_fraction = 0.0);
         void set_spiral(double phase_0, double lambda_0, double amp_0);
         int number_of_spirals() const {
@@ -65,6 +71,29 @@ class BKNField: public NField {
 };
 
 
+class FlareBKNField : public NField {
+    public:
+        FlareBKNField(double n_0, double n_n, double t_start, double width_pc, ParticlesDistribution* particles, bool in_plasma_frame,
+                      double theta_los, double z,
+                      Geometry* geometry_out, Geometry* geometry_in = nullptr,
+                      VField* vfield = nullptr);
+        double _nf(const Vector3d &point, const double t = 0.0) const override;
+    private:
+        // Flare amplitude. To add flare to stationary BKNField with some ``n_0``, ``n_n``, use the same ``n_n`` but
+        // define flare's ``n_0_fl`` as ``n_0*(1 + A_N)``, where ``A_N`` - fractional increase/decrease of particles in
+        // flare
+        double n_0_;
+        double n_n_;
+        double t_start_;
+        double width_pc_;
+        // LOS angle for the jet axis
+        double theta_los_;
+        // redshift
+        double z_;
+};
+
+
+
 //class FFNField: public PowerLawNField {
 //    public:
 //        FFNField(double M_BH, double A,  double nu, double s, double gamma_min);
@@ -85,5 +114,6 @@ class BKNField: public NField {
 //};
 //
 //
+
 
 #endif //BK_TRANSFER_NFIELD_H

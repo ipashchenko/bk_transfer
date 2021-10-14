@@ -11,7 +11,7 @@ const double abserr = 1e-27;
 class Observation {
     public:
         Observation(Jet* newjet, ImagePlane* imagePlane);
-        void run(int n, double tau_max, double dt_max, double tau_min, double nu, string polarization, double relerr);
+        void observe(int n, double tau_max, double dt_max, double tau_min, double nu, string polarization, double relerr, double t_obs= 0.0);
         void observe_single_pixel(Ray& ray, Pixel& pixel, double tau_min, double tau_max, int n, double dt_max,
                                   double nu, string polarization, double relerr);
         std::vector<std::vector<double>> getImage(string value);

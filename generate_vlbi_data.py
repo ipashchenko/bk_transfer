@@ -15,12 +15,16 @@ from from_fits import create_clean_image_from_fits_file
 from image import plot as iplot
 
 
+# Requires already generated CC FITS files
 only_plot = False
-modelfit_core = True
+modelfit_core = False
 full_stokes = False
+jet_only = True
+
 
 # -107 for M87
-rot_angle_deg = -107.0
+# rot_angle_deg = -107.0
+rot_angle_deg = 0.0
 freq_ghz = 15.4
 # Directory to save files
 # save_dir = "/home/ilya/github/bk_transfer/pics/KH"
@@ -31,13 +35,14 @@ template_uvfits = "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uv
 # template_uvfits = "/home/ilya/Downloads/M87uvf/1228+126.u.2008_05_01.uvf"
 # Multiplicative factor for noise added to model visibilities.
 noise_scale_factor = 1.0
-# Used in CLEAN
+# CLEAN image parameters
 mapsize = (1024, 0.1)
+# Directory with C++ generated txt-files with model images
 jetpol_run_directory = "/home/ilya/github/bk_transfer/Release"
 
 # C++ code run parameters
-z = 0.00436
-# z = 0.1
+# z = 0.00436
+z = 0.5
 n_along = 512
 n_across = 80
 lg_pixel_size_mas_min = -1.5
@@ -53,8 +58,6 @@ else:
     stokes = ("I",)
 
 if not only_plot:
-    # Plot only jet emission and do not plot counter-jet?
-    jet_only = False
     path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
     uvdata = UVData(template_uvfits)
     downscale_uvdata_by_freq_flag = downscale_uvdata_by_freq(uvdata)
@@ -71,7 +74,8 @@ if not only_plot:
                      jet_side=False, rot=np.deg2rad(rot_angle_deg)) for _ in stokes]
     for i, stk in enumerate(stokes):
         jms[i].load_image_stokes(stk, "{}/jet_image_{}_{}.txt".format(jetpol_run_directory, stk.lower(), freq_ghz), scale=1.0)
-        cjms[i].load_image_stokes(stk, "{}/cjet_image_{}_{}.txt".format(jetpol_run_directory, stk.lower(), freq_ghz), scale=1.0)
+        if not jet_only:
+            cjms[i].load_image_stokes(stk, "{}/cjet_image_{}_{}.txt".format(jetpol_run_directory, stk.lower(), freq_ghz), scale=1.0)
 
     # List of models (for J & CJ) for all stokes
     js = [TwinJetImage(jms[i], cjms[i]) for i in range(len(stokes))]

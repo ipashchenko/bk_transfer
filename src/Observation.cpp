@@ -17,13 +17,28 @@ Observation::Observation(Jet *newjet, ImagePlane *newimagePlane)
 
 // ``dt_max`` - max. step size in pc. Adaptive step size will be kept less then this.
 // ``n`` defines the initial step size (that will be adjusted) through utils.steps_schedule function.
-void Observation::run(int n, double tau_max, double dt_max, double tau_min, double nu, string polarization, double relerr) {
+void Observation::observe(int n, double tau_max, double dt_max, double tau_min, double nu, string polarization,
+                          double relerr, double t_obs) {
+
+    jet->set_t_obs(t_obs);
 	dt_max *= pc;
     auto image_size = getImageSize();
 	vector<Pixel>& pixels = imagePlane->getPixels();
 	vector<Ray>& rays = imagePlane->getRays();
 	omp_set_num_threads(4);
-	// Comment out for easy debug printing
+
+
+
+    // FIXME: Debug
+//    unsigned long int j = 63;
+//    unsigned long int k = 2;
+//    auto &ray = rays[j*image_size.second+k];
+//    auto &pxl = pixels[j*image_size.second+k];
+//    observe_single_pixel(ray, pxl, tau_min, tau_max, n, dt_max, nu, polarization, relerr);
+
+
+
+//	 Comment out for easy debug printing
 	#pragma omp parallel for schedule(dynamic) collapse(2) default(none) shared(image_size, rays, pixels, tau_min, tau_max, n, dt_max, nu, polarization, relerr)
     for (unsigned long int j = 0; j < image_size.first; ++j) {
 	    // TODO: If one (doesn't?) need counter-jet side -- start from uncommenting this line:D
@@ -32,10 +47,13 @@ void Observation::run(int n, double tau_max, double dt_max, double tau_min, doub
         for (unsigned long int k = 0; k < image_size.second; ++k) {
             auto &ray = rays[j*image_size.second+k];
         	auto &pxl = pixels[j*image_size.second+k];
+
 //        	std::cout << "Observing pixel " << j << ", " << k << std::endl;
         	observe_single_pixel(ray, pxl, tau_min, tau_max, n, dt_max, nu, polarization, relerr);
         }
     }
+
+
 }
 
 
@@ -50,9 +68,9 @@ pair<unsigned long int, unsigned long int> Observation::getImageSize() {
 pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection> &list_intersect, Vector3d ray_direction,
                                                          const double nu, double tau_max, int n, double dt_max,
                                                          double relerr) {
-
-	// Precision for finding tau crossing
-	const double tau_precision = 0.1;
+//    std::cout << "Begin tau integration!" << std::endl;
+    // Precision for finding tau crossing
+	const double tau_precision = 0.01;
 
 	// Write final values in this variables inside for-cycle
 	double background_tau = 0.;
@@ -96,6 +114,7 @@ pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection>
             // Use odeint's resizing functionality to allocate memory for x_m
             // Adjust_size_by_resizeability(x_m, optDepth, typename is_resizeable<double>::type());
             while(std::abs(x_m - tau_max) > tau_precision) {
+                std::cout << "Finding cross tau!" << std::endl;
                 // Get the mid point time
                 t_m = 0.5 * (t0 + t1);
                 // Obtain the corresponding state
@@ -135,6 +154,7 @@ pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection>
 	}
 //	std::cout << "L[pc] = " << thickness/pc << "\n";
 //    std::cout << "tau = " << background_tau << "\n";
+//    std::cout << "Done tau integration!" << std::endl;
 	return std::make_pair(background_tau, thickness);
 }
 
@@ -172,6 +192,9 @@ void Observation::integrate_i_adaptive(std::list<Intersection> &list_intersect, 
 
         background_I = stI;
     }
+
+//    std::cout << "Done I integration!" << std::endl;
+
 }
 
 void Observation::integrate_speed_adaptive(std::list<Intersection> &list_intersect, const Vector3d& ray_direction, const double nu,
@@ -290,7 +313,8 @@ void Observation::observe_single_pixel(Ray &ray, Pixel &pxl,  double tau_min, do
                                        double nu, string polarization, double relerr) {
     auto ij = pxl.getij();
 //    std::cout << "=====================================================================================================" << "\n";
-    std::cout << "Observing pixel " << ij.first << ", " << ij.second << "\n";
+//    std::cout << "Observing pixel " << ij.first << ", " << ij.second << "\n";
+//    std::cout << "Coordinate = " << pxl.getCoordinate()/pc << "\n";
 //    std::cout << "=====================================================================================================" << "\n";
     auto ray_direction = ray.direction();
     std::list<Intersection> list_intersect = jet->hit(ray);
