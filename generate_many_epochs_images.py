@@ -13,19 +13,19 @@ lg_pixsize_min_mas = -2.0
 lg_pixsize_max_mas = -1.0
 data_dir = "/home/ilya/data/rfc"
 source_template = "J0102+5824"
-ts_obs_month = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
+ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
 n_first = None
-# frac.amp, t_start[month], width[pc]
-flare_params = [5.0, 10.0, 2.0,
-                10.0, 30.0, 2.5]
+# frac.amp, t_start[days], width[pc]
+flare_params = [5.0, 300.0, 2.0,
+                10.0, 500.0, 2.5]
 
 # Construct params file
 with open("parallels_run.txt".format(source_template), "w") as fo:
-    for t_obs_month in ts_obs_month[:n_first]:
+    for t_obs_days in ts_obs_days[:n_first]:
         fo.write("{} {} {} {} {} {} {} {} {} {} {} ".format(redshift, los_angle_deg, cone_half_angle_deg,
                                                             B_1, K_1, Gamma, n_along, n_across,
                                                             lg_pixsize_min_mas, lg_pixsize_max_mas,
-                                                            t_obs_month))
+                                                            t_obs_days))
         # Write flare parameters
         for flare_param in flare_params[:-1]:
             fo.write("{}, ".format(flare_param))

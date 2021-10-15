@@ -336,7 +336,7 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
                                            double Gamma,
                                            int number_of_pixels_along, int number_of_pixels_across,
                                            double lg_pixel_size_mas_start, double lg_pixel_size_mas_stop,
-                                           double t_obs,
+                                           double t_obs_days,
                                            std::vector<double> flare_params) {
     auto t1 = Clock::now();
     std::clock_t start;
@@ -382,7 +382,7 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
         vfield = new ConstFlatVField(Gamma, &geometry, 0.05);
     }
 
-    double frac_amp, t_start_month, flare_width_pc;
+    double frac_amp, t_start_days, flare_width_pc;
     int num_flares = flare_params.size()/3;
     std::vector<NField*> nfields;
     nfields.push_back(&bk_stat_nfield);
@@ -390,11 +390,11 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
     FlareBKNField* bk_flare_nfield;
     for(int i = 0; i < num_flares; i++){
         frac_amp = flare_params[3*i + 0];
-        t_start_month = flare_params[3*i + 1];
+        t_start_days = flare_params[3 * i + 1];
         // In sec
-        t_start_month *= 30.0 * 24.0 * 60.0 * 60.0;
+        t_start_days *= 24.0 * 60.0 * 60.0;
         flare_width_pc = flare_params[3*i + 2];
-        bk_flare_nfield = new FlareBKNField(frac_amp*K_1, n, t_start_month, flare_width_pc, &particles,
+        bk_flare_nfield = new FlareBKNField(frac_amp*K_1, n, t_start_days, flare_width_pc, &particles,
                                             true, los_angle, redshift, &geometry, nullptr, vfield);
         nfields.push_back(bk_flare_nfield);
     }
@@ -470,7 +470,8 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
             } else {
                 std::cout << "Running transfer for frequency " << nu_observed_ghz[i_nu] << " GHz for counter-jet" << std::endl;
             }
-            observation.observe(n_, tau_max, dt_max, tau_min, nu_bh[i_nu], polarization, relerr, 30.0*24.0*60.0*60.0*t_obs);
+            // t_obs_days in days!
+            observation.observe(n_, tau_max, dt_max, tau_min, nu_bh[i_nu], polarization, relerr, 24.0 * 60.0 * 60.0 * t_obs_days);
             string value = "tau";
             auto image_tau = observation.getImage(value);
 
@@ -494,7 +495,7 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
             std::fstream fs;
             std::stringstream ss;
             std::string freq_name = nu_observed_band[i_nu];
-            ss << std::fixed << std::setprecision(1) << std::showpoint << t_obs;
+            ss << std::fixed << std::setprecision(1) << std::showpoint << t_obs_days;
             std::string epoch_obs = ss.str();
 
             std::string file_tau, file_tau_fr, file_i, file_q, file_u, file_v, file_l;
@@ -677,16 +678,16 @@ int main(int argc, char *argv[]) {
         double t_obs = atof(argv[11]);
         std::cout << "t_obs(months) = " << argv[11] << "\n";
 
-        double frac_amp, t_start_month, flare_width_pc;
+        double frac_amp, t_start_days, flare_width_pc;
         for(int i = 0; i < num_of_flares; i++){
             frac_amp = atof(argv[11 + 3*i + 1]);
             std::cout << "Frac.amp = " << frac_amp << "\n";
-            t_start_month = atof(argv[11 + 3*i + 2]);
-            std::cout << "T_start (month) = " << t_start_month << "\n";
+            t_start_days = atof(argv[11 + 3 * i + 2]);
+            std::cout << "T_start (days) = " << t_start_days << "\n";
             flare_width_pc = atof(argv[11 + 3*i + 3]);
             std::cout << "Width (pc) = " << flare_width_pc << "\n";
             flare_params.push_back(frac_amp);
-            flare_params.push_back(t_start_month);
+            flare_params.push_back(t_start_days);
             flare_params.push_back(flare_width_pc);
         }
 

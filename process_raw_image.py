@@ -160,19 +160,19 @@ if __name__ == "__main__":
     n_along = 1024
     n_across = 256
 
-    ts_obs_month = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
+    ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
     band = "X"
     core_positions = list()
-    for t_obs_month in ts_obs_month:
-        print("T[months] = ", t_obs_month)
-        image_txt = os.path.join(txt_dir, "jet_image_i_{}_{:.1f}.txt".format(band, t_obs_month))
+    for t_obs_days in ts_obs_days:
+        print("T[days] = ", t_obs_days)
+        image_txt = os.path.join(txt_dir, "jet_image_i_{}_{:.1f}.txt".format(band, t_obs_days))
         image = np.loadtxt(image_txt)
-        plt.matshow(image)
+        plt.matshow(np.log10(image))
         plt.show()
-        tau_txt = os.path.join(txt_dir, "jet_image_tau_{}_{:.1f}.txt".format(band, t_obs_month))
+        tau_txt = os.path.join(txt_dir, "jet_image_tau_{}_{:.1f}.txt".format(band, t_obs_days))
         res = get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max,
                                      n_along, n_across)
         core_positions.append(res["tau_1_1"])
 
-    plt.plot(ts_obs_month, core_positions)
+    plt.plot(ts_obs_days, core_positions)
     plt.show()
