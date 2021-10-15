@@ -152,6 +152,7 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
 
 if __name__ == "__main__":
     data_dir = "/home/ilya/data/rfc"
+    txt_dir = "/home/ilya/fs/sshfs/calculon/github/bk_transfer/Release"
     source_template = "J0102+5824"
     z = 0.5
     lg_pixel_size_mas_min = -2
@@ -163,11 +164,11 @@ if __name__ == "__main__":
     band = "X"
     core_positions = list()
     for t_obs_month in ts_obs_month:
-        image_txt = os.path.join(data_dir, "results", "jet_image_i_{}_{:.1f}.txt".format(band, t_obs_month))
+        image_txt = os.path.join(txt_dir, "jet_image_i_{}_{:.1f}.txt".format(band, t_obs_month))
         image = np.loadtxt(image_txt)
         plt.matshow(image)
         plt.show()
-        tau_txt = os.path.join(data_dir, "results", "jet_image_tau_{}_{:.1f}.txt".format(band, t_obs_month))
+        tau_txt = os.path.join(txt_dir, "jet_image_tau_{}_{:.1f}.txt".format(band, t_obs_month))
         res = get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max,
                                      n_along, n_across)
         core_positions.append(res["tau_1_1"])
