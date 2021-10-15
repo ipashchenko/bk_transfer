@@ -164,6 +164,7 @@ if __name__ == "__main__":
     band = "X"
     core_positions = list()
     for t_obs_month in ts_obs_month:
+        print("T[months] = ", t_obs_month)
         image_txt = os.path.join(txt_dir, "jet_image_i_{}_{:.1f}.txt".format(band, t_obs_month))
         image = np.loadtxt(image_txt)
         plt.matshow(image)
