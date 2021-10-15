@@ -147,5 +147,5 @@ double FlareBKNField::_nf(const Vector3d &point, const double t) const {
 //    std::cout << "beta_app = " << beta_app << "\n";
 
     double r = point.norm();
-    return n_0_ * pow(r/pc, -n_n_) * exp(-pow(r*sin_theta_local - beta_app*c*(t + t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+    return n_0_ * pow(r/pc, -n_n_) * exp(-pow(r*sin_theta_local - beta_app*c*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
 }
