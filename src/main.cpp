@@ -470,7 +470,7 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
             } else {
                 std::cout << "Running transfer for frequency " << nu_observed_ghz[i_nu] << " GHz for counter-jet" << std::endl;
             }
-            observation.observe(n_, tau_max, dt_max, tau_min, nu_bh[i_nu], polarization, relerr, t_obs);
+            observation.observe(n_, tau_max, dt_max, tau_min, nu_bh[i_nu], polarization, relerr, 30.0*24.0*60.0*60.0*t_obs);
             string value = "tau";
             auto image_tau = observation.getImage(value);
 
