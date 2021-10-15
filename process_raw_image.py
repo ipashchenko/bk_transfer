@@ -160,11 +160,13 @@ if __name__ == "__main__":
     n_along = 1024
     n_across = 256
 
-    ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
+    # ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
+    # 5 years once per 3 months
+    ts_obs_days = np.linspace(0, 5*12*30, 5*int(12/3))
     band = "X"
     core_positions = list()
     for t_obs_days in ts_obs_days:
-        print("T[days] = ", t_obs_days)
+        print("T[days] = {:.1f}".format(t_obs_days))
         image_txt = os.path.join(txt_dir, "jet_image_i_{}_{:.1f}.txt".format(band, t_obs_days))
         image = np.loadtxt(image_txt)
         plt.matshow(np.log10(image))
