@@ -1,26 +1,26 @@
 import os
 import numpy as np
 
-redshift = 0.5
+redshift = 1.3
 los_angle_deg = 5
 cone_half_angle_deg = 1.5
 B_1 = 1.0
 K_1 = 1000.
-Gamma = 10.
+Gamma = 9.
 n_along = 1024
 n_across = 256
 lg_pixsize_min_mas = -2.0
-lg_pixsize_max_mas = -1.0
+lg_pixsize_max_mas = -0.5
 data_dir = "/home/ilya/data/rfc"
 source_template = "J0102+5824"
 # ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
 # 5 years once per 3 months
-ts_obs_days = np.linspace(0, 5*12*30, 5*int(12/3))
+ts_obs_days = np.linspace(0, 1*12*30, 1*int(12/0.5))
 n_first = None
 # frac.amp, t_start[days], width[pc]
 flare_params = [5.0, 0.0, 2.,
-                10.0, 500.0, 2.,
-                10.0, 1000.0, 2.]
+                10.0, 100.0, 2.,
+                10.0, 200.0, 2.]
 
 # Construct params file
 with open("parallels_run.txt".format(source_template), "w") as fo:

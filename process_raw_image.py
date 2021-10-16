@@ -49,6 +49,10 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
         idx_tau_1 = np.where(tau_stripe < 1)[0][1]
     if idx_tau_1 == 1:
         idx_tau_1 = np.where(tau_stripe < 1)[0][2]
+    if idx_tau_1 == 2:
+        idx_tau_1 = np.where(tau_stripe < 1)[0][3]
+    if idx_tau_1 == 3:
+        idx_tau_1 = np.where(tau_stripe < 1)[0][4]
 
     # Find if there is another tau = 1 region due to flare down the core
     tau_down_core = tau_stripe[idx_tau_1:]
@@ -67,18 +71,25 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
     print("Tau at max I stripe = ", tau_at_max_I_stripe)
     print("Tau at max I mean = ", tau_at_max_I_mean)
 
-    pos_tau_1_1_pc = mas_to_pc(pixel_coordinates[idx_tau_1], z)
+    pos_tau_1_1_mas = pixel_coordinates[idx_tau_1]
+    pos_tau_1_1_pc = mas_to_pc(pos_tau_1_1_mas, z)
+    pos_tau_1_2_mas = None
     pos_tau_1_2_pc = None
     if idx_tau_1_2 is not None:
-        pos_tau_1_2_pc = mas_to_pc(pixel_coordinates[idx_tau_1_2], z)
-    pos_max_I_stripe_pc = mas_to_pc(pixel_coordinates[idx_max_I_stripe], z)
-    pos_max_I_mean_pc = mas_to_pc(pixel_coordinates[idx_max_I_mean], z)
+        pos_tau_1_2_mas = pixel_coordinates[idx_tau_1_2]
+        pos_tau_1_2_pc = mas_to_pc(pos_tau_1_2_mas, z)
+    pos_max_I_stripe_mas = pixel_coordinates[idx_max_I_stripe]
+    pos_max_I_stripe_pc = mas_to_pc(pos_max_I_stripe_mas, z)
+    pos_max_I_mean_mas = pixel_coordinates[idx_max_I_mean]
+    pos_max_I_mean_pc = mas_to_pc(pos_max_I_mean_mas, z)
 
     # Core flux
     core_flux = np.sum(I_orig[:, :idx_tau_1])
 
     return {"tau_1_1": pos_tau_1_1_pc, "tau_1_2": pos_tau_1_2_pc,
             "max_I_stripe": pos_max_I_stripe_pc, "max_I_mean": pos_max_I_mean_pc,
+            "core_flux": core_flux, "tau_1_1_mas": pos_tau_1_1_mas, "tau_1_2_mas": pos_tau_1_2_mas,
+            "max_I_stripe_mas": pos_max_I_stripe_mas, "max_I_mean_mas": pos_max_I_mean_mas,
             "core_flux": core_flux}
 
 
@@ -154,27 +165,46 @@ if __name__ == "__main__":
     data_dir = "/home/ilya/data/rfc"
     txt_dir = "/home/ilya/fs/sshfs/calculon/github/bk_transfer/Release"
     source_template = "J0102+5824"
-    z = 0.5
+    z = 1.3
+    plot = False
     lg_pixel_size_mas_min = -2
-    lg_pixel_size_mas_max = -1
+    lg_pixel_size_mas_max = -0.5
     n_along = 1024
     n_across = 256
 
     # ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
     # 5 years once per 3 months
-    ts_obs_days = np.linspace(0, 5*12*30, 5*int(12/3))
-    band = "X"
-    core_positions = list()
+    ts_obs_days = np.linspace(0, 1*12*30, 1*int(12/0.5))
+    corex_positions = list()
+    cores_positions = list()
     for t_obs_days in ts_obs_days:
         print("T[days] = {:.1f}".format(t_obs_days))
-        image_txt = os.path.join(txt_dir, "jet_image_i_{}_{:.1f}.txt".format(band, t_obs_days))
-        image = np.loadtxt(image_txt)
-        plt.matshow(np.log10(image))
-        plt.show()
-        tau_txt = os.path.join(txt_dir, "jet_image_tau_{}_{:.1f}.txt".format(band, t_obs_days))
-        res = get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max,
-                                     n_along, n_across)
-        core_positions.append(res["tau_1_1"])
+        imagex_txt = os.path.join(txt_dir, "jet_image_i_X_{:.1f}.txt".format(t_obs_days))
+        images_txt = os.path.join(txt_dir, "jet_image_i_S_{:.1f}.txt".format(t_obs_days))
 
-    plt.plot(ts_obs_days, core_positions)
+        if plot:
+            fig, axes = plt.subplots(2, 1, sharex=True)
+            imagex = np.loadtxt(imagex_txt)
+            images = np.loadtxt(images_txt)
+            axes[0].matshow(np.log10(images))
+            axes[1].matshow(np.log10(imagex))
+            axes[1].xaxis.tick_bottom()
+            axes[0].xaxis.tick_bottom()
+            axes[1].set_xlabel("Along")
+            fig.subplots_adjust(hspace=0)
+            fig.subplots_adjust(wspace=0)
+            fig.tight_layout()
+            plt.show()
+        taux_txt = os.path.join(txt_dir, "jet_image_tau_X_{:.1f}.txt".format(t_obs_days))
+        taus_txt = os.path.join(txt_dir, "jet_image_tau_S_{:.1f}.txt".format(t_obs_days))
+        resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max,
+                                      n_along, n_across)
+        ress = get_proj_core_position(images_txt, taus_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max,
+                                      n_along, n_across)
+        corex_positions.append(resx["tau_1_1_mas"])
+        cores_positions.append(ress["tau_1_1_mas"])
+
+    plt.scatter(ts_obs_days, np.array(cores_positions)-np.array(corex_positions))
+    plt.ylabel("Core shift, mas")
+    plt.xlabel("Time, days")
     plt.show()
