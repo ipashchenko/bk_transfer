@@ -3,7 +3,7 @@ import numpy as np
 from astropy import cosmology
 import astropy.units as u
 import matplotlib
-label_size = 16
+label_size = 20
 matplotlib.rcParams['xtick.labelsize'] = label_size
 matplotlib.rcParams['ytick.labelsize'] = label_size
 matplotlib.rcParams['axes.titlesize'] = label_size
@@ -165,18 +165,19 @@ if __name__ == "__main__":
     data_dir = "/home/ilya/data/rfc"
     txt_dir = "/home/ilya/fs/sshfs/calculon/github/bk_transfer/Release"
     source_template = "J0102+5824"
-    z = 1.3
-    plot = False
-    lg_pixel_size_mas_min = -2
-    lg_pixel_size_mas_max = -0.5
-    n_along = 1024
-    n_across = 256
+    z = 1.0
+    plot = True
+    lg_pixel_size_mas_min = -2.0
+    lg_pixel_size_mas_max = -0.0
+    n_along = 400
+    n_across = 80
 
     # ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
-    # 5 years once per 3 months
-    ts_obs_days = np.linspace(0, 1*12*30, 1*int(12/0.5))
+    ts_obs_days = np.linspace(300, 360*10, 50)
     corex_positions = list()
     cores_positions = list()
+    corex_fluxes = list()
+    cores_fluxes = list()
     for t_obs_days in ts_obs_days:
         print("T[days] = {:.1f}".format(t_obs_days))
         imagex_txt = os.path.join(txt_dir, "jet_image_i_X_{:.1f}.txt".format(t_obs_days))
@@ -186,6 +187,8 @@ if __name__ == "__main__":
             fig, axes = plt.subplots(2, 1, sharex=True)
             imagex = np.loadtxt(imagex_txt)
             images = np.loadtxt(images_txt)
+            print("Flux S = {:.2f} Jy".format(np.sum(images)))
+            print("Flux X = {:.2f} Jy".format(np.sum(imagex)))
             axes[0].matshow(np.log10(images))
             axes[1].matshow(np.log10(imagex))
             axes[1].xaxis.tick_bottom()
@@ -194,7 +197,9 @@ if __name__ == "__main__":
             fig.subplots_adjust(hspace=0)
             fig.subplots_adjust(wspace=0)
             fig.tight_layout()
-            plt.show()
+            # plt.savefig("tobs_{:.1f}.png".format(t_obs_days))
+            plt.close()
+            # plt.show()
         taux_txt = os.path.join(txt_dir, "jet_image_tau_X_{:.1f}.txt".format(t_obs_days))
         taus_txt = os.path.join(txt_dir, "jet_image_tau_S_{:.1f}.txt".format(t_obs_days))
         resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max,
@@ -203,8 +208,65 @@ if __name__ == "__main__":
                                       n_along, n_across)
         corex_positions.append(resx["tau_1_1_mas"])
         cores_positions.append(ress["tau_1_1_mas"])
+        corex_fluxes.append(resx["core_flux"])
+        cores_fluxes.append(ress["core_flux"])
 
-    plt.scatter(ts_obs_days, np.array(cores_positions)-np.array(corex_positions))
-    plt.ylabel("Core shift, mas")
-    plt.xlabel("Time, days")
+    CS = np.array(cores_positions)-np.array(corex_positions)
+    # fig, axes = plt.subplots(1, 1)
+    # axes.scatter(ts_obs_days, CS)
+    # axes.set_ylabel("Core shift, mas")
+    # axes.set_xlabel("Time, days")
+    # plt.show()
+
+    fig, axes = plt.subplots(1, 1, figsize=(15, 15))
+    axes.set_xlabel("Time, days")
+    axes2 = axes.twinx()
+    axes2.set_ylabel("Flux density, Jy")
+    axes.set_ylabel("Core shift, mas")
+    axes.tick_params("y")
+    axes2.tick_params("y")
+
+    axes.plot([], [], color="C0", label=r"$S_{\rm 8 GHz}$")
+    axes.plot([], [], color="C1", label=r"$S_{\rm 2 GHz}$")
+
+    axes.plot(ts_obs_days, CS, "--", label="CS", color="black")
+    axes.scatter(ts_obs_days, CS, color="black")
+    axes2.plot(ts_obs_days, corex_fluxes, color="C0", label="8 GHz")
+    axes2.scatter(ts_obs_days, corex_fluxes, color="C0", label="8 GHz")
+    axes2.plot(ts_obs_days, cores_fluxes, color="C1", label="2 GHz")
+    axes2.scatter(ts_obs_days, cores_fluxes, color="C1", label="2 GHz")
+
+    axes.legend()
+    plt.show()
+
+
+
+    fig, axes = plt.subplots(1, 1, figsize=(15, 15))
+    axes.set_xlabel("Time, days")
+    axes2 = axes.twinx()
+    axes2.set_ylabel("Flux density, Jy")
+    axes.set_ylabel("Core position, mas")
+    axes.tick_params("y")
+    axes2.tick_params("y")
+
+    axes.plot([], [], color="C0", label=r"$S_{\rm 8 GHz}$")
+    axes.plot([], [], color="C1", label=r"$S_{\rm 2 GHz}$")
+
+    axes.plot(ts_obs_days, corex_positions, "--", label=r"$r_{\rm 8 GHz}$", color="C0")
+    axes.scatter(ts_obs_days, corex_positions, color="C0")
+    axes.plot(ts_obs_days, cores_positions, "--", label=r"$r_{\rm 2 GHz}$", color="C1")
+    axes.scatter(ts_obs_days, cores_positions, color="C1")
+    axes2.plot(ts_obs_days, corex_fluxes, color="C0")
+    axes2.scatter(ts_obs_days, corex_fluxes, color="C0")
+    axes2.plot(ts_obs_days, cores_fluxes, color="C1")
+    axes2.scatter(ts_obs_days, cores_fluxes, color="C1")
+
+    axes.legend()
+    plt.show()
+
+
+    fig, axes = plt.subplots(1, 1)
+    axes.scatter(cores_fluxes, cores_positions)
+    axes.set_xlabel(r"$S_{\rm core}$, Jy")
+    axes.set_ylabel(r"$r_{\rm core}$, mas")
     plt.show()
