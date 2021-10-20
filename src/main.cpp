@@ -33,9 +33,11 @@ std::vector<double> run_on_analytic() {
 
 	// FIXME: z = 0 case leads to NaN intersections
     // M87
-    double redshift = 0.00436;
-//    double redshift = 0.1;
-    double los_angle = 17.0*M_PI/180.0;
+    // double redshift = 0.00436;
+    // double los_angle = 17.0*M_PI/180.0;
+    // 3C 84
+    double redshift = 0.017559;
+    double los_angle = 45.0*M_PI/180.0;
     // theta_pr = 60 deg for Gamma = 3
 //    double los_angle = 11.3*M_PI/180.0;
 
@@ -56,7 +58,7 @@ std::vector<double> run_on_analytic() {
     // Observed frequencies in GHz
     //std::vector<double> nu_observed_ghz{15.4, 12.1, 8.1};
 //    std::vector<double> nu_observed_ghz{15.4, 8.1};
-    std::vector<double> nu_observed_ghz{15.4};
+    std::vector<double> nu_observed_ghz{86.0};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
@@ -68,7 +70,7 @@ std::vector<double> run_on_analytic() {
     Vector3d origin = {0., 0., 0.};
     Vector3d direction = {0., 0., 1.};
     double big_scale = 1000*pc;
-    double cone_half_angle = 2.0*M_PI/180.0;
+    // double cone_half_angle = 2.0*M_PI/180.0;
     // For sheath
     //double R = 0.15*pc;
     // For jet only
@@ -128,7 +130,7 @@ std::vector<double> run_on_analytic() {
     BKScalarBField bk_bfield(0.025, 1.0, &geometry);
 
     // TODO: Tested
-    HelicalConicalBField jetbfield(0.05, 0.5, 10.*M_PI/180., true, 0.0, &geometry);
+    HelicalConicalBField jetbfield(0.1, 0.5, 45.*M_PI/180., true, 0.0, &geometry);
 //    HelicalCylinderBField jetbfield(0.0001, 30.0*M_PI/180., true, 0.0, &geometry);
 //    ToroidalBField jetbfield(0.01, 1.0, false, 0.0, &geometry);
 
@@ -155,19 +157,16 @@ std::vector<double> run_on_analytic() {
     //LenaMHDBFieldShell bfield(0.0, -0.02, 0.1, 0.15, 0.0);
 
     std::vector<VectorBField*> vbfields;
-//    vbfields.push_back(&jetbfield);
-    //bfields.push_back(&jetbfield_sheath);
-    //bfields.push_back(&jetbfield_spine);
-    //bfields.push_back(&rotm_screen_bfield);
+    vbfields.push_back(&jetbfield);
     std::vector<ScalarBField*> sbfields;
-    sbfields.push_back(&bk_bfield);
+    // sbfields.push_back(&bk_bfield);
 
     // Setting components of N-fields ==================================================================================
     // Exponent of the power-law particle Lorenz factor distribution
     double s = 2.5;
-    double ds = 0.0;
-    double gamma_min = 1.0;
-    PowerLaw particles(s, gamma_min, "pairs");
+    double ds = 0.01;
+    double gamma_min = 100.0;
+    PowerLaw particles(s, gamma_min, "pairs", true, ds);
     // Value at r=1pc
     double K_1 = 2;
     // Working with spirals
@@ -231,14 +230,14 @@ std::vector<double> run_on_analytic() {
 
     // Setting V-field =================================================================================================
     VField* vfield;
-    bool central_vfield = true;
-    double Gamma = 3.42;
+    bool central_vfield = false;
+    double Gamma = 2.00;
     // Working with spirals
 //    double Gamma = 1.20;
     if (central_vfield) {
         vfield = new ConstCentralVField(Gamma, &geometry, 0.0);
     } else {
-        vfield = new ConstFlatVField(Gamma, &geometry, 0.05);
+        vfield = new ConstFlatVField(Gamma, &geometry, 0.0);
     }
     //vfield = new ConstFlatVField(Gamma, &geometry, 0.0);
     //vfield = new SheathFlatVField(2.0, 3.4, &geometry_spine, &geometry_sheath,
@@ -256,11 +255,11 @@ std::vector<double> run_on_analytic() {
     int number_of_pixels_along = 512;
 //    int number_of_pixels_along = 500;
     //int number_of_pixels_across = 150;
-    int number_of_pixels_across = 80;
+    int number_of_pixels_across = 128;
     // Non-uniform pixel from ``pixel_size_mas_start`` (near BH) to ``pixel_size_mas_stop`` (image edges)
-    double pixel_size_mas_start = pow(10.0, -1.5);
+    double pixel_size_mas_start = pow(10.0, -3);
     //double pixel_size_mas_start = 0.06;
-    double pixel_size_mas_stop = pow(10.0, -0.5);
+    double pixel_size_mas_stop = pow(10.0, -2);
     //double pixel_size_mas_stop = 0.06;
     auto image_size = std::make_pair(number_of_pixels_across, number_of_pixels_along);
     auto pc_in_mas = mas_to_pc(redshift);
@@ -307,7 +306,7 @@ std::vector<double> run_on_analytic() {
 
         // FIXME: Put out of frequency loop - these do not depend on frequency
         // Setting transfer-specific parameters ========================================================================
-        double tau_max = 10;
+        double tau_max = 30;
         double dt_max_pc = 0.01;
         double dt_max = pc*dt_max_pc;
         double tau_min_log10 = -20.0;
