@@ -671,6 +671,7 @@ int main(int argc, char *argv[]) {
                      " lg_pixel_size_mas_start, lg_pixel_size_mas_stop,\n"
 //                     " t_obs (months), flare_params: [amp, t_start (month), width (pc)]\n" << "\n";
                      " t_obs (months), flare_params: [amp_N, amp_B, t_start (month), width (pc)]\n" << "\n";
+                     " t_obs (days), flare_params: [amp, t_start (days), width (pc)]\n" << "\n";
         return 1;
     }
     else {
@@ -706,7 +707,7 @@ int main(int argc, char *argv[]) {
         std::cout << "lg(max_pixel_size[mas]) = " << argv[10] << "\n";
 
         double t_obs = atof(argv[11]);
-        std::cout << "t_obs(months) = " << argv[11] << "\n";
+        std::cout << "t_obs(days) = " << argv[11] << "\n";
 
         double frac_amp, frac_amp_B, t_start_days, flare_width_pc;
         for(int i = 0; i < num_of_flares; i++){
