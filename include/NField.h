@@ -41,7 +41,7 @@ class BKNField: public NField {
     public:
         BKNField(double n_0, double n_n, ParticlesDistribution* particles, bool in_plasma_frame,
                  Geometry* geometry_out, Geometry* geometry_in = nullptr, VField* vfield = nullptr);
-        double _nf(const Vector3d &point, const double t = 0.0) const override;
+        double _nf(const Vector3d &point, double t = 0.0) const override;
         void set_heating_profile(double r_mean, double r_width, double background_fraction = 0.0);
         void set_spiral(double phase_0, double lambda_0, double amp_0);
         int number_of_spirals() const {

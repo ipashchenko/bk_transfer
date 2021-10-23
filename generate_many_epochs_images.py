@@ -17,10 +17,10 @@ source_template = "J0102+5824"
 # 5 years once per 3 months
 ts_obs_days = np.linspace(0, 5*12*30, 5*int(12/3))
 n_first = None
-# frac.amp, t_start[days], width[pc]
-flare_params = [5.0, 0.0, 2.,
-                10.0, 500.0, 2.,
-                10.0, 1000.0, 2.]
+# frac.amp.N, frac.amp.B, t_start[days], width[pc]
+flare_params = [5.0, 0.0, 0.0, 2.,
+                10.0, 0.0, 500.0, 2.,
+                10.0, 0.0, 1000.0, 2.]
 
 # Construct params file
 with open("parallels_run.txt".format(source_template), "w") as fo:
@@ -39,5 +39,5 @@ with open("parallels_run.txt".format(source_template), "w") as fo:
 exec_dir = "/home/ilya/github/bk_transfer/Release"
 os.chdir(exec_dir)
 
-os.system("parallel --files --results t_obs_{11} --joblog log --jobs 4"
+os.system("parallel --files --results t_obs_{11} --joblog log --jobs 6"
           " -a /home/ilya/github/bk_transfer/parallels_run.txt -n 1 -m --colsep ' ' \"./bk_transfer\"")

@@ -4,6 +4,7 @@
 #include <Eigen/Eigen>
 #include "utils.h"
 #include "Geometry.h"
+#include "VField.h"
 
 using Eigen::Vector3d;
 
@@ -14,24 +15,52 @@ const double l_eps_B = 0.001*pc;
 // as it can't be transferred to the plasma frame if specified in a lab frame.
 class ScalarBField {
     public:
-        virtual double _bf(const Vector3d &point) const = 0 ;
-        double bf(const Vector3d &point) const;
+        virtual double _bf(const Vector3d &point, double t = 0.0) const = 0 ;
+        double bf(const Vector3d &point, double t = 0.0) const;
         // In plasma frame
-        double bf_plasma_frame(const Vector3d &point, Vector3d &v) const;
+        double bf_plasma_frame(const Vector3d &point, Vector3d &v, double t = 0.0) const;
     protected:
-        ScalarBField(Geometry* geometry_out=nullptr, Geometry* geometry_in=nullptr);
+        ScalarBField(Geometry* geometry_out=nullptr, Geometry* geometry_in=nullptr, VField* vfield= nullptr);
         Geometry* geometry_in_;
         Geometry* geometry_out_;
+        VField* vfield_;
 };
 
 class BKScalarBField : public ScalarBField {
     public:
-        BKScalarBField(double b_0, double m_b, Geometry* geometry_out=nullptr, Geometry* geometry_in=nullptr);
-        double _bf(const Vector3d &point) const override;
+        BKScalarBField(double b_0, double m_b, Geometry* geometry_out=nullptr, Geometry* geometry_in=nullptr,
+                       VField* vfield= nullptr);
+        double _bf(const Vector3d &point, double t = 0.0) const override;
     private:
         double b_0_;
         double m_b_;
 };
+
+
+
+
+class FlareBKScalarBField : public BKScalarBField {
+    public:
+        FlareBKScalarBField(double b_0, double m_b, double t_start, double width_pc, double theta_los, double z,
+                            Geometry* geometry_out, Geometry* geometry_in = nullptr,
+                            VField* vfield = nullptr);
+        double _bf(const Vector3d &point, double t = 0.0) const override;
+    private:
+        // Flare amplitude. To add flare to stationary BKNField with some ``n_0``, ``n_n``, use the same ``n_n`` but
+        // define flare's ``n_0_fl`` as ``n_0*(1 + A_N)``, where ``A_N`` - fractional increase/decrease of particles in
+        // flare
+        double t_start_;
+        double width_pc_;
+        // LOS angle for the jet axis
+        double theta_los_;
+        // redshift
+        double z_;
+};
+
+
+
+
+
 
 
 // B-field with vector values, e.g. ordered component or ordered component with cells, with specified fraction of the

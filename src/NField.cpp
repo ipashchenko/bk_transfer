@@ -136,17 +136,12 @@ FlareBKNField::FlareBKNField(double n_0, double n_n, double t_start, double widt
 double FlareBKNField::_nf(const Vector3d &point, const double t) const {
     // Direction to the observer
     Vector3d n_los = {sin(theta_los_), 0, cos(theta_los_)};
-//    Vector3d v = vfield_->vf(point).normalized();
     Vector3d v = vfield_->vf(point);
     Vector3d v_hat = v.normalized();
     double cos_theta_local = v_hat.dot(n_los);
-//    double sin_theta_local = sqrt(1.0 - cos_theta_local*cos_theta_local);
     double beta = v.norm()/c;
     double beta_app = beta/(1.0 - beta*cos_theta_local)/(1.0 + z_);
 
-//    std::cout << "beta_app = " << beta_app << "\n";
-
     double r = point.norm();
-//    return n_0_ * pow(r/pc, -n_n_) * exp(-pow(r*sin_theta_local - beta_app*c*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
     return n_0_ * pow(r/pc, -n_n_) * exp(-pow(r - beta_app*c*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
 }

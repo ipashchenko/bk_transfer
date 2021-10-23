@@ -361,19 +361,8 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
     double cone_half_angle = cone_half_angle_deg*M_PI/180.0;
     Cone geometry(origin, direction, cone_half_angle, big_scale);
 
-    // Setting B-field
-    BKScalarBField bk_bfield(b_0, m_b, &geometry);
 
-    std::vector<VectorBField*> vbfields;
-    std::vector<ScalarBField*> sbfields;
-    sbfields.push_back(&bk_bfield);
-
-    // Setting components of N-fields ==================================================================================
-    PowerLaw particles(s, gamma_min, "pairs");
-    BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
-
-
-    // Setting V-field =================================================================================================
+    // We need to set VField for flares first===========================================================================
     VField* vfield;
     bool central_vfield = true;
     if (central_vfield) {
@@ -381,19 +370,58 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
     } else {
         vfield = new ConstFlatVField(Gamma, &geometry, 0.05);
     }
+    // =================================================================================================================
 
-    double frac_amp, t_start_days, flare_width_pc;
-    int num_flares = flare_params.size()/3;
+    // Setting B-field =================================================================================================
+    BKScalarBField bk_bfield(b_0, m_b, &geometry);
+
+    std::vector<VectorBField*> vbfields;
+    std::vector<ScalarBField*> sbfields;
+    sbfields.push_back(&bk_bfield);
+
+
+
+
+    double frac_amp, frac_amp_B, t_start_days, flare_width_pc;
+    int num_flares = flare_params.size()/4;
+    FlareBKScalarBField* bk_flare_bfield;
+    for(int i = 0; i < num_flares; i++){
+        frac_amp = flare_params[4*i + 0];
+        frac_amp_B = flare_params[4*i + 1];
+        t_start_days = flare_params[4*i + 2];
+        // In sec
+        t_start_days *= 24.0 * 60.0 * 60.0;
+        flare_width_pc = flare_params[4*i + 3];
+        bk_flare_bfield = new FlareBKScalarBField(frac_amp_B*b_0, m_b, t_start_days, flare_width_pc,
+                                                  los_angle, redshift, &geometry, nullptr, vfield);
+        sbfields.push_back(bk_flare_bfield);
+    }
+
+    // =================================================================================================================
+
+
+
+
+
+
+
+
+    // Setting components of N-fields ==================================================================================
+    PowerLaw particles(s, gamma_min, "pairs");
+    BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
+
+
     std::vector<NField*> nfields;
     nfields.push_back(&bk_stat_nfield);
 
     FlareBKNField* bk_flare_nfield;
     for(int i = 0; i < num_flares; i++){
-        frac_amp = flare_params[3*i + 0];
-        t_start_days = flare_params[3 * i + 1];
+        frac_amp = flare_params[4*i + 0];
+        frac_amp_B = flare_params[4*i + 1];
+        t_start_days = flare_params[4*i + 2];
         // In sec
         t_start_days *= 24.0 * 60.0 * 60.0;
-        flare_width_pc = flare_params[3*i + 2];
+        flare_width_pc = flare_params[4*i + 3];
         bk_flare_nfield = new FlareBKNField(frac_amp*K_1, n, t_start_days, flare_width_pc, &particles,
                                             true, los_angle, redshift, &geometry, nullptr, vfield);
         nfields.push_back(bk_flare_nfield);
@@ -632,16 +660,17 @@ int main(int argc, char *argv[]) {
     std::vector<double> total_fluxes;
     std::vector<double> flare_params;
 
-    int num_of_flares = (argc - 12) / 3;
+    int num_of_flares = (argc - 12) / 4;
     std::cout << "Number of flares : " << num_of_flares << "\n";
-    int argc_pred = 12 + 3 * num_of_flares;
+    int argc_pred = 12 + 4 * num_of_flares;
 
     if(argc != argc_pred){
         std::cout << argc << "\n";
         std::cout << "Supply redshift, LOS-angle (deg), Cone half-angle (deg),"
                      " B_1 [G], K_1 [cm^{-3}], Gamma, N_along, N_across,"
                      " lg_pixel_size_mas_start, lg_pixel_size_mas_stop,\n"
-                     " t_obs (months), flare_params: [amp, t_start (month), width (pc)]\n" << "\n";
+//                     " t_obs (months), flare_params: [amp, t_start (month), width (pc)]\n" << "\n";
+                     " t_obs (months), flare_params: [amp_N, amp_B, t_start (month), width (pc)]\n" << "\n";
         return 1;
     }
     else {
@@ -679,15 +708,18 @@ int main(int argc, char *argv[]) {
         double t_obs = atof(argv[11]);
         std::cout << "t_obs(months) = " << argv[11] << "\n";
 
-        double frac_amp, t_start_days, flare_width_pc;
+        double frac_amp, frac_amp_B, t_start_days, flare_width_pc;
         for(int i = 0; i < num_of_flares; i++){
-            frac_amp = atof(argv[11 + 3*i + 1]);
-            std::cout << "Frac.amp = " << frac_amp << "\n";
-            t_start_days = atof(argv[11 + 3 * i + 2]);
+            frac_amp = atof(argv[11 + 4*i + 1]);
+            std::cout << "Frac.amp N = " << frac_amp << "\n";
+            frac_amp_B = atof(argv[11 + 4*i + 2]);
+            std::cout << "Frac.amp B = " << frac_amp_B << "\n";
+            t_start_days = atof(argv[11 + 4*i + 3]);
             std::cout << "T_start (days) = " << t_start_days << "\n";
-            flare_width_pc = atof(argv[11 + 3*i + 3]);
+            flare_width_pc = atof(argv[11 + 4*i + 4]);
             std::cout << "Width (pc) = " << flare_width_pc << "\n";
             flare_params.push_back(frac_amp);
+            flare_params.push_back(frac_amp_B);
             flare_params.push_back(t_start_days);
             flare_params.push_back(flare_width_pc);
         }
