@@ -53,7 +53,11 @@ void TauFR::operator()(const double &x, double &dxdt, double t) {
 
 // FIXME: Test w/o compensating negative
 void I::operator()(const double &x, double &dxdt, const double t) {
-//    std::cout << "I = " << x << "\n";
+    // Check that I is non-negative after previous step
+    if(x < 0){
+        throw NegativeI();
+    }
+
     Vector3d point = point_start + t * ray_direction;
 
     double k_i, eta_i;

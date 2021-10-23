@@ -78,4 +78,11 @@ class NegativeKI : public std::exception {
         }
 };
 
+
+class NegativeI : public std::exception {
+        const char * what () const noexcept override {
+            return "I < 0!";
+        }
+};
+
 #endif //MHD_TRANSFER_INCLUDE_MYEXCEPTIONS_H
