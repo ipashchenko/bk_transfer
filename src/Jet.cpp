@@ -39,7 +39,7 @@ std::tuple<double, double, double, double, double, double, double, double, doubl
     }
 
     for (auto sbfield_: sbfields_) {
-        b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
+        b_prime_tangled += sbfield_->bf_plasma_frame(point, v, t_obs_);
     }
 
     if(b_prime.norm() < eps_B) {
@@ -114,7 +114,7 @@ std::tuple<double, double> Jet::get_stokes_I_transport_coefficients(Vector3d &po
         b_prime_tangled += local_b_prime.norm()*bfield_->get_tangled_fraction(point);
     }
     for (auto sbfield_: sbfields_) {
-        b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
+        b_prime_tangled += sbfield_->bf_plasma_frame(point, v, t_obs_);
     }
 
     if(b_prime.norm() < eps_B && b_prime_tangled < eps_B){
@@ -168,7 +168,7 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
         b_prime_tangled += local_b_prime.norm()*bfield_->get_tangled_fraction(point);
     }
     for (auto sbfield_: sbfields_) {
-        b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
+        b_prime_tangled += sbfield_->bf_plasma_frame(point, v, t_obs_);
     }
 
 //    std::cout << "B' = " << b_prime_tangled << "\n";
@@ -226,7 +226,7 @@ double Jet::getEtaI(Vector3d &point, Vector3d &n_los, double nu) {
         b_prime_tangled += local_b_prime.norm()*bfield_->get_tangled_fraction(point);
     }
     for (auto sbfield_: sbfields_) {
-        b_prime_tangled += sbfield_->bf_plasma_frame(point, v);
+        b_prime_tangled += sbfield_->bf_plasma_frame(point, v, t_obs_);
     }
 
     if(b_prime.norm() < eps_B && b_prime_tangled < eps_B) {
