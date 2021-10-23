@@ -17,8 +17,8 @@ source_template = "J0102+5824"
 # 5 years once per 3 months
 ts_obs_days = np.linspace(300, 10*360, 50)
 n_first = None
-# frac.amp, t_start[days], width[pc]
-flare_params = [5.0, 0.0, 2.]
+# frac.amp.N, frac.amp.B, t_start[days], width[pc]
+flare_params = [5.0, 0.0, 0.0, 2.]
                 # 10.0, 100.0, 2.,
                 # 10.0, 200.0, 2.]
 
@@ -35,9 +35,7 @@ with open("parallels_run.txt".format(source_template), "w") as fo:
         fo.write("{}".format(flare_params[-1]))
         fo.write("\n")
 
-
 exec_dir = "/home/ilya/github/bk_transfer/Release"
 os.chdir(exec_dir)
-
 os.system("parallel --files --results t_obs_{11} --joblog log --jobs 6"
           " -a /home/ilya/github/bk_transfer/parallels_run.txt -n 1 -m --colsep ' ' \"./bk_transfer\"")
