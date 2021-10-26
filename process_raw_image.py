@@ -186,6 +186,7 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
 # # axes_I.legend(loc=1)
 # plt.show()
 
+
 if __name__ == "__main__":
     data_dir = "/home/ilya/data/rfc"
     txt_dir = "/home/ilya/fs/sshfs/calculon/github/bk_transfer/Release"
@@ -200,7 +201,7 @@ if __name__ == "__main__":
 
     t_start_days = 0.0
     amp_N = 5.0
-    amp_B = 0.0
+    amp_B = -0.5
     l_pc = 2.0
     Gamma = 10.0
     theta_deg = 5.0
@@ -240,7 +241,7 @@ if __name__ == "__main__":
             fig.subplots_adjust(hspace=0)
             fig.subplots_adjust(wspace=0)
             fig.tight_layout()
-            # plt.savefig("tobs_{:.1f}.png".format(t_obs_days))
+            plt.savefig("tobs_{:.1f}.png".format(t_obs_days))
             plt.close()
             # plt.show()
         taux_txt = os.path.join(txt_dir, "jet_image_tau_X_{:.1f}.txt".format(t_obs_days))
@@ -267,6 +268,7 @@ if __name__ == "__main__":
         print("Jet flux S = {:.2f}".format(jets_fluxes[-1]))
 
     CS = np.array(cores_positions)-np.array(corex_positions)
+
 
     fig, axes = plt.subplots(1, 1, figsize=(15, 15))
     axes.set_xlabel("Time, days")
@@ -295,7 +297,6 @@ if __name__ == "__main__":
     axes.legend()
     # fig.savefig(os.path.join(save_dir, "CS_rc_Sc_t_true.png"), bbox_inches="tight")
     plt.show()
-
 
 
     fig, axes = plt.subplots(1, 1, figsize=(15, 15))
@@ -344,8 +345,9 @@ if __name__ == "__main__":
     axes.set_xlabel(r"$N_{\rm core}, {\rm cm}^{-3}$")
     axes.set_ylabel(r"$B_{\rm core}, {\rm G}$")
     plt.legend()
-    fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Sband.png"), bbox_inches="tight")
+    # fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Sband.png"), bbox_inches="tight")
     plt.show()
+
 
     med_B = np.median(B_core_X)
     med_N = np.median(N_core_X)
@@ -355,5 +357,5 @@ if __name__ == "__main__":
     axes.set_xlabel(r"$N_{\rm core}, {\rm cm}^{-3}$")
     axes.set_ylabel(r"$B_{\rm core}, {\rm G}$")
     plt.legend()
-    fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Xband.png"), bbox_inches="tight")
+    # fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Xband.png"), bbox_inches="tight")
     plt.show()

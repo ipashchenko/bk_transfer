@@ -361,7 +361,6 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
     double cone_half_angle = cone_half_angle_deg*M_PI/180.0;
     Cone geometry(origin, direction, cone_half_angle, big_scale);
 
-
     // We need to set VField for flares first===========================================================================
     VField* vfield;
     bool central_vfield = true;
@@ -378,9 +377,6 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
     std::vector<VectorBField*> vbfields;
     std::vector<ScalarBField*> sbfields;
     sbfields.push_back(&bk_bfield);
-
-
-
 
     double frac_amp, frac_amp_B, t_start_days, flare_width_pc;
     int num_flares = flare_params.size()/4;
@@ -399,17 +395,9 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
 
     // =================================================================================================================
 
-
-
-
-
-
-
-
     // Setting components of N-fields ==================================================================================
     PowerLaw particles(s, gamma_min, "pairs");
     BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
-
 
     std::vector<NField*> nfields;
     nfields.push_back(&bk_stat_nfield);
@@ -640,6 +628,7 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
     return total_fluxes;
 }
 
+
 int main2() {
     std::vector<double> total_fluxes;
     total_fluxes = run_on_analytic();
@@ -648,9 +637,6 @@ int main2() {
     }
     return 0;
 }
-
-
-
 
 
 // To run in parallel when fil params_3ridges.txt has 3 parameter sets:
