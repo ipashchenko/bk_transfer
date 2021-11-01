@@ -49,9 +49,12 @@ BKNField::BKNField(double n_0, double n_n, ParticlesDistribution* particles, boo
         NField(in_plasma_frame, particles, geometry_out, geometry_in, vfield),
         n_0_(n_0),
         n_n_(n_n),
+        amp_border_(1.0),
         r_mean_(0.0),
         r_width_(0.0),
-        background_fraction_(0.025),
+        amp_axis_(1.0),
+        r_width_axis_(0.0),
+        background_fraction_(0.0),
         is_profile_set_(false),
         phases_0_(),
         lambdas_0_(),
@@ -72,7 +75,7 @@ double BKNField::_nf(const Vector3d &point, const double t) const {
         double y = point[1];
         double R_cur = hypot(x, y);
         double R_out = geometry_out_->radius_at_given_distance(point);
-        return (generalized1_gaussian1d(R_cur / R_out, r_mean_, r_width_, 2) + background_fraction_) * raw_density;
+        return (amp_axis_*generalized1_gaussian1d(R_cur / R_out, 0.0, r_width_axis_, 2) + amp_border_*generalized1_gaussian1d(R_cur / R_out, r_mean_, r_width_, 2) + background_fraction_) * raw_density;
     }
     // If we are modelling KH modes
     else if (is_spirals_present_){
@@ -102,12 +105,15 @@ double BKNField::_nf(const Vector3d &point, const double t) const {
 }
 
 
-void BKNField::set_heating_profile(double r_mean, double r_width, double background_fraction) {
+void BKNField::set_heating_profile(double amp_border, double r_mean, double r_width, double amp_axis, double r_width_axis, double background_fraction) {
     if (r_mean > 1 || r_mean < 0.0 || r_width < 0.0 || background_fraction < 0.0 || background_fraction_ > 1.0){
         throw BadHeatingProfileParameters();
     }
+    amp_border_ = amp_border;
     r_mean_ = r_mean;
     r_width_ = r_width;
+    amp_axis_ = amp_axis;
+    r_width_axis_ = r_width_axis;
     background_fraction_ = background_fraction;
     is_profile_set_ = true;
 }

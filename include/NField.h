@@ -42,7 +42,7 @@ class BKNField: public NField {
         BKNField(double n_0, double n_n, ParticlesDistribution* particles, bool in_plasma_frame,
                  Geometry* geometry_out, Geometry* geometry_in = nullptr, VField* vfield = nullptr);
         double _nf(const Vector3d &point, double t = 0.0) const override;
-        void set_heating_profile(double r_mean, double r_width, double background_fraction = 0.0);
+        void set_heating_profile(double amp_border, double r_mean, double r_width, double amp_axis, double r_width_axis, double background_fraction = 0.0);
         void set_spiral(double phase_0, double lambda_0, double amp_0);
         int number_of_spirals() const {
             return lambdas_0_.size();
@@ -52,8 +52,11 @@ class BKNField: public NField {
         double n_0_;
         double n_n_;
         // Heating profile
+        double amp_border_;
         double r_mean_;
         double r_width_;
+        double amp_axis_;
+        double r_width_axis_;
         double background_fraction_;
         bool is_profile_set_;
         // Spirals
