@@ -171,7 +171,7 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
         b_prime_tangled += sbfield_->bf_plasma_frame(point, v, t_obs_);
     }
 
-//    std::cout << "B' = " << b_prime_tangled << "\n";
+//    std::cout << "B' = " << b_prime << "\n";
 
     // FIXME: DEBUG
     if(b_prime.norm() < eps_B && b_prime_tangled < eps_B) {
@@ -195,7 +195,8 @@ double Jet::getKI(Vector3d &point, Vector3d &n_los, double nu) {
     auto result = k_i_prime/D;
 //    std::cout << "k_I = " << result << "\n";
     if(isnan(result)) {
-        std::cout << "NaN in k_I!" << std::endl;
+//        std::cout << "NaN in k_I!" << std::endl;
+        throw NaNResult();
     }
     if(result < 0){
         throw NegativeKI();
@@ -246,7 +247,7 @@ double Jet::getEtaI(Vector3d &point, Vector3d &n_los, double nu) {
     }
     auto result = eta_i_prime*D*D;
     if(isnan(result)) {
-        std::cout << "NaN in eta_I!" << std::endl;
+        throw NaNResult();
     }
     return result;
 }
@@ -282,7 +283,7 @@ double Jet::getKF(Vector3d &point, Vector3d &n_los, double nu) {
     }
     auto result = k_F_prime/D;
     if(isnan(result)) {
-        std::cout << "NaN in k_F!" << std::endl;
+        throw NaNResult();
     }
     return result;
 }
