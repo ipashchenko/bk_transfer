@@ -88,9 +88,11 @@ pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection>
 		double length = (point_out - point_in).norm();
 //        std::cout << "length(pc) = " << length/pc << "\n";
 
-        // FIXME: This is how dt_max should be specified: as N to divide the path.
+        // Initial step size
         double dt = length/n;
-        dt_max = dt;
+        if(dt_max > dt){
+            dt_max = dt;
+        }
 //        std::cout << "dt_max(pc) = " << dt_max/pc << "\n";
 
 		// Directed to observer (as we integrate ``k`` only)
@@ -177,6 +179,9 @@ void Observation::integrate_i_adaptive(std::list<Intersection> &list_intersect, 
         double length = (point_out - point_in).norm();
         // Initial step size (will be adjusted)
         double dt = length / n;
+        if(dt_max > dt){
+            dt_max = dt;
+        }
 
         Vector3d inv_direction = -1. * ray_direction;
         // Here ``inv_direction`` points to the observer as it is an argument of k_I
@@ -215,6 +220,9 @@ void Observation::integrate_speed_adaptive(std::list<Intersection> &list_interse
         double length = (point_out - point_in).norm();
         // Initial step size (will be adjusted)
         double dt = length / n;
+        if(dt_max > dt){
+            dt_max = dt;
+        }
 
         Vector3d inv_direction = -1. * ray_direction;
         Speed speed(jet, point_out, inv_direction, nu);
@@ -266,8 +274,11 @@ void Observation::integrate_full_stokes_adaptive(std::list<Intersection> &list_i
 		Vector3d point_out = borders.second;
 
 		double length = (point_out - point_in).norm();
+        // Initial step size, will be adjusted
 		double dt = length / n;
-
+        if(dt_max > dt){
+            dt_max = dt;
+        }
 		Vector3d inv_direction = -1. * ray_direction;
 		FullStokes full_stokes(jet, point_out, inv_direction, nu);
 		typedef runge_kutta_dopri5<std::vector<double>> stepper_type;
@@ -293,8 +304,11 @@ void Observation::integrate_faraday_rotation_depth_adaptive(std::list<Intersecti
         Vector3d point_out = borders.second;
 
         double length = (point_out - point_in).norm();
+        // Initial step size. Will be adjusted
         double dt = length / n;
-
+        if(dt_max > dt){
+            dt_max = dt;
+        }
         //std::cout << "dt = " << dt << std::endl;
 
         Vector3d inv_direction = -1. * ray_direction;

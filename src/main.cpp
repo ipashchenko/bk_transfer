@@ -33,13 +33,14 @@ std::vector<double> run_on_analytic() {
 
 	// FIXME: z = 0 case leads to NaN intersections
     // M87
-//    double redshift = 0.00436;
-//    double los_angle = 17.0*M_PI/180.0;
-    double redshift = 0.5;
-    double los_angle = 3.0*M_PI/180.0;
+    double redshift = 0.00436;
+    double los_angle = 17.0*M_PI/180.0;
+    // 3C 84
+//    double redshift = 0.017559;
+//    double los_angle = 20.0*M_PI/180.0;
 
     // Observed frequencies in GHz
-    std::vector<double> nu_observed_ghz{2.1};
+    std::vector<double> nu_observed_ghz{8.1, 15.4};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
@@ -51,58 +52,53 @@ std::vector<double> run_on_analytic() {
     Vector3d origin = {0., 0., 0.};
     Vector3d direction = {0., 0., 1.};
     double big_scale = 1000*pc;
-    double cone_half_angle = 1.5*M_PI/180.0;
-    Cone geometry(origin, direction, cone_half_angle, big_scale);
+//    double cone_half_angle = 1.5*M_PI/180.0;
+//    Cone geometry(origin, direction, cone_half_angle, big_scale);
 //    double R_cyl = 0.125*pc;
 //    Cylinder geometry(origin, direction, R_cyl);
-//    double R_1pc = 0.1*pc;
-//    Parabaloid geometry(origin, direction, R_1pc, big_scale, true);
+    double R_1pc = 0.1*pc;
+    Parabaloid geometry(origin, direction, R_1pc, big_scale, true);
 
     // Setting B-field
-    BKScalarBField bk_bfield(1.0, 1.0, &geometry);
-//    HelicalConicalBField jetbfield(0.05, 0.5, 10.*M_PI/180., true, 0.0, &geometry);
+    BKScalarBField bk_bfield(0.05, 0.5, &geometry);
+//    HelicalConicalBField jetbfield(0.05, 0.5, 85.*M_PI/180., true, 0.0, &geometry);
 
     std::vector<VectorBField*> vbfields;
     std::vector<ScalarBField*> sbfields;
     sbfields.push_back(&bk_bfield);
+//    vbfields.push_back(&jetbfield);
+
 
     // Setting components of N-fields ==================================================================================
-    double s = 2.5;
-    double ds = 0.0;
-    double gamma_min = 1.0;
-    PowerLaw particles(s, gamma_min, "pairs");
+    double s = 2.0;
+    double ds = 0.01;
+    double gamma_min = 10.0;
+    PowerLaw particles(s, gamma_min, "pairs", false);
     // Value at r=1pc
-    double K_1 = 5000;
+    double K_1 = 0.05;
     // Exponent of the decrease
-    double n = 2.0;
+    double n = 1.0;
     BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
+//    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 1.0, 0.025, 0.01);
 
 
     // Setting V-field =================================================================================================
     VField* vfield;
-    bool central_vfield = true;
-    double Gamma = 10.0;
+    bool central_vfield = false;
+    double Gamma = 1.2;
+    // Gamma(z) = Gamma_0 + Gamma_1*(z/1pc)^{0.5}
+    double Gamma_0 = 1.2;
+    double Gamma_1 = 2.0;
     // Working with spirals
     //double Gamma = 1.20;
-    if (central_vfield) {
-        vfield = new ConstCentralVField(Gamma, &geometry, 0.0);
-    } else {
-        vfield = new ConstFlatVField(Gamma, &geometry, 0.05);
-    }
+//    if (central_vfield) {
+//        vfield = new ConstCentralVField(Gamma, &geometry, 0.0);
+//    } else {
+//        vfield = new ConstFlatVField(Gamma, &geometry, 0.0);
+//    }
+//    vfield = new ConstParabolicVField(Gamma, &geometry, 0.0);
+    vfield = new AccelParabolicVField(Gamma_0, Gamma_1, &geometry, 0.0);
 
-
-
-    // Flare start time in sec
-    // In months
-    double t_start_1 = 30.0;
-    t_start_1 *= 30.0 * 24.0 * 60.0 * 60.0;
-    double t_start_2 = 10.0;
-    t_start_2 *= 30.0 * 24.0 * 60.0 * 60.0;
-    double flare_width_pc = 2.5;
-    FlareBKNField bk_flare_nfield_1(10 * K_1, n, t_start_1, flare_width_pc, &particles, true, los_angle, redshift,
-                                    &geometry, nullptr, vfield);
-    FlareBKNField bk_flare_nfield_2(5 * K_1, n, t_start_2, flare_width_pc, &particles, true, los_angle, redshift,
-                                    &geometry, nullptr, vfield);
 
     // Working spirals implementation
 //    bk_stat_nfield.set_spiral(0.0, 30.0 * R_1pc, 0.9 * R_1pc);
@@ -111,8 +107,6 @@ std::vector<double> run_on_analytic() {
 
     std::vector<NField*> nfields;
     nfields.push_back(&bk_stat_nfield);
-    nfields.push_back(&bk_flare_nfield_1);
-    nfields.push_back(&bk_flare_nfield_2);
 
 
     Jet bkjet(&geometry, vfield, sbfields, vbfields, nfields);
@@ -120,10 +114,10 @@ std::vector<double> run_on_analytic() {
     // FIXME: Put inside frequency loop for dep. on frequency
     // Setting parameters of pixels and image ==========================================================================
     int number_of_pixels_along = 1024;
-    int number_of_pixels_across = 512;
+    int number_of_pixels_across = 128;
     // Non-uniform pixel from ``pixel_size_mas_start`` (near BH) to ``pixel_size_mas_stop`` (image edges)
     double pixel_size_mas_start = pow(10.0, -2.0);
-    double pixel_size_mas_stop = pow(10.0, -1.0);
+    double pixel_size_mas_stop = pow(10.0, -0.5);
     auto image_size = std::make_pair(number_of_pixels_across, number_of_pixels_along);
     auto pc_in_mas = mas_to_pc(redshift);
     std::cout << "pc_in_mas " << pc_in_mas << std::endl;
@@ -135,9 +129,9 @@ std::vector<double> run_on_analytic() {
     for(auto jet_side : {true, false}) {
 
         // Ignore CJ
-        if(jet_side == false) {
-            continue;
-        }
+//        if(jet_side == false) {
+//            continue;
+//        }
 
         ImagePlane imagePlane(image_size, lg_pixel_size_start, lg_pixel_size_stop, los_angle, jet_side);
         // Array of pixel sizes in cm
@@ -170,6 +164,7 @@ std::vector<double> run_on_analytic() {
         // FIXME: Put out of frequency loop - these do not depend on frequency
         // Setting transfer-specific parameters ========================================================================
         double tau_max = 30;
+        // Maximal step size. Will be used this value of geometrical path divided by n (which is smaller)
         double dt_max_pc = 0.01;
         double dt_max = pc*dt_max_pc;
         double tau_min_log10 = -20.0;
@@ -202,9 +197,10 @@ std::vector<double> run_on_analytic() {
                 }
             }
 
-            if(jet_side == true){
-                total_fluxes.push_back(total_flux);
-            }
+//            if(jet_side == true){
+//                total_fluxes.push_back(total_flux);
+//            }
+            total_fluxes.push_back(total_flux);
 
             value = "l";
             auto image_l = observation.getImage(value);
@@ -629,7 +625,7 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
 }
 
 
-int main2() {
+int main() {
     std::vector<double> total_fluxes;
     total_fluxes = run_on_analytic();
     for(auto total_flux: total_fluxes){
@@ -641,7 +637,7 @@ int main2() {
 
 // To run in parallel when fil params_3ridges.txt has 3 parameter sets:
 // parallel --files --results t_obs_{11} --joblog log --jobs 7 -a params_flaring_jet.txt -n 1 -m --colsep ' ' "./bk_transfer"
-int main(int argc, char *argv[]) {
+int main2(int argc, char *argv[]) {
 
     std::vector<double> total_fluxes;
     std::vector<double> flare_params;
