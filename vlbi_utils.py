@@ -18,6 +18,14 @@ sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from from_fits import create_clean_image_from_fits_file
 
 
+def convert_blc_trc(blc, trc, ipol):
+    if blc[0] == 0: blc = (blc[0] + 1, blc[1])
+    if blc[1] == 0: blc = (blc[0], blc[1] + 1)
+    if trc[0] == ipol.shape: trc = (trc[0] - 1, trc[1])
+    if trc[1] == ipol.shape: trc = (trc[0], trc[1] - 1)
+    return blc, trc
+
+
 def downscale_uvdata_by_freq(uvdata):
     if abs(uvdata.hdu.data[0][0]) > 1:
         downscale_by_freq = True
