@@ -38,14 +38,6 @@ class ConstFlatVField: public VField {
 };
 
 
-class ApproximateMHDVfield: public VField {
-    public:
-        ApproximateMHDVfield(Geometry* geometry, double betac_phi=0.0);
-        Vector3d vf(const Vector3d& point) const override ;
-    private:
-        double betac_phi_;
-};
-
 //
 //class ShearedFlatVField: public VField {
 //    public:
@@ -110,6 +102,32 @@ class ConstCentralVField: public VField {
 //        double theta_sheath_;
 //        Vector3d origin_;
 //};
+
+
+class ConstParabolicVField: public VField {
+    public:
+        explicit ConstParabolicVField(double gamma, Geometry* geometry, double betac_phi=0.0, Vector3d origin={0, 0, 0});
+        Vector3d vf(const Vector3d& point) const override;
+
+    private:
+        double gamma_;
+        double betac_phi_;
+        Vector3d origin_;
+};
+
+
+class AccelParabolicVField: public VField {
+    public:
+        explicit AccelParabolicVField(double gamma_0, double gamma_1, Geometry* geometry, double betac_phi=0.0, Vector3d origin={0, 0, 0});
+        Vector3d vf(const Vector3d& point) const override;
+
+    private:
+        double gamma_0_;
+        double gamma_1_;
+        double betac_phi_;
+        Vector3d origin_;
+};
+
 
 
 #endif //BK_TRANSFER_VFIELD_H

@@ -3,6 +3,7 @@
 #include <utility>
 #include <utils.h>
 #include "VField.h"
+#include "MyExceptions.h"
 
 using Eigen::Vector3d;
 
@@ -23,29 +24,6 @@ void VField::set_profile(double r1, double r2, double K1, double K2, double b1, 
 }
 
 
-ApproximateMHDVfield::ApproximateMHDVfield(Geometry* geometry, double betac_phi) : VField(geometry), betac_phi_(betac_phi) {};
-
-
-Vector3d ApproximateMHDVfield::vf(const Vector3d &point) const {
-    double x = point[0];
-    double y = point[1];
-    double z = point[2];
-    double phi = atan2(y, x);
-    double v_phi = c*betac_phi_;
-    double r_border = geometry_->radius_at_given_distance(point);
-    double r_point = sqrt(x*x + y*y);
-
-    double gamma = density_profile(r_point/r_border, r1_, r2_, K1_, K2_, b1_, b2_, b3_);
-
-    if(z > 0) {
-        // Dividing by gamma x,y components accounts for relativistic addition of perpendicular velocities
-        return {-sin(phi)*v_phi/gamma, cos(phi)*v_phi/gamma, c*sqrt(1. - 1./(gamma*gamma))};
-    } else {
-        return {sin(phi)*v_phi/gamma, -cos(phi)*v_phi/gamma, -c*sqrt(1. - 1./(gamma*gamma))};
-    }
-}
-
-
 ConstFlatVField::ConstFlatVField(double gamma, Geometry* geometry, double betac_phi) :
     VField(geometry), gamma_(gamma), betac_phi_(betac_phi) {};
 
@@ -54,6 +32,11 @@ Vector3d ConstFlatVField::vf(const Vector3d &point) const {
     double y = point[1];
     double z = point[2];
     double phi = atan2(y, x);
+    // As atan2 returns [-pi, pi], put this to [0, 2pi]
+    if(phi < 0){
+        phi += 2.0*M_PI;
+    }
+
     double v_phi = c*betac_phi_;
     double r_border = geometry_->radius_at_given_distance(point);
     double r_point = sqrt(x*x + y*y);
@@ -62,14 +45,27 @@ Vector3d ConstFlatVField::vf(const Vector3d &point) const {
     if(is_profile_set) {
         gamma *= density_profile(r_point/r_border, r1_, r2_, K1_, K2_, b1_, b2_, b3_);
     }
+    double v_pol = c*sqrt(gamma*gamma - 1.0)/gamma;
 
-    if(z > 0) {
-        // Relativistic addition of velocities Gamma (along jet) and phi-component (perpendicular jet)
-        //return {-sin(phi)*v_phi/gamma, cos(phi)*v_phi/gamma, c*sqrt(1. - 1./(gamma*gamma))};
-        return {sin(phi)*v_phi/gamma, -cos(phi)*v_phi/gamma, c*sqrt(1. - 1./(gamma*gamma))};
+
+    Vector3d V_p;
+    if(point[2] > 0){
+        V_p = {0.0, 0.0, v_pol};
     } else {
-        return {sin(phi)*v_phi/gamma, -cos(phi)*v_phi/gamma, -c*sqrt(1. - 1./(gamma*gamma))};
+        V_p = {0.0, 0.0, -v_pol};
     }
+    // FIXME: Move in if(z > 0) to account for the different direction of the rotation?
+    Vector3d V_phi = {-sin(phi)*v_phi, cos(phi)*v_phi, 0.0};
+
+    return V_p + V_phi;
+
+//    if(z > 0) {
+//        // Relativistic addition of velocities Gamma (along jet) and phi-component (perpendicular jet)
+//        //return {-sin(phi)*v_phi/gamma, cos(phi)*v_phi/gamma, c*sqrt(1. - 1./(gamma*gamma))};
+//        return {sin(phi)*v_phi/gamma, -cos(phi)*v_phi/gamma, c*sqrt(1. - 1./(gamma*gamma))};
+//    } else {
+//        return {sin(phi)*v_phi/gamma, -cos(phi)*v_phi/gamma, -c*sqrt(1. - 1./(gamma*gamma))};
+//    }
 }
 
 
@@ -79,24 +75,44 @@ ConstCentralVField::ConstCentralVField(double gamma, Geometry* geometry, double 
 Vector3d ConstCentralVField::vf(const Vector3d &point) const {
     double x = point[0];
     double y = point[1];
-    double z = point[2];
+    double z = abs(point[2]);
     double phi = atan2(y, x);
+    // As atan2 returns [-pi, pi], put this to [0, 2pi]
+    if(phi < 0){
+        phi += 2.0*M_PI;
+    }
     double v_phi = c*betac_phi_;
     double r_border = geometry_->radius_at_given_distance(point);
-    double r = (point - origin_).norm();
+    double r_cur = hypot(x, y);
+
+    // Poloidal angle - always from the (0,0,0) to the current point (central velocity field)
+    double tan_polangle = r_cur/z;
+    double sinz = sqrt(tan_polangle*tan_polangle/(1.0 + tan_polangle*tan_polangle));
+    double cosz = sqrt(1.0/(1.0 + tan_polangle*tan_polangle));
+
 
     double gamma = gamma_;
     if(is_profile_set) {
-        gamma *= density_profile(r/r_border, r1_, r2_, K1_, K2_, b1_, b2_, b3_);
+        gamma *= density_profile(r_cur/r_border, r1_, r2_, K1_, K2_, b1_, b2_, b3_);
     }
 
-    double v_r = c*sqrt(1. - 1./(gamma*gamma));
-    if(z > 0) {
-        return {v_r*(x-origin_[0])/r - sin(phi)*v_phi, v_r*(y-origin_[1])/r + cos(phi)*v_phi, v_r*(z-origin_[2])/r};
+    double v_pol = c*sqrt(1. - 1./(gamma*gamma));
+//    if(z > 0) {
+//        return {v_r*(x-origin_[0])/r - sin(phi)*v_phi, v_r*(y-origin_[1])/r + cos(phi)*v_phi, v_r*(z-origin_[2])/r};
+//    } else {
+//        // FIXME: z < 0
+//        return {v_r*(x-origin_[0])/r + sin(phi)*v_phi, v_r*(y-origin_[1])/r - cos(phi)*v_phi, v_r*(abs(z)-origin_[2])/r};
+//    }
+    Vector3d V_p;
+    if(point[2] > 0){
+        V_p = {v_pol*sinz*cos(phi), v_pol*sinz*sin(phi), v_pol*cosz};
     } else {
-        // FIXME: z < 0
-        return {v_r*(x-origin_[0])/r + sin(phi)*v_phi, v_r*(y-origin_[1])/r - cos(phi)*v_phi, v_r*(abs(z)-origin_[2])/r};
+        V_p = {v_pol*sinz*cos(phi), v_pol*sinz*sin(phi), -v_pol*cosz};
     }
+
+    Vector3d V_phi = {-sin(phi)*v_phi, cos(phi)*v_phi, 0.0};
+
+    return V_p + V_phi;
 };
 
 
@@ -193,3 +209,97 @@ Vector3d SheathFlatVField::vf(const Vector3d &point) const {
 //    double v_r = c*sqrt(1. - 1./(gamma*gamma));
 //    return {v_r*(x-origin_[0])/r, v_r*(y-origin_[1])/r, v_r*(z-origin_[2])/r};
 //}
+
+
+ConstParabolicVField::ConstParabolicVField(double gamma, Geometry* geometry, double betac_phi, Vector3d origin) :
+        VField(geometry), gamma_(gamma), betac_phi_(betac_phi), origin_(std::move(origin)) {}
+
+Vector3d ConstParabolicVField::vf(const Vector3d &point) const {
+    double x = point[0];
+    double y = point[1];
+    double z = abs(point[2]);
+    double r_cur = hypot(x, y);
+
+    double phi = atan2(y, x);
+    // As atan2 returns [-pi, pi], put this to [0, 2pi]
+    if(phi < 0){
+        phi += 2.0*M_PI;
+    }
+
+    double r_border = geometry_->radius_at_given_distance(point);
+    double gamma = gamma_;
+    if(is_profile_set) {
+        gamma *= density_profile(r_cur/r_border, r1_, r2_, K1_, K2_, b1_, b2_, b3_);
+    }
+
+    double v_phi = c*betac_phi_;
+    double v_pol = c*sqrt(gamma*gamma - 1.0)/gamma;
+
+    // Constant in the parabolic equation for a given streamline
+    double R_1_cur = r_cur/ sqrt(z);
+    // Derivative of the local parabola equation at given point to find the tangent of the poloidal angle
+    double tan_polangle = 0.5*R_1_cur/ sqrt(z);
+
+    double sinz = sqrt(tan_polangle*tan_polangle/(1.0 + tan_polangle*tan_polangle));
+    double cosz = sqrt(1.0/(1.0 + tan_polangle*tan_polangle));
+
+
+    Vector3d V_p;
+    if(point[2] > 0){
+        V_p = {v_pol*sinz*cos(phi), v_pol*sinz*sin(phi), v_pol*cosz};
+    } else {
+        V_p = {v_pol*sinz*cos(phi), v_pol*sinz*sin(phi), -v_pol*cosz};
+    }
+    // FIXME: Move in if(z > 0) to account for the different direction of the rotation?
+    Vector3d V_phi = {-sin(phi)*v_phi, cos(phi)*v_phi, 0.0};
+
+    return V_p + V_phi;
+
+};
+
+
+AccelParabolicVField::AccelParabolicVField(double gamma_0, double gamma_1, Geometry* geometry, double betac_phi, Vector3d origin) :
+        VField(geometry), gamma_0_(gamma_0), gamma_1_(gamma_1), betac_phi_(betac_phi), origin_(std::move(origin)) {}
+
+Vector3d AccelParabolicVField::vf(const Vector3d &point) const {
+    double x = point[0];
+    double y = point[1];
+    double z = abs(point[2]);
+    double r_cur = hypot(x, y);
+
+    double phi = atan2(y, x);
+    // As atan2 returns [-pi, pi], put this to [0, 2pi]
+    if(phi < 0){
+        phi += 2.0*M_PI;
+    }
+
+    double r_border = geometry_->radius_at_given_distance(point);
+    double gamma = gamma_0_ + gamma_1_*pow(r_cur/pc, 0.5);
+    if(is_profile_set) {
+        gamma *= density_profile(r_cur/r_border, r1_, r2_, K1_, K2_, b1_, b2_, b3_);
+    }
+
+    double v_phi = c*betac_phi_;
+    double v_pol = c*sqrt(gamma*gamma - 1.0)/gamma;
+
+    // Constant in the parabolic equation for a given streamline
+    double R_1_cur = r_cur/ sqrt(z);
+    // Derivative of the local parabola equation at given point to find the tangent of the poloidal angle
+    double tan_polangle = 0.5*R_1_cur/ sqrt(z);
+
+    double sinz = sqrt(tan_polangle*tan_polangle/(1.0 + tan_polangle*tan_polangle));
+    double cosz = sqrt(1.0/(1.0 + tan_polangle*tan_polangle));
+
+
+    Vector3d V_p;
+    if(point[2] > 0){
+        V_p = {v_pol*sinz*cos(phi), v_pol*sinz*sin(phi), v_pol*cosz};
+    } else {
+        V_p = {v_pol*sinz*cos(phi), v_pol*sinz*sin(phi), -v_pol*cosz};
+    }
+    // FIXME: Move in if(z > 0) to account for the different direction of the rotation?
+    Vector3d V_phi = {-sin(phi)*v_phi, cos(phi)*v_phi, 0.0};
+
+    return V_p + V_phi;
+
+};
