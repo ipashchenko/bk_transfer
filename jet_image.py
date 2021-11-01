@@ -430,7 +430,8 @@ class TwinJetImage(object):
     def __init__(self, jet, counterjet):
         self.jet = jet
         self.counterjet = counterjet
-        assert jet.stokes == counterjet.stokes
+        if jet.stokes != counterjet.stokes:
+            raise Exception("Different Stokes for J ({}) & CJ ({})".format(jet.stokes, counterjet.stokes))
         self.stokes = jet.stokes
 
     def ft(self, uv):
@@ -475,6 +476,22 @@ class TwinJetImage(object):
         if outfile:
             fig.savefig(outfile, dpi=300, bbox_inches="tight")
         return fig
+
+    def save_image_to_difmap_format(self, difmap_format_file, scale=1.0):
+        image = np.hstack((self.counterjet._image[::-1], self.jet._image))
+        # CJ has its DEC coordinates multiplied on -1.
+        r_ob_mas = np.vstack((self.counterjet.r_ob_mas, self.jet.r_ob_mas))
+        d_mas = np.vstack((self.counterjet.d_mas, self.jet.d_mas))
+
+        with open(difmap_format_file, "w") as fo:
+            for idx, imval in np.ndenumerate(image):
+                if imval == 0:
+                    continue
+                j, i = idx
+                dec = -r_ob_mas[i, j].value
+                ra = -d_mas[i, j].value
+                # print("RA = {}, DEC = {}".format(ra, dec))
+                fo.write("{} {} {}\n".format(imval*scale, np.hypot(ra, dec), np.rad2deg(np.arctan2(ra, dec))))
 
 
 def plot_images(mhd_code, rt_code, txt_files_dir="/home/ilya/github/mhd_transfer/Release", save_dir=None,
