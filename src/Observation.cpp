@@ -65,6 +65,7 @@ pair<unsigned long int, unsigned long int> Observation::getImageSize() {
   return imagePlane->image_size;
 }
 
+
 pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection> &list_intersect, Vector3d ray_direction,
                                                          const double nu, double tau_max, int n, double dt_max,
                                                          double relerr) {
@@ -85,7 +86,12 @@ pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection>
 //		std::cout << "In = " << point_in/pc << ", Out = " << point_out/pc << "\n";
 
 		double length = (point_out - point_in).norm();
-		double dt = length/n;
+//        std::cout << "length(pc) = " << length/pc << "\n";
+
+        // FIXME: This is how dt_max should be specified: as N to divide the path.
+        double dt = length/n;
+        dt_max = dt;
+//        std::cout << "dt_max(pc) = " << dt_max/pc << "\n";
 
 		// Directed to observer (as we integrate ``k`` only)
 		Vector3d ray_direction_ = -1. * ray_direction;
@@ -95,7 +101,7 @@ pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection>
 		Tau tau(jet, point_in, ray_direction_, nu);
 		// This is out State
 		double optDepth = 0.0;
-		typedef runge_kutta_dopri5< double > stepper_type;
+        typedef runge_kutta_dopri5< double > stepper_type;
 	    auto stepper = make_dense_output(abserr, relerr, dt_max, stepper_type());
 		auto is_done = std::bind(check_opt_depth, tau_max, std::placeholders::_1);
 		auto ode_range = make_adaptive_range(std::ref(stepper), tau, optDepth, 0.0, length, dt);
@@ -114,7 +120,7 @@ pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection>
             // Use odeint's resizing functionality to allocate memory for x_m
             // Adjust_size_by_resizeability(x_m, optDepth, typename is_resizeable<double>::type());
             while(std::abs(x_m - tau_max) > tau_precision) {
-                std::cout << "Finding cross tau!" << std::endl;
+//                std::cout << "Finding cross tau!" << std::endl;
                 // Get the mid point time
                 t_m = 0.5 * (t0 + t1);
                 // Obtain the corresponding state
