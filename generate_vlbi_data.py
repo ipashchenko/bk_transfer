@@ -19,33 +19,36 @@ from image import plot as iplot
 only_plot = False
 modelfit_core = False
 full_stokes = False
-jet_only = True
+jet_only = False
 
 
 # -107 for M87
-# rot_angle_deg = -107.0
-rot_angle_deg = 0.0
+rot_angle_deg = -107.0
+# rot_angle_deg = 0.0
 freq_ghz = 15.4
 # Directory to save files
 # save_dir = "/home/ilya/github/bk_transfer/pics/KH"
-save_dir = "/home/ilya/github/bk_transfer/pics/cores"
+# save_dir = "/home/ilya/github/bk_transfer/pics/cores"
+# save_dir = "/home/ilya/github/bk_transfer/pics/doubles"
+save_dir = "/home/ilya/github/bk_transfer/pics/doubles"
 # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
-template_uvfits = "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uvf"
-# template_uvfits = "/home/ilya/data/M87Lesha/to_ilya/1228+126.U.2009_05_23C_ta60.uvf_cal"
+# template_uvfits = "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uvf"
+# template_uvfits = "/home/ilya/Downloads/3c84.GMVA/3c84.may08.uvf"
+template_uvfits = "/home/ilya/data/M87Lesha/to_ilya/1228+126.U.2009_05_23C_ta60.uvf_cal"
 # template_uvfits = "/home/ilya/Downloads/M87uvf/1228+126.u.2008_05_01.uvf"
 # Multiplicative factor for noise added to model visibilities.
 noise_scale_factor = 1.0
 # CLEAN image parameters
-mapsize = (1024, 0.1)
+mapsize = (2048, 0.05)
 # Directory with C++ generated txt-files with model images
 jetpol_run_directory = "/home/ilya/github/bk_transfer/Release"
 
 # C++ code run parameters
-# z = 0.00436
-z = 0.5
-n_along = 512
-n_across = 80
-lg_pixel_size_mas_min = -1.5
+z = 0.00436
+# z = 0.017559
+n_along = 1024
+n_across = 128
+lg_pixel_size_mas_min = -2
 lg_pixel_size_mas_max = -0.5
 resolutions = np.logspace(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along)
 print("Model jet extends up to {:.1f} mas!".format(np.sum(resolutions)))
@@ -58,7 +61,8 @@ else:
     stokes = ("I",)
 
 if not only_plot:
-    path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
+    # path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
+    path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
     uvdata = UVData(template_uvfits)
     downscale_uvdata_by_freq_flag = downscale_uvdata_by_freq(uvdata)
     noise = uvdata.noise(average_freq=False, use_V=False)
@@ -77,19 +81,24 @@ if not only_plot:
         if not jet_only:
             cjms[i].load_image_stokes(stk, "{}/cjet_image_{}_{}.txt".format(jetpol_run_directory, stk.lower(), freq_ghz), scale=1.0)
 
-    # List of models (for J & CJ) for all stokes
-    js = [TwinJetImage(jms[i], cjms[i]) for i in range(len(stokes))]
+    if not jet_only:
+        # List of models (for J & CJ) for all stokes
+        js = [TwinJetImage(jms[i], cjms[i]) for i in range(len(stokes))]
+    else:
+        js = jms
 
     uvdata.zero_data()
-    if jet_only:
-        uvdata.substitute(jms)
-    else:
-        uvdata.substitute(js)
+    uvdata.substitute(js)
+
     # Optionally
-    uvdata.rotate_evpa(np.deg2rad(rot_angle_deg))
+    if full_stokes:
+        uvdata.rotate_evpa(np.deg2rad(rot_angle_deg))
     uvdata.noise_add(noise)
     # downscale = True for Lesha's data
-    uvdata.save(os.path.join(save_dir, "template.uvf"), rewrite=True,  downscale_by_freq=False)
+    # downscale = False for MOJAVE data
+    # downscale = True for 3C84 GMVA data
+    downscale_by_freq = downscale_uvdata_by_freq(uvdata)
+    uvdata.save(os.path.join(save_dir, "template.uvf"), rewrite=True,  downscale_by_freq=downscale_by_freq)
 
 
     # Modelfit core ####################################################################################################
@@ -138,8 +147,8 @@ if not only_plot:
 
 ccimages = {stk: create_clean_image_from_fits_file(os.path.join(save_dir, "model_cc_{}.fits".format(stk.lower())))
             for stk in stokes}
-ipol = ccimages["I"].image
-beam = ccimages["I"].beam
+ipol = ccimages[stokes[0]].image
+beam = ccimages[stokes[0]].beam
 # Number of pixels in beam
 npixels_beam = np.pi*beam[0]*beam[1]/(4*np.log(2)*mapsize[1]**2)
 
@@ -167,7 +176,7 @@ if full_stokes:
     fpol = ppol/ipol
 
 # IPOL contours
-fig = iplot(ipol, x=ccimages["I"].x, y=ccimages["I"].y,
+fig = iplot(ipol, x=ccimages[stokes[0]].x, y=ccimages[stokes[0]].y,
             min_abs_level=4*std, blc=blc, trc=trc, beam=beam, close=True, show_beam=True, show=False,
             contour_color='gray', contour_linewidth=0.25)
 fig.savefig(os.path.join(save_dir, "observed_ipol.png"), dpi=600, bbox_inches="tight")
