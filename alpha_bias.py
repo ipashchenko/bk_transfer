@@ -44,7 +44,7 @@ Path(save_dir).mkdir(parents=True, exist_ok=True)
 
 
 # Observed frequencies of simulations
-if data_origin == "mpjave" or data_origin == "bk145":
+if data_origin == "mojave" or data_origin == "bk145":
     freqs_obs_ghz = [8.1, 15.4]
 elif data_origin == "vsop":
     freqs_obs_ghz = [1.6, 4.8]
@@ -54,10 +54,7 @@ elif data_origin == "vsop":
 rot_angle_deg = -107.0
 
 # Scale model image to obtain ~ 3 Jy
-# bk
-scale = 0.28
-# 2 ridges
-scale = 0.5
+scale = 1.0
 
 # Multiplicative factor for noise added to model visibilities.
 noise_scale_factor = 1.0
@@ -94,6 +91,10 @@ path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
 # need_downscale_uv = False
 template_uvfits_dict = {15.4: "/home/ilya/data/alpha/MOJAVE/1228+126.u.2020_07_02.uvf",
                         8.1: "/home/ilya/data/alpha/MOJAVE/1228+126.x.2006_06_15.uvf"}
+template_ccimage = {8.1: "/home/ilya/data/alpha/MOJAVE/template_cc_i_8.1.fits",
+                    15.4: "/home/ilya/data/alpha/MOJAVE/template_cc_i_15.4.fits"}
+template_ccimage = create_clean_image_from_fits_file(template_ccimage[8.1])
+common_beam = template_ccimage.beam
 
 # VSOP data
 # need_downscale_uv = True
@@ -138,8 +139,8 @@ if not only_make_pics:
             cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
                                   scale=scale*(freq_high/freq)**(-alpha_true))
         else:
-            jm.load_image_stokes("I", "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=1.0)
-            cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=1.0)
+            jm.load_image_stokes("I", "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
+            cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
         js = TwinJetImage(jm, cjm)
 
         # Convert to difmap model format
@@ -149,7 +150,7 @@ if not only_make_pics:
         # Rotate
         rotate_difmap_model("{}/true_jet_model_i_{}.txt".format(save_dir, freq),
                             "{}/true_jet_model_i_{}_rotated.txt".format(save_dir, freq),
-                            PA_deg=107.0)
+                            PA_deg=-rot_angle_deg)
         # Convolve with beam
         convert_difmap_model_file_to_CCFITS("{}/true_jet_model_i_{}_rotated.txt".format(save_dir, freq), "I", common_mapsize,
                                             common_beam, template_uvfits_dict[freq],

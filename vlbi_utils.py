@@ -18,7 +18,21 @@ sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from from_fits import create_clean_image_from_fits_file
 
 
+
+def plot_difmap_model(dfm_txt, cmap="inferno"):
+    """
+    Plot difmap model file in polar coordinates, using log10 of flux as a color.
+    """
+    f, r, theta = np.loadtxt(dfm_txt, unpack=True)
+    fig, axes = plt.subplots(subplot_kw={'projection': 'polar'})
+    axes.scatter(np.deg2rad(theta), r, c=np.log10(f), cmap=cmap, s=0.05)
+    plt.show()
+
+
 def convert_blc_trc(blc, trc, ipol):
+    """
+    Fix border values (0, e.g. 256, 512)
+    """
     if blc[0] == 0: blc = (blc[0] + 1, blc[1])
     if blc[1] == 0: blc = (blc[0], blc[1] + 1)
     if trc[0] == ipol.shape: trc = (trc[0] - 1, trc[1])
@@ -27,6 +41,13 @@ def convert_blc_trc(blc, trc, ipol):
 
 
 def downscale_uvdata_by_freq(uvdata):
+    """
+    Chack if one needs to downscale (u,v)-coordinates by frequency. Need to know it when saving UV-data.
+    :param uvdata:
+        Instance of ``UVData`` class.
+    :return:
+        Boolean.
+    """
     if abs(uvdata.hdu.data[0][0]) > 1:
         downscale_by_freq = True
     else:

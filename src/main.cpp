@@ -624,7 +624,8 @@ std::vector<double> run_on_analytic_params(double redshift, double los_angle_deg
     return total_fluxes;
 }
 
-
+// To quickly show J + CJ images for freq_ghz GHz:
+// j = np.loadtxt("jet_image_i_{}.txt".format(freq_ghz)); cj = np.loadtxt("cjet_image_i_{}.txt".format(freq_ghz)); jcj = np.hstack((cj[::, ::-1], j)); plt.matshow(jcj, aspect="auto");plt.colorbar(); plt.show()
 int main() {
     std::vector<double> total_fluxes;
     total_fluxes = run_on_analytic();
