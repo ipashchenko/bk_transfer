@@ -79,10 +79,25 @@ class NegativeKI : public std::exception {
 };
 
 
+class NegativeTau : public std::exception {
+        const char * what () const noexcept override {
+            return "tau < 0!";
+        }
+};
+
+
 class NegativeI : public std::exception {
         const char * what () const noexcept override {
             return "I < 0!";
         }
 };
+
+
+class NaNResult : public std::exception {
+        const char * what () const noexcept override {
+            return "NaN result!";
+        }
+};
+
 
 #endif //MHD_TRANSFER_INCLUDE_MYEXCEPTIONS_H
