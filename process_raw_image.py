@@ -227,6 +227,7 @@ if __name__ == "__main__":
         imagex_txt = os.path.join(txt_dir, "jet_image_i_X_{:.1f}.txt".format(t_obs_days))
         images_txt = os.path.join(txt_dir, "jet_image_i_S_{:.1f}.txt".format(t_obs_days))
 
+        # convert -delay 10 -loop 0 `ls -tr tobs*.png` animation.gif
         if plot:
             fig, axes = plt.subplots(2, 1, sharex=True)
             imagex = np.loadtxt(imagex_txt)
