@@ -16,11 +16,18 @@ System::System(Jet *newjet,
 }
 
 
-// FIXME: Sometimes tau becomes negative!!!
 void Tau::operator()(const double &x, double &dxdt, const double t) {
-//    std::cout << "--- tau = " << x << "\n";
+//    std::cout << "===========================" << "\n";
+//    std::cout << "x = " << x << ", dxdt = " << dxdt << ", t = " << t << "\n";
+//    if(x < 0){
+//        std::cout << "Negative tau = " << x << "\n";
+//        throw NegativeTau();
+//    }
+//    std::cout << "tau = " << x << "\n";
     Vector3d point = point_start - t * ray_direction;
+//    std::cout << "point = " << point/pc << "\n";
     dxdt = jet->getKI(point, ray_direction, nu);
+//    std::cout << "k_i = " << dxdt << "\n";
 }
 
 
@@ -53,16 +60,18 @@ void TauFR::operator()(const double &x, double &dxdt, double t) {
 
 // FIXME: Test w/o compensating negative
 void I::operator()(const double &x, double &dxdt, const double t) {
+//    std::cout << "I = " << x << "\n";
     // Check that I is non-negative after previous step
-    if(x < 0){
-        throw NegativeI();
-    }
+//    if(x < 0){
+//        throw NegativeI();
+//    }
 
     Vector3d point = point_start + t * ray_direction;
 
     double k_i, eta_i;
     std::tie(k_i, eta_i) = jet->get_stokes_I_transport_coefficients(point, ray_direction, nu);
 
+//    std::cout << "K_i = " << k_i << ", eta_i = " << eta_i << "\n";
     dxdt = eta_i - k_i*x;
 }
 
