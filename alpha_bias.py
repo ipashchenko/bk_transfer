@@ -5,7 +5,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 import numpy as np
 import matplotlib
-matplotlib.use('Qt5Agg')
+matplotlib.use('Agg')
 import sys
 from jet_image import JetImage, TwinJetImage
 from vlbi_utils import (find_image_std, find_bbox, convert_difmap_model_file_to_CCFITS, rotate_difmap_model,
@@ -31,9 +31,13 @@ jet_model = "bk"
 # jet_model = "2ridges"
 # jet_model = "3ridges"
 # jet_model = "kh"
+if jet_model not in ("bk", "2ridges", "3ridges", "kh"):
+    raise Exception
 data_origin = "mojave"
 # data_origin = "bk145"
 # data_origin = "vsop"
+if data_origin not in ("mojave", "bk145", "vsop"):
+    raise Exception
 
 # Saving intermediate files
 if data_origin == "mojave":
