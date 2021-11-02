@@ -60,7 +60,7 @@ std::vector<double> run_on_analytic() {
     Parabaloid geometry(origin, direction, R_1pc, big_scale, true);
 
     // Setting B-field
-    BKScalarBField bk_bfield(0.05, 0.5, &geometry);
+    BKScalarBField bk_bfield(0.05, 0.75, &geometry);
 //    HelicalConicalBField jetbfield(0.05, 0.5, 85.*M_PI/180., true, 0.0, &geometry);
 
     std::vector<VectorBField*> vbfields;
@@ -77,7 +77,7 @@ std::vector<double> run_on_analytic() {
     // Value at r=1pc
     double K_1 = 0.05;
     // Exponent of the decrease
-    double n = 1.0;
+    double n = 1.5;
     BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
 //    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 1.0, 0.025, 0.01);
 

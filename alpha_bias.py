@@ -9,7 +9,7 @@ matplotlib.use('Qt5Agg')
 import sys
 from jet_image import JetImage, TwinJetImage
 from vlbi_utils import (find_image_std, find_bbox, convert_difmap_model_file_to_CCFITS, rotate_difmap_model,
-                        convert_blc_trc, downscale_uvdata_by_freq)
+                        convert_blc_trc)
 sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from uv_data import UVData
 from spydiff import clean_difmap
@@ -27,17 +27,21 @@ artificial_alpha = False
 alpha_true = -0.5
 
 
+jet_model = "bk"
+# jet_model = "2ridges"
+# jet_model = "3ridges"
+# jet_model = "kh"
 data_origin = "mojave"
 # data_origin = "bk145"
 # data_origin = "vsop"
 
 # Saving intermediate files
 if data_origin == "mojave":
-    save_dir = "/home/ilya/data/alpha/results/MOJAVE"
+    save_dir = os.path.join("/home/ilya/data/alpha/results/MOJAVE", jet_model)
 elif data_origin == "bk145":
-    save_dir = "/home/ilya/data/alpha/results/BK145"
+    save_dir = os.path.join("/home/ilya/data/alpha/results/BK145", jet_model)
 elif data_origin == "vsop":
-    save_dir = "/home/ilya/data/alpha/results/VSOP"
+    save_dir = os.path.join("/home/ilya/data/alpha/results/VSOP", jet_model)
 else:
     raise Exception("data_origin must be vsop, mojave of bk145!")
 Path(save_dir).mkdir(parents=True, exist_ok=True)
@@ -79,32 +83,34 @@ lg_pixel_size_mas_max = -0.5
 # path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
 path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
 
-# Lesha's data
-# need_downscale_uv = True
-# template_uvfits_dict = {15.4: "/home/ilya/data/alpha/BK145/1228+126.U.2009_05_23C_ta60.uvf_cal",
-#                         8.1: "/home/ilya/data/alpha/BK145/1228+126.X.2009_05_23_ta60.uvf_cal"}
-# Low freq
-# template_x_ccimage = create_clean_image_from_fits_file("/home/ilya/data/alpha/BK145/X_template_beam.fits")
-# common_beam = template_x_ccimage.beam
+if data_origin == "bk145":
+    # Lesha's data
+    need_downscale_uv = True
+    template_uvfits_dict = {15.4: "/home/ilya/data/alpha/BK145/1228+126.U.2009_05_23C_ta60.uvf_cal",
+                            8.1: "/home/ilya/data/alpha/BK145/1228+126.X.2009_05_23_ta60.uvf_cal"}
+    # Low freq
+    template_x_ccimage = create_clean_image_from_fits_file("/home/ilya/data/alpha/BK145/X_template_beam.fits")
+    common_beam = template_x_ccimage.beam
 
-# MOJAVE data
-# need_downscale_uv = False
-template_uvfits_dict = {15.4: "/home/ilya/data/alpha/MOJAVE/1228+126.u.2020_07_02.uvf",
-                        8.1: "/home/ilya/data/alpha/MOJAVE/1228+126.x.2006_06_15.uvf"}
-template_ccimage = {8.1: "/home/ilya/data/alpha/MOJAVE/template_cc_i_8.1.fits",
-                    15.4: "/home/ilya/data/alpha/MOJAVE/template_cc_i_15.4.fits"}
-template_ccimage = create_clean_image_from_fits_file(template_ccimage[8.1])
-common_beam = template_ccimage.beam
+elif data_origin == "mojave":
+    # MOJAVE data
+    need_downscale_uv = False
+    template_uvfits_dict = {15.4: "/home/ilya/data/alpha/MOJAVE/1228+126.u.2020_07_02.uvf",
+                            8.1: "/home/ilya/data/alpha/MOJAVE/1228+126.x.2006_06_15.uvf"}
+    template_ccimage = {8.1: "/home/ilya/data/alpha/MOJAVE/template_cc_i_8.1.fits",
+                        15.4: "/home/ilya/data/alpha/MOJAVE/template_cc_i_15.4.fits"}
+    template_ccimage = create_clean_image_from_fits_file(template_ccimage[8.1])
+    common_beam = template_ccimage.beam
 
-# VSOP data
-# need_downscale_uv = True
-# template_uvfits_dict = {4.8: "/home/ilya/data/alpha/VSOP/m87.vsop-c.w040a5.split_12s",
-#                         1.6: "/home/ilya/data/alpha/VSOP/m87.vsop-l.w022a7.split_12s"}
-# template_ccimages = {1.6: create_clean_image_from_fits_file("/home/ilya/data/alpha/VSOP/template_l_beam.fits"),
-#                      4.8: create_clean_image_from_fits_file("/home/ilya/data/alpha/VSOP/template_c_beam.fits")}
-# common_beam = template_ccimages[1.6]
-
-# path_to_script = "/home/ilya/data/alpha/VSOP/final_clean_vsop"
+elif data_origin == "vsop":
+    # VSOP data
+    need_downscale_uv = True
+    template_uvfits_dict = {4.8: "/home/ilya/data/alpha/VSOP/m87.vsop-c.w040a5.split_12s",
+                            1.6: "/home/ilya/data/alpha/VSOP/m87.vsop-l.w022a7.split_12s"}
+    template_ccimages = {1.6: create_clean_image_from_fits_file("/home/ilya/data/alpha/VSOP/template_l_beam.fits"),
+                         4.8: create_clean_image_from_fits_file("/home/ilya/data/alpha/VSOP/template_c_beam.fits")}
+    common_beam = template_ccimages[1.6]
+    path_to_script = "/home/ilya/data/alpha/VSOP/final_clean_vsop"
 
 ##############################################
 # No need to change anything below this line #
@@ -118,8 +124,6 @@ freq_low = min(freqs_obs_ghz)
 if not only_make_pics:
     for freq in freqs_obs_ghz:
         uvdata = UVData(template_uvfits_dict[freq])
-        downscale_by_freq = downscale_uvdata_by_freq(uvdata)
-
         noise = uvdata.noise(average_freq=False, use_V=False)
         uvdata.zero_data()
         # If one needs to decrease the noise this is the way to do it
@@ -157,7 +161,7 @@ if not only_make_pics:
                                             "{}/convolved_true_jet_model_i_rotated_{}.fits".format(save_dir, freq))
         uvdata.substitute([js])
         uvdata.noise_add(noise)
-        uvdata.save(os.path.join(save_dir, "template_{}.uvf".format(freq)), rewrite=True, downscale_by_freq=downscale_by_freq)
+        uvdata.save(os.path.join(save_dir, "template_{}.uvf".format(freq)), rewrite=True, downscale_by_freq=need_downscale_uv)
 
         outfname = "model_cc_i_{}.fits".format(freq)
         if os.path.exists(outfname):
@@ -206,8 +210,8 @@ blc_high, trc_high = convert_blc_trc(blc_high, trc_high, ipol_high)
 # trc = (836, 654)
 
 # bk
-blc = (459, 474)
-trc = (1024, 754)
+blc = (900, 900)
+trc = (2000, 1500)
 
 blc_low = blc
 trc_low = trc
@@ -270,8 +274,12 @@ spix_array = np.log(ipol_arrays[freq_low]/ipol_arrays[freq_high])/np.log(freq_lo
 #                                                           mask_on_chisq=False, ampcal_uncertainties=None)
 
 # True spix
+if artificial_alpha:
+    color_clim = [alpha_true-0.5, alpha_true+0.5]
+else:
+    color_clim = [-1.5, 0.5]
 fig = iplot(ipol_arrays[freq_low], true_convolved_spix_array, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
-            min_abs_level=3*std_dict[freq_low], colors_mask=common_imask, color_clim=[alpha_true-0.5, alpha_true+0.5], blc=blc, trc=trc,
+            min_abs_level=3*std_dict[freq_low], colors_mask=common_imask, color_clim=color_clim, blc=blc, trc=trc,
             beam=common_beam, close=True, colorbar_label=r"$\alpha$", show_beam=True, show=False,
             cmap='bwr', contour_color='black', plot_colorbar=True,
             contour_linewidth=0.25)
@@ -279,8 +287,12 @@ fig.savefig(os.path.join(save_dir, "true_conv_spix_{}GHz_{}GHz_I_{}GHz.png".form
             dpi=600, bbox_inches="tight")
 
 # Observed spix
+if artificial_alpha:
+    color_clim = [alpha_true-0.5, alpha_true+0.5]
+else:
+    color_clim = [-1.5, 0.5]
 fig = iplot(ipol_arrays[freq_low], spix_array, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
-            min_abs_level=3*std_dict[freq_low], colors_mask=common_imask, color_clim=[alpha_true-0.5, alpha_true+0.5], blc=blc, trc=trc,
+            min_abs_level=3*std_dict[freq_low], colors_mask=common_imask, color_clim=color_clim, blc=blc, trc=trc,
             beam=common_beam, close=True, colorbar_label=r"$\alpha$", show_beam=True, show=False,
             cmap='bwr', contour_color='black', plot_colorbar=True,
             contour_linewidth=0.25)
