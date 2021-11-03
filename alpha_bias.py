@@ -223,8 +223,8 @@ blc_high, trc_high = convert_blc_trc(blc_high, trc_high, ipol_high)
 # trc = (836, 654)
 
 # bk
-blc = (900, 900)
-trc = (2000, 1500)
+blc = (900, 930)
+trc = (1500, 1240)
 
 blc_low = blc
 trc_low = trc
