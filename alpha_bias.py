@@ -37,8 +37,8 @@ jet_model = "bk"
 # jet_model = "kh"
 if jet_model not in ("bk", "2ridges", "3ridges", "kh"):
     raise Exception
-data_origin = "mojave"
-# data_origin = "bk145"
+# data_origin = "mojave"
+data_origin = "bk145"
 # data_origin = "vsop"
 if data_origin not in ("mojave", "bk145", "vsop"):
     raise Exception
@@ -76,7 +76,7 @@ common_mapsize = (2048, 0.1)
 
 # Common beam size (mas, mas, deg)
 # Circular
-common_beam = (1.0, 1.0, 0)
+common_beam = (1.56, 1.56, 0)
 
 
 # C++ code run parameters
