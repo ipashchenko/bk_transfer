@@ -20,7 +20,7 @@ from image import plot as iplot
 
 # If `True` then re-substitute model data and re-image in Difmap
 only_make_pics = True
-# If ``only_make_pics = True``, do we need to re-CLEAN?
+# If ``only_make_pics = True``, do we need to re-CLEAN? Note that when new beam is used then we need to go from scratch!
 re_clean = False
 
 # Make model low frequency image from high frequency one using `alpha_true`
@@ -132,7 +132,7 @@ jet_only = False
 freq_high = max(freqs_obs_ghz)
 freq_low = min(freqs_obs_ghz)
 
-if not only_make_pics or (not only_make_pics and re_clean):
+if not only_make_pics or (only_make_pics and re_clean):
     for freq in freqs_obs_ghz:
         if not only_make_pics:
             uvdata = UVData(template_uvfits_dict[freq])
