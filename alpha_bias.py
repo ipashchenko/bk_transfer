@@ -20,6 +20,8 @@ from image import plot as iplot
 
 # If `True` then re-substitute model data and re-image in Difmap
 only_make_pics = True
+# If ``only_make_pics = True``, do we need to re-CLEAN?
+re_clean = False
 
 # Make model low frequency image from high frequency one using `alpha_true`
 artificial_alpha = False
@@ -130,62 +132,62 @@ jet_only = False
 freq_high = max(freqs_obs_ghz)
 freq_low = min(freqs_obs_ghz)
 
-if not only_make_pics:
+if not only_make_pics or (not only_make_pics and re_clean):
     for freq in freqs_obs_ghz:
-        uvdata = UVData(template_uvfits_dict[freq])
-        noise = uvdata.noise(average_freq=False, use_V=False)
-        uvdata.zero_data()
-        # If one needs to decrease the noise this is the way to do it
-        for baseline, baseline_noise_std in noise.items():
-            noise.update({baseline: noise_scale_factor*baseline_noise_std})
+        if not only_make_pics:
+            uvdata = UVData(template_uvfits_dict[freq])
+            noise = uvdata.noise(average_freq=False, use_V=False)
+            uvdata.zero_data()
+            # If one needs to decrease the noise this is the way to do it
+            for baseline, baseline_noise_std in noise.items():
+                noise.update({baseline: noise_scale_factor*baseline_noise_std})
 
 
-        jm = JetImage(z=z, n_along=n_along, n_across=n_across,
-                      lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
-                      jet_side=True, rot=np.deg2rad(rot_angle_deg))
-        cjm = JetImage(z=z, n_along=n_along, n_across=n_across,
-                       lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
-                       jet_side=False, rot=np.deg2rad(rot_angle_deg))
-        if artificial_alpha:
-            jm.load_image_stokes("I", "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
-                                 scale=scale*(freq_high/freq)**(-alpha_true))
-            cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
-                                  scale=scale*(freq_high/freq)**(-alpha_true))
-        else:
-            jm.load_image_stokes("I", "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
-            cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
-        js = TwinJetImage(jm, cjm)
+            jm = JetImage(z=z, n_along=n_along, n_across=n_across,
+                          lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
+                          jet_side=True, rot=np.deg2rad(rot_angle_deg))
+            cjm = JetImage(z=z, n_along=n_along, n_across=n_across,
+                           lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
+                           jet_side=False, rot=np.deg2rad(rot_angle_deg))
+            if artificial_alpha:
+                jm.load_image_stokes("I", "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
+                                     scale=scale*(freq_high/freq)**(-alpha_true))
+                cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
+                                      scale=scale*(freq_high/freq)**(-alpha_true))
+            else:
+                jm.load_image_stokes("I", "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
+                cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
+            js = TwinJetImage(jm, cjm)
 
-        # Convert to difmap model format
-        # TODO: Check
-        js.save_image_to_difmap_format("{}/true_jet_model_i_{}.txt".format(save_dir, freq))
+            # Convert to difmap model format
+            # TODO: Check
+            js.save_image_to_difmap_format("{}/true_jet_model_i_{}.txt".format(save_dir, freq))
 
-        # Rotate
-        rotate_difmap_model("{}/true_jet_model_i_{}.txt".format(save_dir, freq),
-                            "{}/true_jet_model_i_{}_rotated.txt".format(save_dir, freq),
-                            PA_deg=-rot_angle_deg)
-        # Convolve with beam
-        convert_difmap_model_file_to_CCFITS("{}/true_jet_model_i_{}_rotated.txt".format(save_dir, freq), "I", common_mapsize,
-                                            common_beam, template_uvfits_dict[freq],
-                                            "{}/convolved_true_jet_model_i_rotated_{}.fits".format(save_dir, freq))
-        uvdata.substitute([js])
-        uvdata.noise_add(noise)
-        uvdata.save(os.path.join(save_dir, "template_{}.uvf".format(freq)), rewrite=True, downscale_by_freq=need_downscale_uv)
+            # Rotate
+            rotate_difmap_model("{}/true_jet_model_i_{}.txt".format(save_dir, freq),
+                                "{}/true_jet_model_i_{}_rotated.txt".format(save_dir, freq),
+                                PA_deg=-rot_angle_deg)
+            # Convolve with beam
+            convert_difmap_model_file_to_CCFITS("{}/true_jet_model_i_{}_rotated.txt".format(save_dir, freq), "I", common_mapsize,
+                                                common_beam, template_uvfits_dict[freq],
+                                                "{}/convolved_true_jet_model_i_rotated_{}.fits".format(save_dir, freq))
+            uvdata.substitute([js])
+            uvdata.noise_add(noise)
+            uvdata.save(os.path.join(save_dir, "template_{}.uvf".format(freq)), rewrite=True, downscale_by_freq=need_downscale_uv)
 
-        outfname = "model_cc_i_{}.fits".format(freq)
-        if os.path.exists(outfname):
-            os.unlink(outfname)
-        if use_uvtaper:
-            path_to_script = path_to_scripts[freq]
-        clean_difmap(fname="template_{}.uvf".format(freq), path=save_dir,
-                     outfname=outfname, outpath=save_dir, stokes="i",
-                     mapsize_clean=common_mapsize, path_to_script=path_to_script,
-                     show_difmap_output=True,
-                     beam_restore=common_beam)
-                     # dfm_model=os.path.join(save_dir, "model_cc_i_{}.mdl".format(freq)))
-
-# FIXME:
-# import sys; sys.exit(0)
+        # If doing from scratch or only making pics, but with re-CLEANing
+        if not only_make_pics or (only_make_pics and re_clean):
+            outfname = "model_cc_i_{}.fits".format(freq)
+            if os.path.exists(outfname):
+                os.unlink(outfname)
+            if use_uvtaper:
+                path_to_script = path_to_scripts[freq]
+            clean_difmap(fname="template_{}.uvf".format(freq), path=save_dir,
+                         outfname=outfname, outpath=save_dir, stokes="i",
+                         mapsize_clean=common_mapsize, path_to_script=path_to_script,
+                         show_difmap_output=True,
+                         beam_restore=common_beam)
+                         # dfm_model=os.path.join(save_dir, "model_cc_i_{}.mdl".format(freq)))
 
 # Create image of alpha made from true jet models convolved with beam
 itrue_convolved_low = create_image_from_fits_file("{}/convolved_true_jet_model_i_rotated_{}.fits".format(save_dir, freq_low)).image
