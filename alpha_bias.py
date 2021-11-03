@@ -26,6 +26,8 @@ artificial_alpha = False
 # S ~ nu^{+alpha}
 alpha_true = -0.5
 
+# Use final CLEAN iterations with UVTAPER?
+use_uvtaper = False
 
 jet_model = "bk"
 # jet_model = "2ridges"
@@ -79,13 +81,15 @@ common_beam = (1.0, 1.0, 0)
 jetpol_files_directory = "/home/ilya/github/bk_transfer/Release"
 z = 0.00436
 n_along = 1024
-n_across = 128
+n_across = 150
 lg_pixel_size_mas_min = -2
-lg_pixel_size_mas_max = -0.5
+lg_pixel_size_mas_max = -1.0
 
 
 # path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
 path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
+path_to_scripts = {15.4: "/home/ilya/github/bk_transfer/scripts/script_clean_rms_u",
+                   8.1: "/home/ilya/github/bk_transfer/scripts/script_clean_rms_x"}
 
 if data_origin == "bk145":
     # Lesha's data
@@ -93,6 +97,7 @@ if data_origin == "bk145":
     template_uvfits_dict = {15.4: "/home/ilya/data/alpha/BK145/1228+126.U.2009_05_23C_ta60.uvf_cal",
                             8.1: "/home/ilya/data/alpha/BK145/1228+126.X.2009_05_23_ta60.uvf_cal"}
     # Low freq
+    # FIXME: Create U-template beam
     template_x_ccimage = create_clean_image_from_fits_file("/home/ilya/data/alpha/BK145/X_template_beam.fits")
     common_beam = template_x_ccimage.beam
 
@@ -170,6 +175,8 @@ if not only_make_pics:
         outfname = "model_cc_i_{}.fits".format(freq)
         if os.path.exists(outfname):
             os.unlink(outfname)
+        if use_uvtaper:
+            path_to_script = path_to_scripts[freq]
         clean_difmap(fname="template_{}.uvf".format(freq), path=save_dir,
                      outfname=outfname, outpath=save_dir, stokes="i",
                      mapsize_clean=common_mapsize, path_to_script=path_to_script,

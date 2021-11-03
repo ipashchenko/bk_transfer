@@ -41,6 +41,7 @@ std::vector<double> run_on_analytic() {
 
     // Observed frequencies in GHz
     std::vector<double> nu_observed_ghz{8.1, 15.4};
+//    std::vector<double> nu_observed_ghz{15.4};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
@@ -114,10 +115,10 @@ std::vector<double> run_on_analytic() {
     // FIXME: Put inside frequency loop for dep. on frequency
     // Setting parameters of pixels and image ==========================================================================
     int number_of_pixels_along = 1024;
-    int number_of_pixels_across = 128;
+    int number_of_pixels_across = 150;
     // Non-uniform pixel from ``pixel_size_mas_start`` (near BH) to ``pixel_size_mas_stop`` (image edges)
     double pixel_size_mas_start = pow(10.0, -2.0);
-    double pixel_size_mas_stop = pow(10.0, -0.5);
+    double pixel_size_mas_stop = pow(10.0, -1.0);
     auto image_size = std::make_pair(number_of_pixels_across, number_of_pixels_along);
     auto pc_in_mas = mas_to_pc(redshift);
     std::cout << "pc_in_mas " << pc_in_mas << std::endl;

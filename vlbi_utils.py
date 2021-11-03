@@ -18,7 +18,6 @@ sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from from_fits import create_clean_image_from_fits_file
 
 
-
 def plot_difmap_model(dfm_txt, cmap="inferno"):
     """
     Plot difmap model file in polar coordinates, using log10 of flux as a color.
