@@ -43,6 +43,11 @@ data_origin = "bk145"
 if data_origin not in ("mojave", "bk145", "vsop"):
     raise Exception
 
+if data_origin in ("mojave", "bk145"):
+    stokes = "i"
+if data_origin == "vsop":
+    stokes = "ll"
+
 # Saving intermediate files
 if data_origin == "mojave":
     save_dir = os.path.join("/home/ilya/data/alpha/results/MOJAVE", jet_model)
@@ -92,6 +97,10 @@ lg_pixel_size_mas_max = -1.0
 path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
 path_to_scripts = {15.4: "/home/ilya/github/bk_transfer/scripts/script_clean_rms_u",
                    8.1: "/home/ilya/github/bk_transfer/scripts/script_clean_rms_x"}
+if data_origin == "vsop":
+    path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_vsop"
+    path_to_scripts = {1.6: "/home/ilya/github/bk_transfer/scripts/final_clean_vsop_l",
+                       4.8: "/home/ilya/github/bk_transfer/scripts/final_clean_vsop_c"}
 
 if data_origin == "bk145":
     # Lesha's data
@@ -121,7 +130,6 @@ elif data_origin == "vsop":
     template_ccimages = {1.6: create_clean_image_from_fits_file("/home/ilya/data/alpha/VSOP/template_l_beam.fits"),
                          4.8: create_clean_image_from_fits_file("/home/ilya/data/alpha/VSOP/template_c_beam.fits")}
     common_beam = template_ccimages[1.6]
-    path_to_script = "/home/ilya/data/alpha/VSOP/final_clean_vsop"
 
 ##############################################
 # No need to change anything below this line #
@@ -150,13 +158,13 @@ if not only_make_pics or (only_make_pics and re_clean):
                            lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
                            jet_side=False, rot=np.deg2rad(rot_angle_deg))
             if artificial_alpha:
-                jm.load_image_stokes("I", "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
+                jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
                                      scale=scale*(freq_high/freq)**(-alpha_true))
-                cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
+                cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
                                       scale=scale*(freq_high/freq)**(-alpha_true))
             else:
-                jm.load_image_stokes("I", "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
-                cjm.load_image_stokes("I", "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
+                jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
+                cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
             js = TwinJetImage(jm, cjm)
 
             # Convert to difmap model format
@@ -183,7 +191,7 @@ if not only_make_pics or (only_make_pics and re_clean):
             if use_uvtaper:
                 path_to_script = path_to_scripts[freq]
             clean_difmap(fname="template_{}.uvf".format(freq), path=save_dir,
-                         outfname=outfname, outpath=save_dir, stokes="i",
+                         outfname=outfname, outpath=save_dir, stokes=stokes,
                          mapsize_clean=common_mapsize, path_to_script=path_to_script,
                          show_difmap_output=True,
                          beam_restore=common_beam)

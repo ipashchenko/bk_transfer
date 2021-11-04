@@ -79,7 +79,7 @@ std::vector<double> run_on_analytic() {
     double K_1 = 0.05;
     // Exponent of the decrease
     double n = 1.5;
-    BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
+    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
 //    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 1.0, 0.025, 0.01);
 
 
