@@ -40,8 +40,10 @@ std::vector<double> run_on_analytic() {
 //    double los_angle = 20.0*M_PI/180.0;
 
     // Observed frequencies in GHz
-    std::vector<double> nu_observed_ghz{8.1, 15.4};
-//    std::vector<double> nu_observed_ghz{15.4};
+//    std::vector<double> nu_observed_ghz{8.1, 15.4};
+//    std::vector<double> nu_observed_ghz{1.6, 4.8};
+//    std::vector<double> nu_observed_ghz{24, 43};
+    std::vector<double> nu_observed_ghz{15.4};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
@@ -75,13 +77,41 @@ std::vector<double> run_on_analytic() {
     double ds = 0.01;
     double gamma_min = 10.0;
     PowerLaw particles(s, gamma_min, "pairs", false);
+
+//    // Single BK ///////////////////////////////////
+//    // Value at r=1pc
+//    double K_1 = 0.05;
+//    // Exponent of the decrease
+//    double n = 1.5;
+//    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
+
+//    // Triple ridges ///////////////////////////////
+//    // Value at r=1pc
+//    double K_1 = 0.5;
+//    // Exponent of the decrease
+//    double n = 1.5;
+//    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
+//    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 1.0, 0.025, 0.01);
+
+
+    // Double ridges ///////////////////////////////
     // Value at r=1pc
-    double K_1 = 0.05;
+    double K_1 = 0.75;
     // Exponent of the decrease
     double n = 1.5;
     BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
-//    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 1.0, 0.025, 0.01);
+    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 0.0, 0.025, 0.01);
 
+//    // Working spirals implementation /////////////
+//    // Value at r=1pc
+//    double K_1 = 2.00;
+//    // Exponent of the decrease
+//    double n = 1.5;
+//    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
+//    bk_stat_nfield.set_background_fraction(0.01);
+//    bk_stat_nfield.set_spiral(0.0, 30.0 * R_1pc, 0.9 * R_1pc);
+//    bk_stat_nfield.set_spiral(M_PI, 30.0 * R_1pc, 0.9 * R_1pc);
+//    bk_stat_nfield.set_spiral(M_PI / 6.0, 10.0 * R_1pc, 0.5 * R_1pc);
 
     // Setting V-field =================================================================================================
     VField* vfield;
@@ -99,12 +129,6 @@ std::vector<double> run_on_analytic() {
 //    }
 //    vfield = new ConstParabolicVField(Gamma, &geometry, 0.0);
     vfield = new AccelParabolicVField(Gamma_0, Gamma_1, &geometry, 0.0);
-
-
-    // Working spirals implementation
-//    bk_stat_nfield.set_spiral(0.0, 30.0 * R_1pc, 0.9 * R_1pc);
-//    bk_stat_nfield.set_spiral(M_PI, 30.0 * R_1pc, 0.9 * R_1pc);
-//    bk_stat_nfield.set_spiral(M_PI / 6.0, 10.0 * R_1pc, 0.5 * R_1pc);
 
     std::vector<NField*> nfields;
     nfields.push_back(&bk_stat_nfield);

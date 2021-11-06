@@ -119,6 +119,10 @@ void BKNField::set_heating_profile(double amp_border, double r_mean, double r_wi
 }
 
 
+void BKNField::set_background_fraction(double background_fraction) {
+    background_fraction_ = background_fraction;
+}
+
 void BKNField::set_spiral(double phase_0, double lambda_0, double amp_0) {
     phases_0_.push_back(phase_0);
     lambdas_0_.push_back(lambda_0);

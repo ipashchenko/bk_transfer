@@ -40,10 +40,11 @@ if jet_model not in ("bk", "2ridges", "3ridges", "kh"):
 # data_origin = "mojave"
 data_origin = "bk145"
 # data_origin = "vsop"
-if data_origin not in ("mojave", "bk145", "vsop"):
+# data_origin = "vlba"
+if data_origin not in ("mojave", "bk145", "vsop", "vlba"):
     raise Exception
 
-if data_origin in ("mojave", "bk145"):
+if data_origin in ("mojave", "bk145", "vlba"):
     stokes = "i"
 if data_origin == "vsop":
     stokes = "ll"
@@ -55,6 +56,8 @@ elif data_origin == "bk145":
     save_dir = os.path.join("/home/ilya/data/alpha/results/BK145", jet_model)
 elif data_origin == "vsop":
     save_dir = os.path.join("/home/ilya/data/alpha/results/VSOP", jet_model)
+elif data_origin == "vlba":
+    save_dir = os.path.join("/home/ilya/data/alpha/results/VLBA", jet_model)
 else:
     raise Exception("data_origin must be vsop, mojave of bk145!")
 Path(save_dir).mkdir(parents=True, exist_ok=True)
@@ -65,7 +68,8 @@ if data_origin == "mojave" or data_origin == "bk145":
     freqs_obs_ghz = [8.1, 15.4]
 elif data_origin == "vsop":
     freqs_obs_ghz = [1.6, 4.8]
-
+elif data_origin == "vlba":
+    freqs_obs_ghz = [24, 43]
 
 # -107 for M87
 rot_angle_deg = -107.0
@@ -79,16 +83,13 @@ noise_scale_factor = 1.0
 # Common size of the map and pixel size (mas)
 common_mapsize = (2048, 0.1)
 
-# Common beam size (mas, mas, deg)
-# Circular
-common_beam = (1.56, 1.56, 0)
-
 
 # C++ code run parameters
 jetpol_files_directory = "/home/ilya/github/bk_transfer/Release"
 z = 0.00436
 n_along = 1024
 n_across = 150
+# FIXME: For 24 & 43 GHz VLBA data we need smaller pixel sizes?
 lg_pixel_size_mas_min = -2
 lg_pixel_size_mas_max = -1.0
 
@@ -109,8 +110,9 @@ if data_origin == "bk145":
                             8.1: "/home/ilya/data/alpha/BK145/1228+126.X.2009_05_23_ta60.uvf_cal"}
     # Low freq
     # FIXME: Create U-template beam
-    template_x_ccimage = create_clean_image_from_fits_file("/home/ilya/data/alpha/BK145/X_template_beam.fits")
-    common_beam = template_x_ccimage.beam
+    # template_x_ccimage = create_clean_image_from_fits_file("/home/ilya/data/alpha/BK145/X_template_beam.fits")
+    # common_beam = template_x_ccimage.beam
+    common_beam = (1.56, 1.56, 0)
 
 elif data_origin == "mojave":
     # MOJAVE data
@@ -129,7 +131,16 @@ elif data_origin == "vsop":
                             1.6: "/home/ilya/data/alpha/VSOP/m87.vsop-l.w022a7.split_12s"}
     template_ccimages = {1.6: create_clean_image_from_fits_file("/home/ilya/data/alpha/VSOP/template_l_beam.fits"),
                          4.8: create_clean_image_from_fits_file("/home/ilya/data/alpha/VSOP/template_c_beam.fits")}
-    common_beam = template_ccimages[1.6]
+    # common_beam = template_ccimages[1.6].beam
+    common_beam = (1.0, 1.0, 0)
+
+elif data_origin == "vlba":
+    common_mapsize = (4096, 0.025)
+    template_uvfits_dict = {24: "/home/ilya/data/alpha/VLBA/m87.k.2018_04_28.fin_uvf_cal",
+                            43: "/home/ilya/data/alpha/VLBA/m87.q.2018_04_28.fin_uvf_cal"}
+    boxes = {24: "/home/ilya/data/alpha/VLBA/m87.k.2018_04_28.fin_win",
+             43: "/home/ilya/data/alpha/VLBA/m87.q.2018_04_28.fin_wins"}
+    common_beam = (0.5, 0.5, 0)
 
 ##############################################
 # No need to change anything below this line #
@@ -186,14 +197,22 @@ if not only_make_pics or (only_make_pics and re_clean):
         # If doing from scratch or only making pics, but with re-CLEANing
         if not only_make_pics or (only_make_pics and re_clean):
             outfname = "model_cc_i_{}.fits".format(freq)
+
             if os.path.exists(outfname):
                 os.unlink(outfname)
+
             if use_uvtaper:
                 path_to_script = path_to_scripts[freq]
+
+            if data_origin == "vlba":
+                txt_box = boxes[freq]
+            else:
+                txt_box = None
+
             clean_difmap(fname="template_{}.uvf".format(freq), path=save_dir,
                          outfname=outfname, outpath=save_dir, stokes=stokes,
                          mapsize_clean=common_mapsize, path_to_script=path_to_script,
-                         show_difmap_output=True,
+                         show_difmap_output=True, text_box=txt_box,
                          beam_restore=common_beam)
                          # dfm_model=os.path.join(save_dir, "model_cc_i_{}.mdl".format(freq)))
 
@@ -226,13 +245,12 @@ blc_high, trc_high = find_bbox(ipol_high, level=3*std_high, min_maxintensity_mjy
                                min_area_pix=10*npixels_beam_high, delta=10)
 blc_high, trc_high = convert_blc_trc(blc_high, trc_high, ipol_high)
 
-# By hand
-# blc = (459, 474)
-# trc = (836, 654)
-
-# bk
-blc = (900, 930)
-trc = (1500, 1240)
+if data_origin in ("mojave", "bk145", "vsop"):
+    blc = (900, 930)
+    trc = (1500, 1240)
+elif data_origin == "vlba":
+    blc = (1900, 1900)
+    trc = (2300, 2200)
 
 blc_low = blc
 trc_low = trc
