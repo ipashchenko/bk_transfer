@@ -31,6 +31,8 @@ alpha_true = -0.5
 # Use final CLEAN iterations with UVTAPER?
 use_uvtaper = False
 
+n_mc = 1
+
 jet_model = "bk"
 # jet_model = "2ridges"
 # jet_model = "3ridges"
@@ -194,6 +196,14 @@ if not only_make_pics or (only_make_pics and re_clean):
             uvdata.noise_add(noise)
             uvdata.save(os.path.join(save_dir, "template_{}.uvf".format(freq)), rewrite=True, downscale_by_freq=need_downscale_uv)
 
+            if n_mc > 1:
+                for i in range(n_mc):
+                    uvdata = UVData(template_uvfits_dict[freq])
+                    uvdata.substitute([js])
+                    uvdata.noise_add(noise)
+                    uvdata.save(os.path.join(save_dir, "template_{}_mc_{}.uvf".format(freq, i+1)), rewrite=True, downscale_by_freq=need_downscale_uv)
+
+
         # If doing from scratch or only making pics, but with re-CLEANing
         if not only_make_pics or (only_make_pics and re_clean):
             outfname = "model_cc_i_{}.fits".format(freq)
@@ -215,6 +225,14 @@ if not only_make_pics or (only_make_pics and re_clean):
                          show_difmap_output=True, text_box=txt_box,
                          beam_restore=common_beam)
                          # dfm_model=os.path.join(save_dir, "model_cc_i_{}.mdl".format(freq)))
+            if n_mc > 1:
+                for i in range(n_mc):
+                    outfname = "model_cc_i_{}_mc_{}.fits".format(freq, i+1)
+                    clean_difmap(fname="template_{}_mc_{}.uvf".format(freq, i+1), path=save_dir,
+                                 outfname=outfname, outpath=save_dir, stokes=stokes,
+                                 mapsize_clean=common_mapsize, path_to_script=path_to_script,
+                                 show_difmap_output=True, text_box=txt_box,
+                                 beam_restore=common_beam)
 
 # Create image of alpha made from true jet models convolved with beam
 itrue_convolved_low = create_image_from_fits_file("{}/convolved_true_jet_model_i_rotated_{}.fits".format(save_dir, freq_low)).image
@@ -344,3 +362,40 @@ fig = iplot(ipol_arrays[freq_low], spix_array - true_convolved_spix_array, x=cci
             cmap='bwr', contour_color='black', plot_colorbar=True,
             contour_linewidth=0.25)
 fig.savefig(os.path.join(save_dir, "bias_spix_{}GHz_{}GHz_I_{}GHz.png".format(freq_high, freq_low, freq_low)), dpi=600, bbox_inches="tight")
+
+
+if n_mc > 1:
+    images = dict()
+    for freq in freqs_obs_ghz:
+        images[freq] = list()
+    # Read all MC data
+    for i in range(n_mc):
+        for freq in freqs_obs_ghz:
+            images[freq].append(create_clean_image_from_fits_file(os.path.join(save_dir, "model_cc_i_{}_mc_{}.fits".format(freq, i+1))).image)
+
+    image_low = np.sum(images[freq_low], axis=0)/n_mc
+    image_high = np.sum(images[freq_high], axis=0)/n_mc
+    std = find_image_std(image_low, beam_npixels=npixels_beam_low)
+    stack_mask = image_low < 3*std
+    spix_array = np.log(image_low/image_high)/np.log(freq_low/freq_high)
+
+
+    # Observed stacked spix
+    if artificial_alpha:
+        color_clim = [alpha_true-0.5, alpha_true+0.5]
+    else:
+        color_clim = [-1.5, 0.5]
+    fig = iplot(image_low, spix_array, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
+                min_abs_level=3*std, colors_mask=stack_mask, color_clim=color_clim, blc=blc, trc=trc,
+                beam=common_beam, close=True, colorbar_label=r"$\alpha$", show_beam=True, show=False,
+                cmap='bwr', contour_color='black', plot_colorbar=True,
+                contour_linewidth=0.25)
+    fig.savefig(os.path.join(save_dir, "stack_spix_{}GHz_{}GHz_I_{}GHz.png".format(freq_high, freq_low, freq_low)), dpi=600, bbox_inches="tight")
+
+    # Bias of stackedspix
+    fig = iplot(image_low, spix_array - true_convolved_spix_array, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
+                min_abs_level=3*std, colors_mask=stack_mask, color_clim=[-0.5, 0.5], blc=blc, trc=trc,
+                beam=common_beam, close=True, colorbar_label=r"$\alpha$", show_beam=True, show=False,
+                cmap='bwr', contour_color='black', plot_colorbar=True,
+                contour_linewidth=0.25)
+    fig.savefig(os.path.join(save_dir, "stack_bias_spix_{}GHz_{}GHz_I_{}GHz.png".format(freq_high, freq_low, freq_low)), dpi=600, bbox_inches="tight")
