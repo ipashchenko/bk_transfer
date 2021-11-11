@@ -86,17 +86,17 @@ scale = 1.0
 noise_scale_factor = 1.0
 
 # Common size of the map and pixel size (mas)
-common_mapsize = (2048, 0.1)
+common_mapsize = (1024, 0.1)
 
 
 # C++ code run parameters
 jetpol_files_directory = "/home/ilya/github/bk_transfer/Release"
 z = 0.00436
-n_along = 1024
-n_across = 150
+n_along = 1400
+n_across = 500
 # FIXME: For 24 & 43 GHz VLBA data we need smaller pixel sizes?
-lg_pixel_size_mas_min = -2
-lg_pixel_size_mas_max = -1.0
+lg_pixel_size_mas_min = -1.5
+lg_pixel_size_mas_max = -1.5
 
 
 # path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
@@ -165,7 +165,6 @@ if not only_make_pics or (only_make_pics and re_clean):
             # If one needs to decrease the noise this is the way to do it
             for baseline, baseline_noise_std in noise.items():
                 noise.update({baseline: noise_scale_factor*baseline_noise_std})
-
 
             jm = JetImage(z=z, n_along=n_along, n_across=n_across,
                           lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
@@ -269,8 +268,8 @@ blc_high, trc_high = find_bbox(ipol_high, level=3*std_high, min_maxintensity_mjy
 blc_high, trc_high = convert_blc_trc(blc_high, trc_high, ipol_high)
 
 if data_origin in ("mojave", "bk145", "vsop"):
-    blc = (900, 930)
-    trc = (1500, 1240)
+    blc = (400, 400)
+    trc = (1000, 800)
 elif data_origin == "vlba":
     blc = (1900, 1900)
     trc = (2300, 2200)
