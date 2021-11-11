@@ -141,14 +141,14 @@ std::vector<double> run_on_analytic() {
 //    int number_of_pixels_along = 1024;
 //    int number_of_pixels_across = 150;
     // Uniform pixel size
-    int number_of_pixels_along = 4000;
-    int number_of_pixels_across = 1500;
+    int number_of_pixels_along = 1400;
+    int number_of_pixels_across = 500;
     // Non-uniform pixel from ``pixel_size_mas_start`` (near BH) to ``pixel_size_mas_stop`` (image edges)
 //    double pixel_size_mas_start = pow(10.0, -2.0);
 //    double pixel_size_mas_stop = pow(10.0, -1.0);
     // Uniform pixel size
-    double pixel_size_mas_start = pow(10.0, -2.0);
-    double pixel_size_mas_stop = pow(10.0, -2.0);
+    double pixel_size_mas_start = pow(10.0, -1.5);
+    double pixel_size_mas_stop = pow(10.0, -1.5);
     auto image_size = std::make_pair(number_of_pixels_across, number_of_pixels_along);
     auto pc_in_mas = mas_to_pc(redshift);
     std::cout << "pc_in_mas " << pc_in_mas << std::endl;
