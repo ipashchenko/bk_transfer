@@ -40,10 +40,10 @@ std::vector<double> run_on_analytic() {
 //    double los_angle = 20.0*M_PI/180.0;
 
     // Observed frequencies in GHz
-//    std::vector<double> nu_observed_ghz{8.1, 15.4};
+    std::vector<double> nu_observed_ghz{8.1, 15.4};
 //    std::vector<double> nu_observed_ghz{1.6, 4.8};
 //    std::vector<double> nu_observed_ghz{24, 43};
-    std::vector<double> nu_observed_ghz{15.4};
+//    std::vector<double> nu_observed_ghz{15.4};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
