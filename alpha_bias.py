@@ -299,6 +299,12 @@ if not only_clean:
                 min_abs_level=3*std_high, blc=blc_high, trc=trc_high, beam=beam_high, close=True, show_beam=True, show=False,
                 contour_color='black', contour_linewidth=0.25, colorbar_label="I frac. bias", plot_colorbar=True, cmap='bwr')
     fig.savefig(os.path.join(save_dir, "bias_ipol_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
+    # True I convolved
+    fig = iplot(itrue_convolved_high,
+                x=ccimages[freq_high].x, y=ccimages[freq_high].y,
+                min_abs_level=3*std_high, blc=blc_high, trc=trc_high, beam=common_beam, close=True, show_beam=True, show=False,
+                contour_color='gray', contour_linewidth=0.25)
+    fig.savefig(os.path.join(save_dir, "ipol_true_conv_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
 
 # I low
 fig = iplot(ipol_low, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
@@ -313,6 +319,13 @@ if not only_clean:
                 min_abs_level=3*std_low, blc=blc_low, trc=trc_low, beam=beam_low, close=True, show_beam=True, show=False,
                 contour_color='black', contour_linewidth=0.25, colorbar_label="I frac. bias", plot_colorbar=True, cmap="bwr")
     fig.savefig(os.path.join(save_dir, "bias_ipol_{}GHz.png".format(freq_low)), dpi=600, bbox_inches="tight")
+    # True I convolved
+    fig = iplot(itrue_convolved_low,
+                x=ccimages[freq_low].x, y=ccimages[freq_low].y,
+                min_abs_level=3*std_low, blc=blc_low, trc=trc_low, beam=common_beam, close=True, show_beam=True, show=False,
+                contour_color='gray', contour_linewidth=0.25)
+    fig.savefig(os.path.join(save_dir, "ipol_true_conv_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
+
 
 ipol_arrays = dict()
 sigma_ipol_arrays = dict()
