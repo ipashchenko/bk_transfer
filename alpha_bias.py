@@ -173,13 +173,13 @@ if not only_make_pics or (only_make_pics and re_clean):
                            lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
                            jet_side=False, rot=np.deg2rad(rot_angle_deg))
             if artificial_alpha:
-                jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
+                jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq_high, jet_model),
                                      scale=scale*(freq_high/freq)**(-alpha_true))
-                cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq_high),
+                cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq_high, jet_model),
                                       scale=scale*(freq_high/freq)**(-alpha_true))
             else:
-                jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
-                cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
+                jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
+                cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
             js = TwinJetImage(jm, cjm)
 
             # Convert to difmap model format
