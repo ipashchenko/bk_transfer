@@ -302,7 +302,7 @@ if not only_clean:
     # True I convolved
     fig = iplot(itrue_convolved_high,
                 x=ccimages[freq_high].x, y=ccimages[freq_high].y,
-                min_abs_level=3*std_high, blc=blc_high, trc=trc_high, beam=common_beam, close=True, show_beam=True, show=False,
+                min_abs_level=1*std_high, blc=blc_high, trc=trc_high, beam=common_beam, close=True, show_beam=True, show=False,
                 contour_color='gray', contour_linewidth=0.25)
     fig.savefig(os.path.join(save_dir, "ipol_true_conv_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
 
@@ -322,7 +322,7 @@ if not only_clean:
     # True I convolved
     fig = iplot(itrue_convolved_low,
                 x=ccimages[freq_low].x, y=ccimages[freq_low].y,
-                min_abs_level=3*std_low, blc=blc_low, trc=trc_low, beam=common_beam, close=True, show_beam=True, show=False,
+                min_abs_level=1*std_low, blc=blc_low, trc=trc_low, beam=common_beam, close=True, show_beam=True, show=False,
                 contour_color='gray', contour_linewidth=0.25)
     fig.savefig(os.path.join(save_dir, "ipol_true_conv_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
 

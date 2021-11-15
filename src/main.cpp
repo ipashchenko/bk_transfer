@@ -104,7 +104,7 @@ std::vector<double> run_on_analytic() {
 
 //    // Working spirals implementation /////////////
 //    // Value at r=1pc
-//    double K_1 = 2.00;
+//    double K_1 = 2.50;
 //    // Exponent of the decrease
 //    double n = 1.5;
 //    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
@@ -118,8 +118,12 @@ std::vector<double> run_on_analytic() {
     bool central_vfield = false;
     double Gamma = 1.2;
     // Gamma(z) = Gamma_0 + Gamma_1*(z/1pc)^{0.5}
+    // For bk & ridges
     double Gamma_0 = 1.1;
     double Gamma_1 = 1.0;
+    // For KH
+//    double Gamma_0 = 1.1;
+//    double Gamma_1 = 1.5;
     // Working with spirals
     //double Gamma = 1.20;
 //    if (central_vfield) {
