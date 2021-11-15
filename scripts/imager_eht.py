@@ -1,11 +1,12 @@
 import numpy as np
 import ehtim as eh
+import astropy.units as u
 import matplotlib
 matplotlib.use('Agg')
 
 
 def image_in_eht(uvfits, prior_fits, maxit_first, maxit_iter,
-                 max_number_of_cycles=1, frac_clipfloor=0.01, uvfits_beam=None,
+                 max_number_of_cycles=1, frac_clipfloor=0.01, beam=None, uvfits_beam=None,
                  frac_nchi2_to_stop=0.01, d1='vis', d2=False, d3=False,
                  alpha_d1=100, alpha_d2=100, alpha_d3=100,
                  s1='simple', s2=False, s3=False,
@@ -109,7 +110,14 @@ def image_in_eht(uvfits, prior_fits, maxit_first, maxit_iter,
     if uvfits_beam is not None:
         obs = eh.obsdata.load_uvfits(uvfits_beam)
         beamparams = obs.fit_beam("natural")
-    outblur = out.blur_gauss(beamparams, 1.0)
+    if beam is not None:
+        beamparams = (beam[0]*u.mas.to(u.rad), beam[1]*u.mas.to(u.rad), beam[2])
+
+    outblurs = list()
+    fracs = (0.5, 0.75, 1.0)
+    for frac in fracs:
+        beamparams_loc = (frac*beamparams[0], frac*beamparams[1], beamparams[2])
+        outblurs.append(out.blur_gauss(beamparams_loc, 1.0))
 
     # Plot the image
     if pdfname is not None:
@@ -118,45 +126,55 @@ def image_in_eht(uvfits, prior_fits, maxit_first, maxit_iter,
     if outname is not None:
         out.save_txt(outname + '.txt')
         out.save_fits(outname + '.fits')
-        outblur.save_txt(outname + '_blur.txt')
-        outblur.save_fits(outname + '_blur.fits')
+        for frac, outblur in zip(fracs, outblurs):
+            outblur.save_txt(outname + '_blur_{}.txt'.format(frac))
+            outblur.save_fits(outname + '_blur_{}.fits'.format(frac))
 
     return out
 
 
 if __name__ == "__main__":
-    uvfits_high = "/home/ilya/data/alpha/results/MOJAVE/2ridges/template_15.4.uvf"
-    uvfits_low = "/home/ilya/data/alpha/results/MOJAVE/2ridges/template_8.1.uvf"
-    initial_fits_high = "/home/ilya/data/alpha/results/MOJAVE/2ridges/convolved_true_jet_model_i_rotated_15.4.fits"
-    initial_fits_low = "/home/ilya/data/alpha/results/MOJAVE/2ridges/convolved_true_jet_model_i_rotated_8.1.fits"
+    freqs_ghz = (15.4, 8.1)
+    freq_low = min(list(freqs_ghz.values()))
+    freq_high = max(list(freqs_ghz.values()))
 
-    eht_image = image_in_eht(uvfits_high, initial_fits_high, uvfits_beam=uvfits_low,
-                             frac_clipfloor=0.00001,
-                             maxit_first=500, maxit_iter=800, frac_nchi2_to_stop=0.03,
-                             alpha_flux=0.0, alpha_cm=0.0,
-                             d1="vis", alpha_d1=1,
-                             s1="simple", s2="tv", alpha_s1=10.0, alpha_s2=1.0,
-                             outname="mojave", pdfname="mojave.pdf")
+    jet_model = "kh"
+    data_type = "bk145"
 
+    # Recovering KH or edges
+    uvfits = {freq: "/home/ilya/data/alpha/results/{}/{}/template_{}.uvf".format(data_type.upper(), jet_model, freq) for freq in freqs_ghz}
+    # DO NOT MODIFY! Prior and initial image - BK model
+    initial_fits = {freq: "/home/ilya/data/alpha/results/MOJAVE/bk/convolved_true_jet_model_i_rotated_{}.fits".format(freq) for freq in freqs_ghz}
+    # Common convolve beam
+    beam = (1.56, 1.56, 0)
+
+    for freq in freqs_ghz:
+        eht_image = image_in_eht(uvfits[freq], initial_fits[freq], beam=beam,
+                                 frac_clipfloor=0.00001,
+                                 maxit_first=500, maxit_iter=800, frac_nchi2_to_stop=0.03,
+                                 alpha_flux=0.0, alpha_cm=0.0,
+                                 d1="vis", alpha_d1=1,
+                                 s1="simple", s2="tv", alpha_s1=10.0, alpha_s2=1.0,
+                                 outname="{}_{}_{}".format(jet_model, data_type, freq), pdfname="{}_{}_{}.pdf".format(jet_model, data_type, freq))
 
     import sys
-    sys.exit(0)
+    # sys.exit(0)
     sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
     from image import plot as iplot
     from from_fits import create_image_from_fits_file
     import astropy.io.fits as pf
-    import astropy.units as u
 
-    obs = eh.obsdata.load_uvfits(uvfits_low)
-    beamparams = obs.fit_beam(weighting="natural")
-    im8 = pf.getdata("/home/ilya/github/bk_transfer/scripts/bk145_8.1_blur.fits")
-    im15 = pf.getdata("/home/ilya/github/bk_transfer/scripts/bk145_15.4_blur.fits")
-    alpha = np.log(im8/im15)/np.log(8.1/15.4)
+    # obs = eh.obsdata.load_uvfits(uvfits_low)
     im8_clean = create_image_from_fits_file("/home/ilya/data/alpha/results/BK145/bk/model_cc_i_8.1.fits")
-    beam = (beamparams[0]*u.rad.to(u.mas), beamparams[1]*u.rad.to(u.mas), beamparams[2])
-    fig = iplot(im8, alpha, x=im8_clean.x, y=im8_clean.y,
-                colors_mask=im8 < 0.0005*np.max(im8),
-                color_clim=[-1.5, 0.5], colorbar_label=r"$\alpha$",
-                min_abs_level=0.0005*np.max(im8), blc=(450, 440), trc=(900, 685),
-                beam=beam, close=False, show_beam=True, show=True,
-                contour_color='black', contour_linewidth=0.25, cmap="bwr")
+    fracs = (0.5, 0.75, 1.0)
+    for frac in fracs:
+        im = {freq: pf.getdata("/home/ilya/github/bk_transfer/scripts/{}_{}_{}_blur_{}.fits".format(jet_model, data_type, freq, frac)) for freq in freqs_ghz}
+        alpha = np.log(im[freq_low]/im[freq_high])/np.log(freq_low/freq_high)
+        # FIXME: From this CLEAN FITS image we Need x,y-coordinate only!
+        fig = iplot(im[freq_low], alpha, x=im8_clean.x, y=im8_clean.y,
+                    colors_mask=im[freq_low] < 0.0005*np.max(im[freq_low]),
+                    color_clim=[-1.5, 0.5], colorbar_label=r"$\alpha$",
+                    min_abs_level=0.0005*np.max(im[freq_low]), blc=(450, 440), trc=(900, 685),
+                    beam=beam, close=False, show_beam=True, show=True,
+                    contour_color='black', contour_linewidth=0.25, cmap="bwr")
+        fig.savefig("/home/ilya/github/bk_transfer/scripts/{}_{}_{}_blur_{}.png".format(jet_model, data_type, freq, frac))
