@@ -120,8 +120,8 @@ def image_in_eht(uvfits, prior_fits, maxit_first, maxit_iter,
         outblurs.append(out.blur_gauss(beamparams_loc, 1.0))
 
     # Plot the image
-    if pdfname is not None:
-        fig = outblur.display(scale="log", export_pdf=pdfname)
+    # if pdfname is not None:
+    #     fig = outblur.display(scale="log", export_pdf=pdfname)
     # Save the images (both beam-convolved and original MEM)
     if outname is not None:
         out.save_txt(outname + '.txt')
@@ -135,8 +135,8 @@ def image_in_eht(uvfits, prior_fits, maxit_first, maxit_iter,
 
 if __name__ == "__main__":
     freqs_ghz = (15.4, 8.1)
-    freq_low = min(list(freqs_ghz.values()))
-    freq_high = max(list(freqs_ghz.values()))
+    freq_low = min(freqs_ghz)
+    freq_high = max(freqs_ghz)
 
     jet_model = "kh"
     data_type = "bk145"
@@ -151,18 +151,28 @@ if __name__ == "__main__":
     for freq in freqs_ghz:
         eht_image = image_in_eht(uvfits[freq], initial_fits[freq], beam=beam,
                                  frac_clipfloor=0.00001,
-                                 maxit_first=500, maxit_iter=800, frac_nchi2_to_stop=0.03,
+                                 maxit_first=500, maxit_iter=2500, frac_nchi2_to_stop=0.03,
                                  alpha_flux=0.0, alpha_cm=0.0,
                                  d1="vis", alpha_d1=1,
-                                 s1="simple", s2="tv", alpha_s1=10.0, alpha_s2=1.0,
+                                 s1="simple", alpha_s1=1.0,
                                  outname="{}_{}_{}".format(jet_model, data_type, freq), pdfname="{}_{}_{}.pdf".format(jet_model, data_type, freq))
 
     import sys
     # sys.exit(0)
+    import os
     sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
     from image import plot as iplot
     from from_fits import create_image_from_fits_file
     import astropy.io.fits as pf
+
+
+    # Get true alpha image
+    # FIXME: Check that the same convolving beam used as here!
+    save_dir = os.path.join("/home/ilya/data/alpha/results/{}".format(data_type.upper()), jet_model)
+    itrue_convolved_low = create_image_from_fits_file("{}/convolved_true_jet_model_i_rotated_{}.fits".format(save_dir, freq_low)).image
+    itrue_convolved_high = create_image_from_fits_file("{}/convolved_true_jet_model_i_rotated_{}.fits".format(save_dir, freq_high)).image
+    true_convolved_spix_array = np.log(itrue_convolved_low/itrue_convolved_high)/np.log(freq_low/freq_high)
+
 
     # obs = eh.obsdata.load_uvfits(uvfits_low)
     im8_clean = create_image_from_fits_file("/home/ilya/data/alpha/results/BK145/bk/model_cc_i_8.1.fits")
@@ -172,9 +182,19 @@ if __name__ == "__main__":
         alpha = np.log(im[freq_low]/im[freq_high])/np.log(freq_low/freq_high)
         # FIXME: From this CLEAN FITS image we Need x,y-coordinate only!
         fig = iplot(im[freq_low], alpha, x=im8_clean.x, y=im8_clean.y,
-                    colors_mask=im[freq_low] < 0.0005*np.max(im[freq_low]),
+                    colors_mask=im[freq_low] < 0.00025*np.max(im[freq_low]),
                     color_clim=[-1.5, 0.5], colorbar_label=r"$\alpha$",
-                    min_abs_level=0.0005*np.max(im[freq_low]), blc=(450, 440), trc=(900, 685),
+                    min_abs_level=0.00025*np.max(im[freq_low]), blc=(450, 440), trc=(1000, 685),
                     beam=beam, close=False, show_beam=True, show=True,
                     contour_color='black', contour_linewidth=0.25, cmap="bwr")
-        fig.savefig("/home/ilya/github/bk_transfer/scripts/{}_{}_{}_blur_{}.png".format(jet_model, data_type, freq, frac))
+        fig.savefig("/home/ilya/github/bk_transfer/scripts/{}_{}_{}_blur_{}.png".format(jet_model, data_type, freq, frac), bbox_inches="tight", dpi=600)
+
+        # We only have model convolved with single beam
+        if frac == 1.0:
+            fig = iplot(im[freq_low], alpha-true_convolved_spix_array, x=im8_clean.x, y=im8_clean.y,
+                        colors_mask=im[freq_low] < 0.00025*np.max(im[freq_low]),
+                        color_clim=[-0.3, 0.3], colorbar_label=r"$\alpha {\rm bias}$",
+                        min_abs_level=0.00025*np.max(im[freq_low]), blc=(450, 440), trc=(1000, 685),
+                        beam=beam, close=False, show_beam=True, show=True,
+                        contour_color='black', contour_linewidth=0.25, cmap="bwr")
+            fig.savefig("/home/ilya/github/bk_transfer/scripts/alpha_bias_{}_{}_{}_blur_{}.png".format(jet_model, data_type, freq, frac), bbox_inches="tight", dpi=600)
