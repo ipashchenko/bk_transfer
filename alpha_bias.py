@@ -24,7 +24,7 @@ only_make_pics = True
 re_clean = False
 
 # If True, then just CLEAN artificial data and do not bother with true model convolution.
-only_clean = False
+only_clean = True
 
 # Make model low frequency image from high frequency one using `alpha_true`
 artificial_alpha = False
@@ -178,8 +178,11 @@ if not only_make_pics or (only_make_pics and re_clean):
                 cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq_high, jet_model),
                                       scale=scale*(freq_high/freq)**(-alpha_true))
             else:
-                jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
-                cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
+                # jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
+                # cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
+                # FIXME: DEBUG
+                jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
+                cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
             js = TwinJetImage(jm, cjm)
 
             # Convert to difmap model format
@@ -267,24 +270,26 @@ blc_high, trc_high = find_bbox(ipol_high, level=3*std_high, min_maxintensity_mjy
                                min_area_pix=10*npixels_beam_high, delta=10)
 blc_high, trc_high = convert_blc_trc(blc_high, trc_high, ipol_high)
 
-if data_origin in ("mojave", "bk145", "vsop"):
+if data_origin == "mojave":
+    blc = (450, 450)
+    trc = (950, 700)
+    blc_true = (400, 400)
+    trc_true = (1000, 800)
+elif data_origin in ("bk145", "vsop"):
     blc = (400, 400)
     trc = (1000, 800)
+    blc_true = (400, 400)
+    trc_true = (1000, 800)
 elif data_origin == "vlba":
     blc = (1900, 1900)
     trc = (2300, 2200)
+    blc_true = (1900, 1900)
+    trc_true = (2300, 2200)
 
-blc_low = blc
-trc_low = trc
-blc_high = blc
-trc_high = trc
-
-# blc = blc_low
-# trc = trc_low
 
 # I high
 fig = iplot(ipol_high, x=ccimages[freq_high].x, y=ccimages[freq_high].y,
-            min_abs_level=3*std_high, blc=blc_low, trc=trc_low, beam=beam_low, close=True, show_beam=True, show=False,
+            min_abs_level=3*std_high, blc=blc, trc=trc, beam=beam_low, close=True, show_beam=True, show=False,
             contour_color='gray', contour_linewidth=0.25)
 fig.savefig(os.path.join(save_dir, "observed_ipol_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
 
@@ -296,19 +301,19 @@ if not only_clean:
                 x=ccimages[freq_high].x, y=ccimages[freq_high].y,
                 colors_mask=ipol_high < 3*std_high,
                 color_clim=[-0.25, 0.25],
-                min_abs_level=3*std_high, blc=blc_high, trc=trc_high, beam=beam_high, close=True, show_beam=True, show=False,
+                min_abs_level=3*std_high, blc=blc, trc=trc, beam=beam_high, close=True, show_beam=True, show=False,
                 contour_color='black', contour_linewidth=0.25, colorbar_label="I frac. bias", plot_colorbar=True, cmap='bwr')
     fig.savefig(os.path.join(save_dir, "bias_ipol_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
     # True I convolved
     fig = iplot(itrue_convolved_high,
                 x=ccimages[freq_high].x, y=ccimages[freq_high].y,
-                min_abs_level=1*std_high, blc=blc_high, trc=trc_high, beam=common_beam, close=True, show_beam=True, show=False,
+                min_abs_level=0.0001*np.max(itrue_convolved_high), blc=blc_true, trc=trc_true, beam=common_beam, close=True, show_beam=True, show=False,
                 contour_color='gray', contour_linewidth=0.25)
     fig.savefig(os.path.join(save_dir, "ipol_true_conv_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
 
 # I low
 fig = iplot(ipol_low, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
-            min_abs_level=3*std_low, blc=blc_low, trc=trc_low, beam=beam_low, close=True, show_beam=True, show=False,
+            min_abs_level=450*1e-06, blc=blc, trc=trc, beam=beam_low, close=True, show_beam=True, show=False,
             contour_color='gray', contour_linewidth=0.25)
 fig.savefig(os.path.join(save_dir, "observed_ipol_{}GHz.png".format(freq_low)), dpi=600, bbox_inches="tight")
 
@@ -316,13 +321,13 @@ if not only_clean:
     # I low bias
     fig = iplot(ipol_low, (ipol_low - itrue_convolved_low)/itrue_convolved_low,
                 x=ccimages[freq_low].x, y=ccimages[freq_low].y, colors_mask=ipol_low < 3*std_low, color_clim=[-0.25, 0.25],
-                min_abs_level=3*std_low, blc=blc_low, trc=trc_low, beam=beam_low, close=True, show_beam=True, show=False,
+                min_abs_level=3*std_low, blc=blc, trc=trc, beam=beam_low, close=True, show_beam=True, show=False,
                 contour_color='black', contour_linewidth=0.25, colorbar_label="I frac. bias", plot_colorbar=True, cmap="bwr")
     fig.savefig(os.path.join(save_dir, "bias_ipol_{}GHz.png".format(freq_low)), dpi=600, bbox_inches="tight")
     # True I convolved
     fig = iplot(itrue_convolved_low,
                 x=ccimages[freq_low].x, y=ccimages[freq_low].y,
-                min_abs_level=1*std_low, blc=blc_low, trc=trc_low, beam=common_beam, close=True, show_beam=True, show=False,
+                min_abs_level=0.0001*np.max(itrue_convolved_low), blc=blc_true, trc=trc_true, beam=common_beam, close=True, show_beam=True, show=False,
                 contour_color='gray', contour_linewidth=0.25)
     fig.savefig(os.path.join(save_dir, "ipol_true_conv_{}GHz.png".format(freq_high)), dpi=600, bbox_inches="tight")
 
@@ -361,12 +366,20 @@ if not only_clean:
                 contour_linewidth=0.25)
     fig.savefig(os.path.join(save_dir, "true_conv_spix_{}GHz_{}GHz_I_{}GHz.png".format(freq_high, freq_low, freq_low)),
                 dpi=600, bbox_inches="tight")
+    fig = iplot(itrue_convolved_low, true_convolved_spix_array, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
+                min_abs_level=0.0001*np.max(itrue_convolved_low), colors_mask=itrue_convolved_low < 0.0001*np.max(itrue_convolved_low),
+                color_clim=color_clim, blc=blc_true, trc=trc_true,
+                beam=common_beam, close=True, colorbar_label=r"$\alpha$", show_beam=True, show=False,
+                cmap='bwr', contour_color='black', plot_colorbar=True,
+                contour_linewidth=0.25)
+    fig.savefig(os.path.join(save_dir, "true_conv_spix_{}GHz_{}GHz_true_I_{}GHz.png".format(freq_high, freq_low, freq_low)),
+                dpi=600, bbox_inches="tight")
 
 # Observed spix
 if artificial_alpha:
     color_clim = [alpha_true-0.5, alpha_true+0.5]
 else:
-    color_clim = [-1.5, 0.5]
+    color_clim = [-1.0, 0.0]
 fig = iplot(ipol_arrays[freq_low], spix_array, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
             min_abs_level=3*std_dict[freq_low], colors_mask=common_imask, color_clim=color_clim, blc=blc, trc=trc,
             beam=common_beam, close=True, colorbar_label=r"$\alpha$", show_beam=True, show=False,
@@ -377,7 +390,7 @@ fig.savefig(os.path.join(save_dir, "spix_{}GHz_{}GHz_I_{}GHz.png".format(freq_hi
 if not only_clean:
     # Bias spix
     fig = iplot(ipol_arrays[freq_low], spix_array - true_convolved_spix_array, x=ccimages[freq_low].x, y=ccimages[freq_low].y,
-                min_abs_level=3*std_dict[freq_low], colors_mask=common_imask, color_clim=[-0.5, 0.5], blc=blc, trc=trc,
+                min_abs_level=3*std_dict[freq_low], colors_mask=common_imask, color_clim=[-0.3, 0.3], blc=blc, trc=trc,
                 beam=common_beam, close=True, colorbar_label=r"$\alpha$", show_beam=True, show=False,
                 cmap='bwr', contour_color='black', plot_colorbar=True,
                 contour_linewidth=0.25)
