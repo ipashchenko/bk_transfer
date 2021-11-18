@@ -1,5 +1,19 @@
 import numpy as np
 import os
+import matplotlib
+label_size = 18
+matplotlib.rcParams['ytick.labelsize'] = label_size
+matplotlib.rcParams['xtick.labelsize'] = label_size
+matplotlib.rcParams['axes.titlesize'] = label_size
+matplotlib.rcParams['axes.labelsize'] = label_size
+matplotlib.rcParams['font.size'] = label_size
+matplotlib.rcParams['legend.fontsize'] = label_size
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator, LogLocator
+from matplotlib.colors import LogNorm
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def simulate_random_evpa(std_evpa, n_epochs=30, n_rep=1000):
@@ -172,8 +186,63 @@ def density_profile(r, r1, r2, K1, K2, b1=1.0, b2=0.0, b3=1.0):
     return y5
 
 
-def concatenate_jet_with_counter_jet(stokes, freq_ghz, path):
-    j = np.loadtxt(os.path.join(path, "jet_image_{}_{}.txt".format(stokes, freq_ghz)))
-    cj = np.loadtxt(os.path.join(path, "cjet_image_{}_{}.txt".format(stokes, freq_ghz)))
+def concatenate_jet_with_counter_jet(stokes, freq_ghz, path=None, code=None):
+    if path is None:
+        path = os.getcwd()
+    if code is None:
+        j = np.loadtxt(os.path.join(path, "jet_image_{}_{}.txt".format(stokes, freq_ghz)))
+        cj = np.loadtxt(os.path.join(path, "cjet_image_{}_{}.txt".format(stokes, freq_ghz)))
+    else:
+        j = np.loadtxt(os.path.join(path, "jet_image_{}_{}_{}.txt".format(stokes, freq_ghz, code)))
+        cj = np.loadtxt(os.path.join(path, "cjet_image_{}_{}_{}.txt".format(stokes, freq_ghz, code)))
     jcj = np.hstack((cj[::, ::-1], j))
-    np.savetxt(os.path.join(path, "jet_cjet_image_{}_{}.txt".format(stokes, freq_ghz)), jcj)
+    if code is None:
+        np.savetxt(os.path.join(path, "jet_cjet_image_{}_{}.txt".format(stokes, freq_ghz)), jcj)
+    else:
+        np.savetxt(os.path.join(path, "jet_cjet_image_{}_{}_{}.txt".format(stokes, freq_ghz, code)), jcj)
+
+
+def plot_raw(txt_files, labels, extent=None, log=True, first_level=0.000001, max_level=0.1, savename=None, cmap="jet",
+             plot_colorbar=False, figsize=(3*5.7, 1.5), pixsize=10**(-1.5), colorbar_label=None):
+    if extent is None and pixsize is None:
+        raise Exception("Specify extent or pixsize!")
+    toplots = [np.loadtxt(txt) for txt in txt_files]
+    toplot = toplots[0]
+    shape = toplot.shape
+    if extent is None:
+        extent_along = pixsize*shape[1]/2
+        extent_across = pixsize*shape[0]/2
+        extent = (-(1400-1200)/1400*extent_along, extent_along, -(250-100)/500*extent_across, (400-250)/500*extent_across)
+
+    if len(toplots) > 1:
+        figsize = (figsize[0], len(toplots)*figsize[1])
+    fig, axes = plt.subplots(len(toplots), 1, figsize=figsize, sharey=True, sharex=True)
+    plt.subplots_adjust(hspace=0, wspace=0)
+    if log:
+        norm = LogNorm(vmin=first_level, vmax=max_level*toplot.max())
+    else:
+        norm = None
+
+    for i in range(len(toplots)):
+        im = axes[i].matshow(toplots[i][100:400, 1200:], norm=norm, extent=extent, aspect="equal", cmap=cmap)
+        axes[i].text(-6, 1.5, labels[i])
+        axes[i].set_ylabel(r"$r$, mas")
+    axes[i].set_xlabel(r"$z_{\rm obs}$, mas")
+    plt.gca().xaxis.tick_bottom()
+    if plot_colorbar:
+        divider = make_axes_locatable(axes)
+        cax = divider.append_axes("right", size="5%", pad=0.00)
+        cb = fig.colorbar(im, cax=cax)
+        cb.set_label(colorbar_label)
+
+    plt.subplots_adjust(hspace=0)
+    if savename is not None:
+        fig.savefig(savename, bbox_inches="tight", dpi=300)
+    plt.show()
+
+
+if __name__ == "__main__":
+    plot_raw(["jet_cjet_image_i_15.4_bk.txt", "jet_cjet_image_i_15.4_2ridges.txt", "jet_cjet_image_i_15.4_3ridges.txt", "jet_cjet_image_i_15.4_kh.txt"],
+             labels=["BK", "2 ridges", "3 ridges", "KH"], cmap="jet", first_level=0.000001, max_level=0.1,
+             pixsize=10**(-1.5), plot_colorbar=False, figsize=(5*5.7, 1.7),
+             savename="jet_models.png")
