@@ -7,6 +7,7 @@ import datetime
 import matplotlib
 label_size = 16
 matplotlib.rcParams['ytick.labelsize'] = label_size
+matplotlib.rcParams['xtick.labelsize'] = label_size
 matplotlib.rcParams['axes.titlesize'] = label_size
 matplotlib.rcParams['axes.labelsize'] = label_size
 matplotlib.rcParams['font.size'] = label_size
@@ -553,22 +554,6 @@ def plot_several_images(prefix, directory):
         plot_images(code, "byhand", txt_files_dir=directory, save_dir=directory, n_along=600, n_across=100,
                     lg_pixel_size_mas_min=np.log10(0.01), lg_pixel_size_mas_max=np.log10(0.05), freq_ghz_high=15.4,
                     plot_beta_app=True, show=False)
-
-
-def plot_raw(txt, label, extent, savename=None):
-    toplot = np.loadtxt(txt)
-    fig, axes = plt.subplots(1, 1)
-    im = axes.matshow(toplot, extent=extent, aspect="equal")
-    axes.set_xlabel(r"$z_{\rm obs}$, mas")
-    axes.set_ylabel(r"$r$, mas")
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    divider = make_axes_locatable(axes)
-    cax = divider.append_axes("right", size="5%", pad=0.00)
-    cb = fig.colorbar(im, cax=cax)
-    cb.set_label(label)
-    if savename is not None:
-        fig.savefig(savename, bbox_inches="tight", dpi=300)
-    plt.show()
 
 
 if __name__ == "__main__":
