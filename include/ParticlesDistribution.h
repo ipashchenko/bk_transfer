@@ -28,6 +28,9 @@ class ParticlesDistribution {
 
         double k_F_c(Vector3d &b, Vector3d &n_los, double nu, double n) const;
         double k_C_c(Vector3d &b, Vector3d &n_los, double nu, double n) const;
+
+        virtual double get_equipartition_bsq_coefficient() const = 0;
+
 };
 
 
@@ -50,6 +53,9 @@ class PowerLaw : public ParticlesDistribution {
         double eta_q(Vector3d &b, Vector3d &n_los, double nu, double n) const override;
         double eta_u(Vector3d &b, Vector3d &n_los, double nu, double n) const override;
         double eta_v(Vector3d &b, Vector3d &n_los, double nu, double n) const override;
+
+        double get_equipartition_bsq_coefficient() const override;
+
     private:
         std::string plasma_;
         double s_;

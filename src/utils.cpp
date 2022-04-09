@@ -32,34 +32,40 @@ double nu_b_value(Vector3d &b) {
 	return q_e*b.norm()/(2.*pi*m_e*c);
 }
 
-double k_0(Vector3d &b, Vector3d &n_los, double nu, double n_nt, double s, double gamma_min) {
-    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+double k_0(Vector3d &b, Vector3d &n_los, double nu, double n_nt, double s, double gamma_min, double gamma_max) {
+//    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+    double n = n_nt*(s-1)/(pow(gamma_min, 1.-s) - pow(gamma_max, 1.-s));
     return pi*nu_p(n)*nu_p(n)*nu_b(b, n_los)/(c*nu*nu);
 }
 
 
-double k_0(double b, Vector3d &n_los, double nu, double n_nt, double s, double gamma_min) {
-    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+double k_0(double b, Vector3d &n_los, double nu, double n_nt, double s, double gamma_min, double gamma_max) {
+//    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+    double n = n_nt*(s-1)/(pow(gamma_min, 1.-s) - pow(gamma_max, 1.-s));
     return pi*nu_p(n)*nu_p(n)*nu_b(b)/(c*nu*nu);
 }
 
-double k_0_value(Vector3d &b, double nu, double n_nt, double s, double gamma_min) {
-    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+double k_0_value(Vector3d &b, double nu, double n_nt, double s, double gamma_min, double gamma_max) {
+//    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+    double n = n_nt*(s-1)/(pow(gamma_min, 1.-s) - pow(gamma_max, 1.-s));
     return pi*nu_p(n)*nu_p(n)*nu_b_value(b)/(c*nu*nu);
 }
 
-double eta_0(Vector3d &b, Vector3d &n_los, double n_nt, double s, double gamma_min) {
-    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+double eta_0(Vector3d &b, Vector3d &n_los, double n_nt, double s, double gamma_min, double gamma_max) {
+//    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+    double n = n_nt*(s-1)/(pow(gamma_min, 1.-s) - pow(gamma_max, 1.-s));
     return pi*nu_p(n)*nu_p(n)*nu_b(b, n_los)*m_e/c;
 }
 
-double eta_0(double b, Vector3d &n_los, double n_nt, double s, double gamma_min) {
-    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+double eta_0(double b, Vector3d &n_los, double n_nt, double s, double gamma_min, double gamma_max) {
+//    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+    double n = n_nt*(s-1)/(pow(gamma_min, 1.-s) - pow(gamma_max, 1.-s));
     return pi*nu_p(n)*nu_p(n)*nu_b(b)*m_e/c;
 }
 
-double eta_0_value(Vector3d &b, double n_nt, double s, double gamma_min) {
-    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+double eta_0_value(Vector3d &b, double n_nt, double s, double gamma_min, double gamma_max) {
+//    double n = n_nt*(s-1)*pow(gamma_min, s-1);
+    double n = n_nt*(s-1)/(pow(gamma_min, 1.-s) - pow(gamma_max, 1.-s));
     return pi*nu_p(n)*nu_p(n)*nu_b_value(b)*m_e/c;
 }
 
@@ -207,4 +213,9 @@ double density_profile(double r, double r1, double r2, double K1, double K2, dou
     // For all r
     auto y2 = y1 + 0.5*(1+l2)*(b3-y1);
     return y2;
+}
+
+
+double distance_plane_point(const Vector3d& P, const Vector3d& P_plane, const Vector3d& N_plane) {
+    return (P - P_plane).dot(N_plane.normalized());
 }

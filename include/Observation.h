@@ -16,9 +16,12 @@ class Observation {
                                   double nu, string polarization, double relerr);
         std::vector<std::vector<double>> getImage(string value);
         std::pair<unsigned long int,unsigned long int> getImageSize();
+//        void find_furthest_point();
+
     private:
         Jet* jet;
         ImagePlane* imagePlane;
+        Vector3d furthest_point_;
 
 		std::pair<double, double> integrate_tau_adaptive(std::list<Intersection>& list_intersect, Vector3d ray_direction,
 		                                                 const double nu, double tau_max, int n, double dt_max, double relerr);

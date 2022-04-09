@@ -25,15 +25,35 @@ void Tau::operator()(const double &x, double &dxdt, const double t) {
 //    }
 //    std::cout << "tau = " << x << "\n";
     Vector3d point = point_start - t * ray_direction;
+
+    ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
+    // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS. Here N_plane vector is
+    // directed to the observer.
+    // ltt_delay is positive for points that lay closer to the observer than the plane
+    double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
+    ltt_delay = 0.0;
+//    double extra_jet_delay_pc = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/pc;
+//    if(extra_jet_delay_pc < 10.0) {
+//        std::cout << "Delay due to extra jet distance [pc] = " << extra_jet_delay_pc << "\n";
+//        std::cout << "LTTD (days) = " << ltt_delay / 24. / 60. / 60. << "\n";
+//    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 //    std::cout << "point = " << point/pc << "\n";
-    dxdt = jet->getKI(point, ray_direction, nu);
+    dxdt = jet->getKI(point, ray_direction, nu, ltt_delay);
 //    std::cout << "k_i = " << dxdt << "\n";
 }
 
 
 void TauFR::operator()(const double &x, double &dxdt, double t) {
     Vector3d point = point_start + t * ray_direction;
-    dxdt = jet->getKF(point, ray_direction, nu);
+    ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
+    // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS
+    double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
+    ltt_delay = 0.0;
+    ///////////////////////////////////////////////////////
+    dxdt = jet->getKF(point, ray_direction, nu, ltt_delay);
 }
 
 
@@ -67,9 +87,14 @@ void I::operator()(const double &x, double &dxdt, const double t) {
 //    }
 
     Vector3d point = point_start + t * ray_direction;
+    ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
+    // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS
+    double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
+    ltt_delay = 0.0;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     double k_i, eta_i;
-    std::tie(k_i, eta_i) = jet->get_stokes_I_transport_coefficients(point, ray_direction, nu);
+    std::tie(k_i, eta_i) = jet->get_stokes_I_transport_coefficients(point, ray_direction, nu, ltt_delay);
 
 //    std::cout << "K_i = " << k_i << ", eta_i = " << eta_i << "\n";
     dxdt = eta_i - k_i*x;
@@ -78,6 +103,11 @@ void I::operator()(const double &x, double &dxdt, const double t) {
 
 void Speed::operator()(const double &x, double &dxdt, const double t) {
     Vector3d point = point_start + t * ray_direction;
+    ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
+    // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS
+    double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
+    ltt_delay = 0.0;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // If negative Stokes I resulted from previous step, remember its value to compensate for
     double compensate_negative_I = 0.0;
@@ -86,7 +116,7 @@ void Speed::operator()(const double &x, double &dxdt, const double t) {
     }
 
     double k_i, eta_i;
-    std::tie(k_i, eta_i) = jet->get_stokes_I_transport_coefficients(point, ray_direction, nu);
+    std::tie(k_i, eta_i) = jet->get_stokes_I_transport_coefficients(point, ray_direction, nu, ltt_delay);
 
     dxdt = eta_i - k_i*(x+compensate_negative_I);
 
@@ -114,17 +144,14 @@ void Speed::operator()(const double &x, double &dxdt, const double t) {
 }
 
 
-FullStokes::FullStokes(Jet *newjet, Vector3d &newpoint_in,
-                       Vector3d &newray_direction, double newnu) {
-	jet = newjet;
-	point_in = newpoint_in;
-	ray_direction = newray_direction;
-	nu = newnu;
-}
-
 void FullStokes::operator()(const state_type &x, state_type &dxdt,
                             const double t) {
-    Vector3d point = point_in + t * ray_direction;
+    Vector3d point = point_start + t * ray_direction;
+    ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
+    // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS
+    double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
+    ltt_delay = 0.0;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	// If negative Stokes I resulted from previous step, remember its value to compensate for
 	double compensate_negative_I = 0.0;
@@ -132,16 +159,14 @@ void FullStokes::operator()(const state_type &x, state_type &dxdt,
 	     compensate_negative_I = -x[0];
 	}
 
-	// TODO: Do I need this block of checking non-neglible B-field?
+	// TODO: Do I need this block of checking non-negligible B-field?
 	// Find value of B in plasma frame to decide about making transport or not
+    // TODO: Use retarded time!!!
 	auto b_in_plasma_frame = jet->getB(point);
 	auto bvalues_in_plasma_frame = b_in_plasma_frame.norm();
 
 	// Non-zero B => make some transport!
 	if(bvalues_in_plasma_frame > eps_B) {
-
-
-
 
 
 
@@ -189,7 +214,7 @@ void FullStokes::operator()(const state_type &x, state_type &dxdt,
         double k_C;
         double h_Q;
 
-        std::tie(k_i, k_q, k_u, k_v, eta_i, eta_q, eta_u, eta_v, k_F, k_C, h_Q) = jet->get_transport_coefficients(point, ray_direction, nu);
+        std::tie(k_i, k_q, k_u, k_v, eta_i, eta_q, eta_u, eta_v, k_F, k_C, h_Q) = jet->get_transport_coefficients(point, ray_direction, nu, ltt_delay);
 
         dxdt_eb[0] = eta_i - k_i*x_eb[0] - k_q*x_eb[1] - k_u*x_eb[2] - k_v*x_eb[3];
         dxdt_eb[1] = eta_q - k_i*x_eb[1] - k_q*x_eb[0] - k_F*x_eb[2] - h_Q*x_eb[3];
@@ -272,9 +297,6 @@ void FullStokes::operator()(const state_type &x, state_type &dxdt,
 bool check_opt_depth(double tau_max, const double &x) {
     return x >= tau_max;
 }
-
-
-
 
 
 //class push_back_state_and_time

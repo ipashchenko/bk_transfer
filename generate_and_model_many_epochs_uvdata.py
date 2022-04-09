@@ -13,24 +13,34 @@ from jet_image import JetImage
 data_dir = "/home/ilya/data/rfc"
 source_template = "J0102+5824"
 epochs = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
-z = 0.5
-n_along = 1024
-n_across = 256
-lg_pixsize_min = -2.0
-lg_pixsize_max = -1.0
+z = 1.0
+n_along = 400
+n_across = 80
+match_resolution = False
+if match_resolution:
+    lg_pixsize_min = {2.3: -2.5, 8.6: -2.5-np.log10(8.6/2.3)}
+    lg_pixsize_max = {2.3: -0.5, 8.6: -0.5-np.log10(8.6/2.3)}
+else:
+    lg_pixsize_min = {2.3: -2.5, 8.6: -2.5}
+    lg_pixsize_max = {2.3: -0.5, 8.6: -0.5}
 
-rot_angle_deg = 0.0
-freqs_ghz = [2.2, 8.4]
+
+epochs = [300.0]
+epochs = np.linspace(300, 10*360, 20)
+
+rot_angle_deg = -90.0
+freqs_ghz = [2.3, 8.6]
+freq_names = {2.3: "S", 8.6: "X"}
 # Directory to save files
 save_dir = "/home/ilya/data/rfc/results"
 # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
-template_uvfits = {2.2: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis.fits",
-                   8.4: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis.fits"}
+template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis.fits",
+                   8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis.fits"}
 # Multiplicative factor for noise added to model visibilities.
 noise_scale_factor = 1.0
 # CLEAN image parameters
 # FIXME: Plavin+ used (2048, 0.05)
-mapsizes = {2.2: (2048, 0.05,), 8.4: (2048, 0.05,)}
+mapsizes = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
 # Directory with C++ generated txt-files with model images
 jetpol_run_directory = "/home/ilya/github/bk_transfer/Release"
 path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
@@ -55,14 +65,14 @@ for freq_ghz in freqs_ghz:
             noise.update({baseline: noise_scale_factor*baseline_noise_std})
 
         jm = JetImage(z=z, n_along=n_along, n_across=n_across,
-                      lg_pixel_size_mas_min=lg_pixsize_min, lg_pixel_size_mas_max=lg_pixsize_max,
+                      lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
                       jet_side=True, rot=np.deg2rad(rot_angle_deg))
 
-        jm.load_image_stokes("I", "{}/jet_image_{}_{}_{}.txt".format(jetpol_run_directory, "i", freq_ghz, epoch), scale=1.0)
+        jm.load_image_stokes("I", "{}/jet_image_{}_{}_{}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], epoch), scale=1.0)
         uvdata.zero_data()
         uvdata.substitute([jm])
         uvdata.noise_add(noise)
-        uvdata.save(os.path.join(save_dir, "template.uvf"), rewrite=True,  downscale_by_freq=False)
+        uvdata.save(os.path.join(save_dir, "template.uvf"), rewrite=True,  downscale_by_freq=True)
 
         beam_fractions = np.linspace(0.5, 1.5, 11)
         results = modelfit_core_wo_extending("template.uvf",
@@ -94,7 +104,7 @@ for freq_ghz in freqs_ghz:
         postfit_rms = np.median([results[frac]['rms'] for frac in beam_fractions])
 
         print("Core flux : {:.2f}+/-{:.2f} Jy".format(flux, rms_flux))
-        print("Core position : {:.2f}+/-{:.2f} Jy".format(r, rms_r))
+        print("Core position : {:.2f}+/-{:.2f} mas".format(r, rms_r))
 
         outfname = "model_cc_i.fits"
         if os.path.exists(os.path.join(save_dir, outfname)):
@@ -102,14 +112,14 @@ for freq_ghz in freqs_ghz:
         clean_difmap(fname="template.uvf", path=save_dir,
                      outfname=outfname, outpath=save_dir, stokes="i",
                      mapsize_clean=mapsizes[freq_ghz], path_to_script=path_to_script,
-                     show_difmap_output=True,
+                     show_difmap_output=False,
                      dfm_model=os.path.join(save_dir, "model_cc_i.mdl"))
 
         ccimage = create_clean_image_from_fits_file(os.path.join(save_dir, "model_cc_i.fits"))
         ipol = ccimage.image
         beam = ccimage.beam
         # Number of pixels in beam
-        npixels_beam = np.pi*beam[0]*beam[1]/(4*np.log(2)*mapsize[1]**2)
+        npixels_beam = np.pi*beam[0]*beam[1]/(4*np.log(2)*mapsizes[freq_ghz][1]**2)
 
         std = find_image_std(ipol, beam_npixels=npixels_beam)
         print("IPOL image std = {} mJy/beam".format(1000*std))
@@ -125,4 +135,12 @@ for freq_ghz in freqs_ghz:
         fig = iplot(ipol, x=ccimage.x, y=ccimage.y,
                     min_abs_level=4*std, blc=blc, trc=trc, beam=beam, close=True, show_beam=True, show=False,
                     contour_color='gray', contour_linewidth=0.25)
-        fig.savefig(os.path.join(save_dir, "observed_i_{}_{}.png".format(freq_ghz, epoch)), dpi=600, bbox_inches="tight")
+        fig.savefig(os.path.join(save_dir, "observed_i_{}_{}.png".format(freq_names[freq_ghz], epoch)), dpi=600, bbox_inches="tight")
+
+for freq_ghz in freqs_ghz:
+    flux = core_fluxes[freq_ghz][0]
+    rms_flux = core_fluxes_err[freq_ghz][0]
+    r = core_positions[freq_ghz][0]
+    rms_r = core_positions_err[freq_ghz][0]
+    print("Core flux : {:.2f}+/-{:.2f} Jy".format(flux, rms_flux))
+    print("Core position : {:.2f}+/-{:.2f} mas".format(r, rms_r))

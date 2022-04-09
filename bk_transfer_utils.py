@@ -14,6 +14,35 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator, LogLocator
 from matplotlib.colors import LogNorm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import astropy.constants as const
+
+# Speed of light [cm / s]
+c = const.c.cgs.value
+# Mass of electron [g]
+m_e = const.m_e.cgs.value
+
+
+def gamma_mean(s, gamma_min, gamma_max=None):
+    """
+    Mean lorenz factor of power law particle density distribution:
+        N(gamma) = K1*gamma^(-s)
+
+    This weakly depends on the ``gamma_max``, so it safely can be assumed
+    gamma_max = 10**4*gamma_min
+    """
+    if gamma_max is None:
+        gamma_max = 10**4*gamma_min
+    return gamma_min * (s-1)/(s-2) * (((gamma_max/gamma_min)**(2-s) - 1) /
+                                      ((gamma_max/gamma_min)**(1-s) - 1))
+
+
+def equipartition_Bsq_coefficient(s, gamma_min, gamma_max=None):
+    if gamma_max is None:
+        gamma_max = 10**4*gamma_min
+    if s != 2.0:
+        return 1.0/(8*np.pi*m_e*c*c)/gamma_mean(s, gamma_min, gamma_max)
+    else:
+        return 1.0/(8*np.pi*m_e*c*c*gamma_min*np.log(gamma_max/gamma_min))
 
 
 def simulate_random_evpa(std_evpa, n_epochs=30, n_rep=1000):
@@ -209,10 +238,11 @@ def plot_raw(txt_files, labels, extent=None, log=True, first_level=0.000001, max
     toplots = [np.loadtxt(txt) for txt in txt_files]
     toplot = toplots[0]
     shape = toplot.shape
+    print(shape)
     if extent is None:
         extent_along = pixsize*shape[1]/2
         extent_across = pixsize*shape[0]/2
-        extent = (-(1400-1200)/1400*extent_along, extent_along, -(250-100)/500*extent_across, (400-250)/500*extent_across)
+        extent = (-(1400-1200)/1400*extent_along, (2300-1400)/1400*extent_along, -(250-130)/500*extent_across, (370-250)/500*extent_across)
 
     if len(toplots) > 1:
         figsize = (figsize[0], len(toplots)*figsize[1])
@@ -224,8 +254,8 @@ def plot_raw(txt_files, labels, extent=None, log=True, first_level=0.000001, max
         norm = None
 
     for i in range(len(toplots)):
-        im = axes[i].matshow(toplots[i][100:400, 1200:], norm=norm, extent=extent, aspect="equal", cmap=cmap)
-        axes[i].text(-6, 1.5, labels[i])
+        im = axes[i].matshow(toplots[i][130:370, 1200:2300], norm=norm, extent=extent, aspect="equal", cmap=cmap)
+        axes[i].text(-6, 1.2, labels[i])
         axes[i].set_ylabel(r"$r$, mas")
     axes[i].set_xlabel(r"$z_{\rm obs}$, mas")
     plt.gca().xaxis.tick_bottom()
@@ -242,7 +272,14 @@ def plot_raw(txt_files, labels, extent=None, log=True, first_level=0.000001, max
 
 
 if __name__ == "__main__":
+    # Plot raw jet model images
+    os.chdir("/home/ilya/data/alpha/txt/final")
+    # for code in ("bk", "kh", "2ridges", "3ridges"):
+    #     for freq in (15.4, 8.1):
+    #         concatenate_jet_with_counter_jet(stokes="i", freq_ghz=freq, path="/home/ilya/data/alpha/txt", code=code)
     plot_raw(["jet_cjet_image_i_15.4_bk.txt", "jet_cjet_image_i_15.4_2ridges.txt", "jet_cjet_image_i_15.4_3ridges.txt", "jet_cjet_image_i_15.4_kh.txt"],
-             labels=["BK", "2 ridges", "3 ridges", "KH"], cmap="jet", first_level=0.000001, max_level=0.1,
+             labels=["BK", "2 ridges", "3 ridges", "KH"], cmap="jet", first_level=5e-7, max_level=0.1,
              pixsize=10**(-1.5), plot_colorbar=False, figsize=(5*5.7, 1.7),
-             savename="jet_models.png")
+             savename="jet_models_final_zoom.png")
+
+

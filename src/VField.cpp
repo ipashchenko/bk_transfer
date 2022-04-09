@@ -27,7 +27,7 @@ void VField::set_profile(double r1, double r2, double K1, double K2, double b1, 
 ConstFlatVField::ConstFlatVField(double gamma, Geometry* geometry, double betac_phi) :
     VField(geometry), gamma_(gamma), betac_phi_(betac_phi) {};
 
-Vector3d ConstFlatVField::vf(const Vector3d &point) const {
+Vector3d ConstFlatVField::vf(const Vector3d &point, double t) const {
     double x = point[0];
     double y = point[1];
     double z = point[2];
@@ -72,7 +72,7 @@ Vector3d ConstFlatVField::vf(const Vector3d &point) const {
 ConstCentralVField::ConstCentralVField(double gamma, Geometry* geometry, double betac_phi, Vector3d origin) :
     VField(geometry), gamma_(gamma), betac_phi_(betac_phi), origin_(std::move(origin)) {}
 
-Vector3d ConstCentralVField::vf(const Vector3d &point) const {
+Vector3d ConstCentralVField::vf(const Vector3d &point, double t) const {
     double x = point[0];
     double y = point[1];
     double z = abs(point[2]);
@@ -145,7 +145,7 @@ SheathFlatVField::SheathFlatVField(double gamma_spine_0, double gamma_sheath_0,
     betac_phi_in_(betac_phi_in),
     betac_phi_out_(betac_phi_out)  {}
 
-Vector3d SheathFlatVField::vf(const Vector3d &point) const {
+Vector3d SheathFlatVField::vf(const Vector3d &point, double t) const {
     double x = point[0];
     double y = point[1];
     double z = point[2];
@@ -214,7 +214,7 @@ Vector3d SheathFlatVField::vf(const Vector3d &point) const {
 ConstParabolicVField::ConstParabolicVField(double gamma, Geometry* geometry, double betac_phi, Vector3d origin) :
         VField(geometry), gamma_(gamma), betac_phi_(betac_phi), origin_(std::move(origin)) {}
 
-Vector3d ConstParabolicVField::vf(const Vector3d &point) const {
+Vector3d ConstParabolicVField::vf(const Vector3d &point, double t) const {
     double x = point[0];
     double y = point[1];
     double z = abs(point[2]);
@@ -261,7 +261,7 @@ Vector3d ConstParabolicVField::vf(const Vector3d &point) const {
 AccelParabolicVField::AccelParabolicVField(double gamma_0, double gamma_1, Geometry* geometry, double betac_phi, Vector3d origin) :
         VField(geometry), gamma_0_(gamma_0), gamma_1_(gamma_1), betac_phi_(betac_phi), origin_(std::move(origin)) {}
 
-Vector3d AccelParabolicVField::vf(const Vector3d &point) const {
+Vector3d AccelParabolicVField::vf(const Vector3d &point, double t) const {
     double x = point[0];
     double y = point[1];
     double z = abs(point[2]);
@@ -274,13 +274,20 @@ Vector3d AccelParabolicVField::vf(const Vector3d &point) const {
     }
 
     double r_border = geometry_->radius_at_given_distance(point);
-    double gamma = gamma_0_ + gamma_1_*pow(r_cur/pc, 0.5);
+    // FIXME: Here was ``r_cur`` instead of z...
+    double gamma = gamma_0_ + gamma_1_*pow(z/pc, 0.5);
     if(is_profile_set) {
         gamma *= density_profile(r_cur/r_border, r1_, r2_, K1_, K2_, b1_, b2_, b3_);
     }
 
     double v_phi = c*betac_phi_;
-    double v_pol = c*sqrt(gamma*gamma - 1.0)/gamma;
+//    double v_pol = c*sqrt(gamma*gamma - 1.0)/gamma;
+    double beta_pol_sq = 1. - 1./gamma/gamma - betac_phi_*betac_phi_;
+    if(beta_pol_sq < 0){
+        beta_pol_sq = 0.0;
+    }
+    double v_pol = c*sqrt(beta_pol_sq);
+
 
     // Constant in the parabolic equation for a given streamline
     double R_1_cur = r_cur/ sqrt(z);

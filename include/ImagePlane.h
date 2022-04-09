@@ -21,6 +21,7 @@ class ImagePlane {
         vector<vector<double>> getImage(string value);
         vector<vector<double>> getPixelSizes();
         const pair<unsigned long int,unsigned long int> image_size;
+        Vector3d get_direction();
 
     private:
         bool jet_side_;

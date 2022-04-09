@@ -15,13 +15,13 @@ double ParticlesDistribution::k_C_c(Vector3d &b, Vector3d &n_los, double nu, dou
 
 PowerLaw::PowerLaw(double s, double gamma_min, std::string plasma, bool changing_s, double ds)
     : s_(s), gamma_min_(gamma_min), plasma_(plasma), changing_s_(changing_s), ds_(ds) {
-    if (plasma_=="normal") {
-        std::cout << "Normal plasma content with gamma_min = " << gamma_min_ << std::endl;
-    } else if (plasma_=="pairs") {
-        std::cout << "Pairs plasma content with gamma_min = " << gamma_min_ << std::endl;
-    } else {
-        throw BadPlasmaContentParameters();
-    }
+//    if (plasma_=="normal") {
+//        std::cout << "Normal plasma content with gamma_min = " << gamma_min_ << std::endl;
+//    } else if (plasma_=="pairs") {
+//        std::cout << "Pairs plasma content with gamma_min = " << gamma_min_ << std::endl;
+//    } else {
+//        throw BadPlasmaContentParameters();
+//    }
     factor_ki_ = (pow(3., (s_ + 1.)/2.)/4.)*tgamma(s_/4. + 11./6.)*tgamma(s_/4. + 1./6.);
     factor_ki_rnd_ = sqrt(pi/4.)*tgamma((6. + s_)/4.)/tgamma((8. + s_)/4.);
     factor_kv_ = pow(3., s_/2.)*(s_ + 3.)*(s_ + 2.)/(4.*(s_ + 1.))*tgamma(s_/4. + 11./12.)*tgamma(s_/4. + 7./12.);
@@ -291,6 +291,20 @@ double PowerLaw::eta_v(Vector3d &b, Vector3d &n_los, double nu, double n_nt) con
         return -eta_0_value(b, n_nt, s, gamma_min_)*cos_theta*pow(nu_b(b, n_los)/nu, s/2.)*factor_etav;
     } else {
         return -eta_0_value(b, n_nt, s, gamma_min_)*cos_theta*pow(nu_b(b, n_los)/nu_min_, s/2.)*factor_etav*pow(nu/nu_min_, 1./3.);
+    }
+}
+
+
+double PowerLaw::get_equipartition_bsq_coefficient() const {
+    double gamma_max = 1E+04;
+    if (changing_s_) {
+        throw NotImplmentedEquipartitionAnisotropicPowerLaw();
+    }
+    if(s_ != 2.0) {
+//        return (s_ - 2)/(s_ - 1)/(8*M_PI*m_e*c*c*gamma_min_);
+        return (s_ - 2)/(s_ - 1) / (8*M_PI*m_e*c*c) * (pow(gamma_min_, 1.-s_) - pow(gamma_max, 1.-s_)) / (pow(gamma_min_, 2.-s_) - pow(gamma_max, 2.-s_));
+    } else {
+        return 1.0/(8*M_PI*m_e*c*c*gamma_min_*log(gamma_max/gamma_min_));
     }
 }
 

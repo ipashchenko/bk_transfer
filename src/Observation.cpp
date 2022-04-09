@@ -15,17 +15,66 @@ Observation::Observation(Jet *newjet, ImagePlane *newimagePlane)
   imagePlane = newimagePlane;
 };
 
+
+//void Observation::find_furthest_point() {
+//
+//    std::cout << "Calculating furthest point..." << "\n";
+//
+//    double local_distance;
+//    double max_distance = 0.0;
+//    size_t best_i;
+//    size_t best_j;
+//    Vector3d point;
+//    Vector3d origin{0.0, 0.0, 0.0};
+//
+//    auto image_size = getImageSize();
+//    vector<Pixel>& pixels = imagePlane->getPixels();
+//    vector<Ray>& rays = imagePlane->getRays();
+//
+//    for (unsigned long int j = 0; j < image_size.first; ++j) {
+//        for (unsigned long int k = 0; k < image_size.second; ++k) {
+//            auto &ray = rays[j*image_size.second+k];
+//            auto &pxl = pixels[j*image_size.second+k];
+//            auto ij = pxl.getij();
+//            auto ray_direction = ray.direction();
+//            std::list<Intersection> list_intersect = jet->hit(ray);
+//
+//            if (!list_intersect.empty()) {
+//                auto borders = list_intersect.front().get_path();
+//                Vector3d point_in = borders.first;
+//                Vector3d point_out = borders.second;
+//
+//                local_distance = (origin - point_in).norm();
+//                if(local_distance > max_distance){
+//                    max_distance = local_distance;
+//                    point = point_in;
+//                    best_i = ij.first;
+//                    best_j = ij.second;
+//                }
+//            }
+//
+//        }
+//    }
+//    std::cout << "Maximal distance [pc] = " << max_distance/pc << "\n";
+//    std::cout << "i = " << best_i << ", j = " << best_j << "\n";
+//    furthest_point_ = point;
+//}
+
 // ``dt_max`` - max. step size in pc. Adaptive step size will be kept less then this.
 // ``n`` defines the initial step size (that will be adjusted) through utils.steps_schedule function.
 void Observation::observe(int n, double tau_max, double dt_max, double tau_min, double nu, string polarization,
                           double relerr, double t_obs) {
+
+    // Point on the near side of the jet, furthest from the origin. It, with LOS direction, determines the plane,
+    // perpendicular to LOS
+//    find_furthest_point();
 
     jet->set_t_obs(t_obs);
 	dt_max *= pc;
     auto image_size = getImageSize();
 	vector<Pixel>& pixels = imagePlane->getPixels();
 	vector<Ray>& rays = imagePlane->getRays();
-	omp_set_num_threads(16);
+	omp_set_num_threads(4);
 
     // FIXME: Debug
 //    unsigned long int j = 63;
@@ -135,8 +184,8 @@ pair<double, double> Observation::integrate_tau_adaptive(std::list<Intersection>
             // We found the interval of size eps, take it's midpoint as final guess
             t_m = 0.5 * (t0 + t1);
             stepper.calc_state(t_m, x_m);
-            std::cout << "Found precise cross value tau = " << x_m << std::endl;
-            std::cout << "Originally it was tau = " << found_iter.get_state() << std::endl;
+//            std::cout << "Found precise cross value tau = " << x_m << std::endl;
+//            std::cout << "Originally it was tau = " << found_iter.get_state() << std::endl;
             double t_tau_max = t_m;
             // double t_tau_max = stepper.current_time();
 
@@ -293,7 +342,7 @@ void Observation::integrate_full_stokes_adaptive(std::list<Intersection> &list_i
 
 
 void Observation::integrate_faraday_rotation_depth_adaptive(std::list<Intersection> &list_intersect, const Vector3d& ray_direction,
-                                                 const double nu, int n, double& background, double dt_max, double relerr) {
+                                                            const double nu, int n, double& background, double dt_max, double relerr) {
 
     for (auto it = list_intersect.rbegin();
          it != list_intersect.rend(); ++it) {
@@ -337,6 +386,21 @@ void Observation::observe_single_pixel(Ray &ray, Pixel &pxl,  double tau_min, do
     auto ray_direction = ray.direction();
     std::list<Intersection> list_intersect = jet->hit(ray);
     if (!list_intersect.empty()) {
+
+
+//        // Find time delay contribution due to light travel time from the current pixel intersection point to plane
+//        // perpendicular to LOS and containing the furthest point
+//        auto borders = list_intersect.front().get_path();
+//        Vector3d point_in = borders.first;
+////        double ltt_delay_1 = distance_plane_point(point_in, furthest_point_, ray_direction)/c;
+////        double ltt_delay_1 = distance_plane_point(point_in, {0.0, 0.0, 0.0}, -ray_direction)/c;
+//
+//
+//        double extra_jet_delay_pc = distance_plane_point(point_in, {0.0, 0.0, 0.0}, -ray_direction)/pc;
+//        std::cout << "Delay due to extra jet distance [pc] = " << extra_jet_delay_pc << "\n";
+//        std::cout << "Time (days) = " << extra_jet_delay_pc*pc/c/24./60./60. << "\n";
+
+
         std::pair<double, double> tau_l_end;
         tau_l_end = integrate_tau_adaptive(list_intersect, ray_direction, nu, tau_max, n, dt_max, relerr);
 //        std::cout << "Tau is done!" << "\n";

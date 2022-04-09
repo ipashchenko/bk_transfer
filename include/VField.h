@@ -9,8 +9,9 @@ using Eigen::Vector3d;
 // TODO: Add ``gamma`` getter - Jet instances need it if particles density in plasma frame must be calculated
 class VField {
     public:
-        virtual Vector3d vf(const Vector3d &point) const = 0;
+        virtual Vector3d vf(const Vector3d &point, double t = 0.0) const = 0;
         void set_profile(double r1, double r2, double K1, double K2, double b1=1.0, double b2=0.0, double b3=1.0);
+
     protected:
         VField(Geometry* geometry);
         // Profile parameters
@@ -23,14 +24,14 @@ class VField {
 class LenaMHDVField : public VField {
     public:
         LenaMHDVField(Geometry* geometry= nullptr);
-        Vector3d vf(const Vector3d& point) const override;
+        Vector3d vf(const Vector3d& point, double t = 0.0) const override;
 };
 
 
 class ConstFlatVField: public VField {
     public:
 	    explicit ConstFlatVField(double gamma, Geometry* geometry, double betac_phi=0.0);
-        Vector3d vf(const Vector3d& point) const override;
+        Vector3d vf(const Vector3d& point, double t = 0.0) const override;
 
     private:
         double gamma_;
@@ -56,7 +57,7 @@ class SheathFlatVField: public VField {
                          Geometry* geometry_in, Geometry* geometry_out,
                          double gamma_spine_v=0.0, double gamma_sheath_v=1.0,
                          double betac_phi_in=0.0,  double betac_phi_out=0.0);
-        Vector3d vf(const Vector3d& point) const override ;
+        Vector3d vf(const Vector3d& point, double t = 0.0) const override;
 
     private:
         double gamma_spine_0_;
@@ -71,7 +72,7 @@ class SheathFlatVField: public VField {
 class ConstCentralVField: public VField {
     public:
 	    explicit ConstCentralVField(double gamma, Geometry* geometry, double betac_phi=0.0, Vector3d origin={0, 0, 0});
-        Vector3d vf(const Vector3d& point) const override;
+        Vector3d vf(const Vector3d& point, double t = 0.0) const override;
 
     private:
         double gamma_;
@@ -107,7 +108,7 @@ class ConstCentralVField: public VField {
 class ConstParabolicVField: public VField {
     public:
         explicit ConstParabolicVField(double gamma, Geometry* geometry, double betac_phi=0.0, Vector3d origin={0, 0, 0});
-        Vector3d vf(const Vector3d& point) const override;
+        Vector3d vf(const Vector3d& point, double t = 0.0) const override;
 
     private:
         double gamma_;
@@ -119,7 +120,7 @@ class ConstParabolicVField: public VField {
 class AccelParabolicVField: public VField {
     public:
         explicit AccelParabolicVField(double gamma_0, double gamma_1, Geometry* geometry, double betac_phi=0.0, Vector3d origin={0, 0, 0});
-        Vector3d vf(const Vector3d& point) const override;
+        Vector3d vf(const Vector3d& point, double t = 0.0) const override;
 
     private:
         double gamma_0_;

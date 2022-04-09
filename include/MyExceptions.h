@@ -48,6 +48,13 @@ class BadParticleProfileParameters : public std::exception {
     }
 };
 
+
+class NotImplmentedEquipartitionAnisotropicPowerLaw : public std::exception {
+        const char * what () const noexcept override {
+            return "Equipartition Power Law with anisotropic spectral index is not implemented!";
+        }
+};
+
 class BadPlasmaContentParameters : public std::exception {
     const char * what () const noexcept override {
         return "Check plasma content parameters!";

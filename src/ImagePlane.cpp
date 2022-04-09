@@ -47,3 +47,7 @@ vector<vector<double>> ImagePlane::getImage(string value) {
 vector<vector<double>> ImagePlane::getPixelSizes() {
     return image_.getPixelSizes();
 }
+
+Vector3d ImagePlane::get_direction() {
+    return direction_;
+}

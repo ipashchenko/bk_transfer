@@ -189,29 +189,30 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
 
 if __name__ == "__main__":
     data_dir = "/home/ilya/data/rfc"
-    txt_dir = "/home/ilya/fs/sshfs/calculon/github/bk_transfer/Release"
+    # txt_dir = "/home/ilya/fs/sshfs/calculon/github/bk_transfer/Release"
+    txt_dir = "/home/ilya/github/bk_transfer/Release"
     save_dir = "/home/ilya/github/bk_transfer/pics"
     source_template = "J0102+5824"
     z = 1.0
     plot = True
-    lg_pixel_size_mas_min = -2.0
-    lg_pixel_size_mas_max = -0.0
+    lg_pixel_size_mas_min = -2.5
+    lg_pixel_size_mas_max = -0.5
     n_along = 400
     n_across = 80
 
     t_start_days = 0.0
     amp_N = 5.0
-    amp_B = -0.5
-    l_pc = 2.0
-    Gamma = 10.0
+    amp_B = 0.0
+    l_pc = 0.2
+    Gamma = 8.6
     theta_deg = 5.0
     b = 1.0
-    B_1 = 1.0
+    B_1 = 0.85
     n = 2.0
     N_1 = 500.0
     z = 1.0
     # ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
-    ts_obs_days = np.linspace(300, 360*10, 50)
+    ts_obs_days = np.linspace(0, 10*360, 30)
     corex_positions = list()
     cores_positions = list()
     corex_fluxes = list()

@@ -56,20 +56,20 @@ double nu_min(double gamma_min, double b);
 // Here in coefficients n is the density of all non-thermal particles, thus we need s and gamma_min to convert to
 // N(gamma) using relation: N(gamma) d(gamma) = n_nt * (s-1) * gamma_min^{s-1} d(gamma)
 // For random B-field
-double k_0(double b, Vector3d &n_los, double nu, double n_nt, double s, double gamma_min);
+double k_0(double b, Vector3d &n_los, double nu, double n_nt, double s, double gamma_min, double gamma_max = 1E+04);
 
 // For vector B-field
-double k_0(Vector3d &b, Vector3d &n_los, double nu, double n_nt, double s, double gamma_min);
+double k_0(Vector3d &b, Vector3d &n_los, double nu, double n_nt, double s, double gamma_min, double gamma_max = 1E+04);
 
-double k_0_value(Vector3d &b, double nu, double n_nt, double s, double gamma_min);
+double k_0_value(Vector3d &b, double nu, double n_nt, double s, double gamma_min, double gamma_max = 1E+04);
 
 // For random B-field
-double eta_0(double b, Vector3d &n_los, double n_nt, double s, double gamma_min);
+double eta_0(double b, Vector3d &n_los, double n_nt, double s, double gamma_min, double gamma_max = 1E+04);
 
 // For vector B-field
-double eta_0(Vector3d &b, Vector3d &n_los, double n_nt, double s, double gamma_min);
+double eta_0(Vector3d &b, Vector3d &n_los, double n_nt, double s, double gamma_min, double gamma_max = 1E+04);
 
-double eta_0_value(Vector3d &b, double n_nt, double s, double gamma_min);
+double eta_0_value(Vector3d &b, double n_nt, double s, double gamma_min, double gamma_max = 1E+04);
 
 // Lorentz factor for the velocity ``v``
 double getG(Vector3d &v);
@@ -122,8 +122,12 @@ std::ostream& write_2dvector(std::ostream& os, std::vector<std::vector<double>>&
 
 void read_from_txt(const std::string& fn, std::vector< std::vector<double> >& properties);
 
-
 //Type 1 (symmetric) GG for 1D case.
 double generalized1_gaussian1d(double x, double loc, double scale, double shape);
+
+// Distance from plane, determined by some point P_plane and normal vector N_plane, to other point P.
+// If N_plane - direction to the observer, P_plane - (0, 0, 0), than for some point P that is closer to the observer
+// than (0, 0, 0) this distance will be positive.
+double distance_plane_point(const Vector3d& P, const Vector3d& P_plane, const Vector3d& N_plane);
 
 #endif //BK_TRANSER_UTILS_H

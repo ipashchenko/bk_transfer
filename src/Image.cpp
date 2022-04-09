@@ -2,6 +2,7 @@
 #include <numeric>
 #include "Image.h"
 #include "logspace.h"
+#include "linspace.h"
 
 
 using std::array;
@@ -36,8 +37,21 @@ Image::Image(pair<unsigned long int, unsigned long int> image_size, double lg_pi
         pixel_center_coordinates_across_(),
         pixels_() {
 
-    // Create array of pixel sizes
-    auto pixel_sizes_along = pyLogspace(lg_pixel_size_start_cm, lg_pixel_size_stop_cm, image_size.second);
+    // Create array of pixel sizes /////////////////////////////////////////////////////////////////////////////////////
+
+    // Logarithmic
+//    auto pixel_sizes_along = pyLogspace(lg_pixel_size_start_cm, lg_pixel_size_stop_cm, image_size.second);
+//    std::cout << "LOG pixel size" << "\n";
+
+
+    // sqrt
+    std::vector<double> pixel_sizes_along = linspace(1, int(image_size.second), int(image_size.second));
+    for(size_t i=0;i<pixel_sizes_along.size();i++){
+        pixel_sizes_along[i] = sqrt(pixel_sizes_along[i])*pow(10.0, lg_pixel_size_start_cm);
+    }
+    std::cout << "SQRT pixel size" << "\n";
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     pixel_sizes_.reserve(image_size.first);
     for (unsigned long int i=0; i < image_size.first; ++i) {
