@@ -292,9 +292,8 @@ if __name__ == "__main__":
     blc = (450, 450)
     trc = (980, 720)
     color_clim = [-1.5, 0.5]
-    template_ccimage = {"X": "/home/ilya/data/alpha/MOJAVE/template_cc_i_8.1.fits",
-                        "U": "/home/ilya/data/alpha/MOJAVE/template_cc_i_15.4.fits"}
-    template_ccimage = create_clean_image_from_fits_file(template_ccimage["X"])
+
+    template_ccimage = create_clean_image_from_fits_file("/home/ilya/data/alpha/BK145/X_template_beam.fits")
     common_beam = template_ccimage.beam
     small_beam = (0.5, 0.5, 0)
     npixels_beam_common = np.pi*common_beam[0]*common_beam[1]/(4*np.log(2)*common_mapsize[1]**2)
