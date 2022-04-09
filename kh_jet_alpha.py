@@ -309,6 +309,9 @@ if __name__ == "__main__":
     art_rebased_dccfits = os.path.join(save_dir, "BK145_U2X_artificial_KH_dcc.fits")
     spix_picture_orig = os.path.join(save_dir, "BK145_spix_orig_artificial_KH.png")
     spix_picture_cor = os.path.join(save_dir, "BK145_spix_cor_artificial_KH.png")
+    # CACLULON
+    path_to_script = "/home/ilya/github/time_machine/bk_transfer/scripts/final_clean_nw"
+    # Local
     path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
     # To quickly show J + CJ images for freq_ghz GHz:
     # j = np.loadtxt("jet_image_i_{}.txt".format(freq_ghz)); cj = np.loadtxt("cjet_image_i_{}.txt".format(freq_ghz)); jcj = np.hstack((cj[::, ::-1], j)); plt.matshow(jcj, aspect="auto");plt.colorbar(); plt.show()
@@ -328,8 +331,8 @@ if __name__ == "__main__":
         cjm = JetImage(z=z, n_along=n_along, n_across=n_across,
                        lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
                        jet_side=False, rot=np.deg2rad(rot_angle_deg))
-        jm.load_image_stokes("I", "/home/ilya/github/bk_transfer/Release/jet_image_i_{}.txt".format(freq_bands_dict[band]), scale=1.0)
-        cjm.load_image_stokes("I", "/home/ilya/github/bk_transfer/Release/cjet_image_i_{}.txt".format(freq_bands_dict[band]), scale=1.0)
+        jm.load_image_stokes("I", "/home/ilya/github/time_machine/bk_transfer/Release/jet_image_i_{}.txt".format(freq_bands_dict[band]), scale=1.0)
+        cjm.load_image_stokes("I", "/home/ilya/github/time_machine/bk_transfer/Release/cjet_image_i_{}.txt".format(freq_bands_dict[band]), scale=1.0)
         js = TwinJetImage(jm, cjm)
 
         js.save_image_to_difmap_format("{}/true_jet_model_i_{}.txt".format(save_dir, band))
