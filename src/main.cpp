@@ -415,7 +415,7 @@ std::vector<double> run_on_analytic_params_kh(double redshift, double los_angle_
 
 
     // Setting components of N-fields ==================================================================================
-    PowerLaw kh_particles(s-0.8, gamma_min, "pairs", false);
+    PowerLaw kh_particles(s-0.6, gamma_min, "pairs", false);
     PowerLaw bkg_particles(s, gamma_min, "pairs", false);
 
 
@@ -426,7 +426,7 @@ std::vector<double> run_on_analytic_params_kh(double redshift, double los_angle_
     EquipartitionKHNfield kh_Es_nfield(&bkg_particles, &bk_bfield, &geometry, nullptr,
                                        vfield, omega);
     kh_Es_nfield.set_background_fraction(background_fraction);
-    kh_Es_nfield.set_spiral_width_frac({0.015, 0.015});
+    kh_Es_nfield.set_spiral_width_frac({0.025, 0.025});
     kh_Es_nfield.set_spiral_scale({2.0, 2.0});
     kh_Es_nfield.set_spiral(phase_0, lambda_0 * pc, amp_0 * R_1pc);
     kh_Es_nfield.set_spiral(phase_1, lambda_1 * pc, amp_1 * R_1pc);
@@ -438,8 +438,8 @@ std::vector<double> run_on_analytic_params_kh(double redshift, double los_angle_
     EquipartitionKHNfield kh_Eb_nfield(&kh_particles, &bk_bfield, &geometry, nullptr,
                                        vfield, omega);
     kh_Eb_nfield.set_background_fraction(background_fraction);
-    kh_Eb_nfield.set_spiral_width_frac({0.04});
-    kh_Eb_nfield.set_spiral_scale({4.0});
+    kh_Eb_nfield.set_spiral_width_frac({0.05});
+    kh_Eb_nfield.set_spiral_scale({3.0});
     kh_Eb_nfield.set_spiral(phase_2, lambda_2 * pc, amp_2 * R_1pc);
 
 
@@ -1200,17 +1200,17 @@ int main(int argc, char *argv[]) {
     double gamma_min = 10.0;
     double background_fraction = 0.0001;
 
-    double R_1_pc = 0.13;
-//    double R_1_pc = 0.105;
-    double b_0 = 0.115;
+//    double R_1_pc = 0.13;
+    double R_1_pc = 0.105;
+    double b_0 = 0.12;
     double m_b = 0.5;
 
     double Gamma_0 = 1.1;
     double Gamma_1 = 0.5;
     double betac_phi = 0.0;
 
-    std::vector<double> scale_spirals = {2.0, 2.0, 4.0};
-    std::vector<double> spiral_width_frac = {0.015, 0.015, 0.05};
+    std::vector<double> scale_spirals = {2.0, 2.0, 3.0};
+    std::vector<double> spiral_width_frac = {0.025, 0.025, 0.05};
 
     // R = 0.09367584
     double phase_0 = 80.0*M_PI/180.;
