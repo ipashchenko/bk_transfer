@@ -416,25 +416,38 @@ std::vector<double> run_on_analytic_params_kh(double redshift, double los_angle_
 
     // Setting components of N-fields ==================================================================================
     PowerLaw kh_particles(s-0.8, gamma_min, "pairs", false);
+    PowerLaw bkg_particles(s, gamma_min, "pairs", false);
+
 
 //    double omega = 1.4E-10;
     double omega = 0.0;
     // TODO: Make accepting a list of B-fields!
-    EquipartitionKHNfield bk_stat_nfield(&kh_particles, &bk_bfield, &geometry, nullptr,
-                                         vfield, omega);
-    bk_stat_nfield.set_background_fraction(background_fraction);
-    bk_stat_nfield.set_spiral_width_frac(spiral_width_frac);
-    bk_stat_nfield.set_spiral_scale(scale_spirals);
-    bk_stat_nfield.set_spiral(phase_0, lambda_0 * pc, amp_0 * R_1pc);
-    bk_stat_nfield.set_spiral(phase_1, lambda_1 * pc, amp_1 * R_1pc);
-    if(amp_2 > 0.0) {
-        bk_stat_nfield.set_spiral(phase_2, lambda_2 * pc, amp_2 * R_1pc);
-    }
+    // Two Es modes
+    EquipartitionKHNfield kh_Es_nfield(&bkg_particles, &bk_bfield, &geometry, nullptr,
+                                       vfield, omega);
+    kh_Es_nfield.set_background_fraction(background_fraction);
+    kh_Es_nfield.set_spiral_width_frac({0.015, 0.015});
+    kh_Es_nfield.set_spiral_scale({2.0, 2.0});
+    kh_Es_nfield.set_spiral(phase_0, lambda_0 * pc, amp_0 * R_1pc);
+    kh_Es_nfield.set_spiral(phase_1, lambda_1 * pc, amp_1 * R_1pc);
+//    if(amp_2 > 0.0) {
+//        kh_Es_nfield.set_spiral(phase_2, lambda_2 * pc, amp_2 * R_1pc);
+//    }
+
+    // Eb mode
+    EquipartitionKHNfield kh_Eb_nfield(&kh_particles, &bk_bfield, &geometry, nullptr,
+                                       vfield, omega);
+    kh_Eb_nfield.set_background_fraction(background_fraction);
+    kh_Eb_nfield.set_spiral_width_frac({0.04});
+    kh_Eb_nfield.set_spiral_scale({4.0});
+    kh_Eb_nfield.set_spiral(phase_2, lambda_2 * pc, amp_2 * R_1pc);
+
+
     std::vector<NField*> nfields;
-    nfields.push_back(&bk_stat_nfield);
+    nfields.push_back(&kh_Es_nfield);
+    nfields.push_back(&kh_Eb_nfield);
 
 
-    PowerLaw bkg_particles(s, gamma_min, "pairs", false);
     EquipartitionBKNfield bkg_nfield(&bkg_particles, sbfields, &geometry, nullptr,
                                      vfield, 0.0, 0.005);
     nfields.push_back(&bkg_nfield);
