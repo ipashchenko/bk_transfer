@@ -90,12 +90,15 @@ double BKNField::_nf(const Vector3d &point, const double t) const {
     bool in_spiral = false;
     double spiral_sum = 0;
 
+    double R_out = geometry_out_->radius_at_given_distance(point);
+
+
     // If we use heating models that depends on radius only
     if(is_profile_set_){
         double x = point[0];
         double y = point[1];
         double R_cur = hypot(x, y);
-        double R_out = geometry_out_->radius_at_given_distance(point);
+//        double R_out = geometry_out_->radius_at_given_distance(point);
         return (amp_axis_*generalized1_gaussian1d(R_cur / R_out, 0.0, r_width_axis_, 2) + amp_border_*generalized1_gaussian1d(R_cur / R_out, r_mean_, r_width_, 2) + background_fraction_) * raw_density;
     }
     // If we are modelling KH modes
@@ -111,7 +114,7 @@ double BKNField::_nf(const Vector3d &point, const double t) const {
             if(distance < spiral_width_frac_*R_cur){
                 in_spiral = true;
             }
-            spiral_sum += raw_density*generalized1_gaussian1d(distance, 0.0, spiral_width_frac_*R_cur, 2);
+            spiral_sum += raw_density*generalized1_gaussian1d(distance, 0.0, spiral_width_frac_*R_out, 2);
         }
         return spiral_sum + raw_density*background_fraction_;
 //        if(in_spiral){
@@ -198,6 +201,7 @@ double EquipartitionKHNfield::_nf(const Vector3d &point, const double t) const {
     double raw_density = particles_->get_equipartition_bsq_coefficient()*b*b;
 //    std::cout << "N = " << raw_density << "\n";
     double spiral_sum = 0;
+    double R_out = geometry_out_->radius_at_given_distance(point);
 
     // If we are modelling KH modes
     double x = point[0];
@@ -208,7 +212,7 @@ double EquipartitionKHNfield::_nf(const Vector3d &point, const double t) const {
         double x_sp = amps_0_[i] * pow(abs(z)/pc, k_) * cos(2*M_PI*abs(z)/(lambdas_0_[i]*pow(abs(z)/pc, k_)) - omega_*t + phases_0_[i]);
         double y_sp = -amps_0_[i] * pow(abs(z)/pc, k_) * sin(2*M_PI*abs(z)/(lambdas_0_[i]*pow(abs(z)/pc, k_)) - omega_*t + phases_0_[i]);
         double distance = hypot(x-x_sp, y-y_sp);
-        spiral_sum += scale_[i]*raw_density*generalized1_gaussian1d(distance, 0.0, spiral_width_frac_[i]*R_cur, 8.0);
+        spiral_sum += scale_[i]*raw_density*generalized1_gaussian1d(distance, 0.0, spiral_width_frac_[i]*R_out, 8.0);
     }
     return spiral_sum + raw_density*background_fraction_;
 }
@@ -255,11 +259,14 @@ FlareBKNField::FlareBKNField(NField* bkg_nfield, double amp, double t_start, dou
 //    return n_0_ * pow(r/pc, -n_n_) * exp(-pow(r - beta_app*c*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
 //}
 
-
+// Slow light approximation!!!
 double FlareBKNField::_nf(const Vector3d &point, const double t) const {
+	// TODO: Here we should integrate flare pattern speed in time to find the position of the flare (e.g. blob center).
+	// We can model flare as a spherical blob.
     Vector3d v = flare_pattern_vfield_->vf(point);
     double r = point.norm();
 //    double n = amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
 //    std::cout << "Flare n = " << n << "\n";
-    return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+//	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 2.0);
 }
