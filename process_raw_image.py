@@ -21,22 +21,38 @@ c = 29979245800.0
 pc = 3.0856775814671913e+18
 #
 day_to_sec = 86400.0
+# g
+m_e = 9.10938356e-28
 
 
-def N(r_proj_pc, t_obs_days, t_start_days, amp, l_pc, Gamma, theta_deg, N_1, n, z):
+def generalized1_gaussian1d(x, loc, scale, shape):
+    return np.exp(-(np.abs(x-loc)/scale)**shape)
+
+
+def equipartition_bsq_coefficient(s, gamma_min, gamma_max):
+
+    if s != 2.0:
+        return (s - 2)/(s - 1) / (8*np.pi*m_e*c*c) * (gamma_min**(1.-s) - gamma_max**(1.-s)) / (gamma_min**(2.-s) - gamma_max**(2.-s))
+    else:
+        return 1.0/(8*np.pi*m_e*c*c*gamma_min*np.log(gamma_max/gamma_min))
+
+
+def N(r_proj_pc, t_obs_days, t_start_days, amp, l_pc, Gamma, theta_deg, N_1, n, z, shape=2):
     theta = np.deg2rad(theta_deg)
     r_pc = r_proj_pc/np.sin(theta)
     beta = np.sqrt(Gamma**2 - 1)/Gamma
     beta_obs = beta/(1 - beta*np.cos(theta))/(1+z)
-    return N_1*r_pc**(-n)*(1 + amp*np.exp(-(r_pc - beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc)**2 / l_pc**2))
+    # return N_1*r_pc**(-n)*(1 + amp*np.exp(-(r_pc - beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc)**2 / l_pc**2))
+    return N_1*r_pc**(-n)*(1 + amp * generalized1_gaussian1d(r_pc, beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc, l_pc, shape))
 
 
-def B(r_proj_pc, t_obs_days, t_start_days, amp, l_pc, Gamma, theta_deg, B_1, b, z):
+def B(r_proj_pc, t_obs_days, t_start_days, amp, l_pc, Gamma, theta_deg, B_1, b, z, shape=2):
     theta = np.deg2rad(theta_deg)
     r_pc = r_proj_pc/np.sin(theta)
     beta = np.sqrt(Gamma**2 - 1)/Gamma
     beta_obs = beta/(1 - beta*np.cos(theta))/(1+z)
-    return B_1*r_pc**(-b)*(1 + amp*np.exp(-(r_pc - beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc)**2 / l_pc**2))
+    # return B_1*r_pc**(-b)*(1 + amp*np.exp(-(r_pc - beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc)**2 / l_pc**2))
+    return B_1*r_pc**(-b)*(1 + amp * generalized1_gaussian1d(r_pc, beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc, l_pc, shape))
 
 
 def ang_to_dist(z):
@@ -48,6 +64,7 @@ def mas_to_pc(mas_coordinates, z):
 
 
 def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along, n_across):
+    print("Using logspace coordinates!")
     resolutions = np.logspace(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along)
     pixsize_array = np.tile(resolutions, n_across).reshape(n_across, n_along).T
     intensity_factor = (pixsize_array/np.min(pixsize_array))**2
@@ -195,24 +212,33 @@ if __name__ == "__main__":
     source_template = "J0102+5824"
     z = 1.0
     plot = True
-    lg_pixel_size_mas_min = -2.5
-    lg_pixel_size_mas_max = -0.5
+    match_resolution = False
+    if match_resolution:
+        lg_pixel_size_mas_min = {2.3: -2.5, 8.6: -2.5-np.log10(8.6/2.3)}
+        lg_pixel_size_mas_max = {2.3: -0.5, 8.6: -0.5-np.log10(8.6/2.3)}
+    else:
+        lg_pixel_size_mas_min = {2.3: -2.5, 8.6: -2.5}
+        lg_pixel_size_mas_max = {2.3: -0.5, 8.6: -0.5}
     n_along = 400
     n_across = 80
 
-    t_start_days = 0.0
-    amp_N = 5.0
-    amp_B = 0.0
-    l_pc = 0.2
+    flare_params = [1.0, 0.0, 300.0, 0.2]
+    flare_shape = 2.0
+    t_start_days = flare_params[2]
+    amp_N = flare_params[0]
+    amp_B = flare_params[1]
+    l_pc = flare_params[3]
     Gamma = 8.6
     theta_deg = 5.0
     b = 1.0
     B_1 = 0.85
     n = 2.0
-    N_1 = 500.0
-    z = 1.0
+    gamma_min = 10.
+    gamma_max = 1E+04
+    s = 2.
+    N_1 = equipartition_bsq_coefficient(s, gamma_min, gamma_max)*B_1**2
     # ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
-    ts_obs_days = np.linspace(0, 10*360, 30)
+    ts_obs_days = np.linspace(0, 10*360, 100)
     corex_positions = list()
     cores_positions = list()
     corex_fluxes = list()
@@ -258,10 +284,10 @@ if __name__ == "__main__":
         cores_fluxes.append(ress["core_flux"])
         jetx_fluxes.append(resx["jet_flux"])
         jets_fluxes.append(ress["jet_flux"])
-        b_core_S = B(ress["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z)
-        n_core_S = N(ress["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z)
-        b_core_X = B(resx["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z)
-        n_core_X = N(resx["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z)
+        b_core_S = B(ress["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
+        n_core_S = N(ress["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
+        b_core_X = B(resx["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
+        n_core_X = N(resx["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
         B_core_S.append(b_core_S)
         N_core_S.append(n_core_S)
         B_core_X.append(b_core_X)
@@ -295,9 +321,8 @@ if __name__ == "__main__":
     axes2.scatter(ts_obs_days, corex_fluxes, color="C0")
     axes2.plot(ts_obs_days, cores_fluxes, color="C1")
     axes2.scatter(ts_obs_days, cores_fluxes, color="C1")
-
     axes.legend()
-    # fig.savefig(os.path.join(save_dir, "CS_rc_Sc_t_true.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "CS_rc_Sc_t_true.png"), bbox_inches="tight")
     plt.show()
 
 
@@ -320,9 +345,8 @@ if __name__ == "__main__":
     axes2.scatter(ts_obs_days, corex_fluxes, color="C0")
     axes2.plot(ts_obs_days, cores_fluxes, color="C1")
     axes2.scatter(ts_obs_days, cores_fluxes, color="C1")
-
     axes.legend()
-    # fig.savefig(os.path.join(save_dir, "rc_Sc_t_true.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "rc_Sc_t_true.png"), bbox_inches="tight")
     plt.show()
 
 
@@ -336,7 +360,7 @@ if __name__ == "__main__":
     axes.scatter(corex_fluxes, corex_positions)
     axes.set_xlabel(r"$S_{\rm core}$, Jy")
     axes.set_ylabel(r"$r_{\rm core}$, mas")
-    # fig.savefig(os.path.join(save_dir, "rc_Sc_true_Xband.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "rc_Sc_true_Xband.png"), bbox_inches="tight")
     plt.show()
 
     med_B = np.median(B_core_S)
@@ -347,7 +371,7 @@ if __name__ == "__main__":
     axes.set_xlabel(r"$N_{\rm core}, {\rm cm}^{-3}$")
     axes.set_ylabel(r"$B_{\rm core}, {\rm G}$")
     plt.legend()
-    # fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Sband.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Sband.png"), bbox_inches="tight")
     plt.show()
 
 
@@ -359,5 +383,5 @@ if __name__ == "__main__":
     axes.set_xlabel(r"$N_{\rm core}, {\rm cm}^{-3}$")
     axes.set_ylabel(r"$B_{\rm core}, {\rm G}$")
     plt.legend()
-    # fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Xband.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Xband.png"), bbox_inches="tight")
     plt.show()
