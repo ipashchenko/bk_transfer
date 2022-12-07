@@ -42,8 +42,8 @@ std::vector<double> run_on_analytic() {
 //    double los_angle = 20.0*M_PI/180.0;
 
     // Observed frequencies in GHz
-    std::vector<double> nu_observed_ghz{8.1, 15.4};
-//    std::vector<double> nu_observed_ghz{1.6, 4.8};
+//    std::vector<double> nu_observed_ghz{8.1, 15.4};
+    std::vector<double> nu_observed_ghz{1.65, 4.8};
 //    std::vector<double> nu_observed_ghz{24, 43};
 //    std::vector<double> nu_observed_ghz{15.4};
     std::vector<double> total_fluxes;
@@ -80,12 +80,12 @@ std::vector<double> run_on_analytic() {
     double gamma_min = 10.0;
     PowerLaw particles(s, gamma_min, "pairs", false);
 
-    // Single BK ///////////////////////////////////
-    // Value at r=1pc
-    double K_1 = 0.0425;
-    // Exponent of the decrease
-    double n = 1.5;
-    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
+//    // Single BK ///////////////////////////////////
+//    // Value at r=1pc
+//    double K_1 = 0.0425;
+//    // Exponent of the decrease
+//    double n = 1.5;
+//    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
 
 //    // Triple ridges ///////////////////////////////
 //    // Value at r=1pc
@@ -96,13 +96,13 @@ std::vector<double> run_on_analytic() {
 //    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 5.0, 0.025, 0.01);
 
 
-//    // Double ridges ///////////////////////////////
-//    // Value at r=1pc
-//    double K_1 = 0.5;
-//    // Exponent of the decrease
-//    double n = 1.5;
-//    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
-//    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 0.0, 0.025, 0.01);
+    // Double ridges ///////////////////////////////
+    // Value at r=1pc
+    double K_1 = 0.5;
+    // Exponent of the decrease
+    double n = 1.5;
+    BKNField bk_stat_nfield(K_1, n, &particles, false, &geometry);
+    bk_stat_nfield.set_heating_profile(1.0, 0.9, 0.025, 0.0, 0.025, 0.01);
 
 //    // Working spirals implementation /////////////
 //    // Value at r=1pc
@@ -145,19 +145,19 @@ std::vector<double> run_on_analytic() {
     // FIXME: Put inside frequency loop for dep. on frequency
     // Setting parameters of pixels and image ==========================================================================
     // Uniform pixel size
-//    int number_of_pixels_along = 1400;
-//    int number_of_pixels_across = 500;
+    int number_of_pixels_along = 1400;
+    int number_of_pixels_across = 500;
 
-    // FIXME: Check FT for imager_dev
-    int number_of_pixels_along = 512;
-    int number_of_pixels_across = 1024;
-    double pixel_size_mas_start = pow(10.0, -1);
-    double pixel_size_mas_stop = pow(10.0, -1);
+//    // FIXME: Check FT for imager_dev
+//    int number_of_pixels_along = 512;
+//    int number_of_pixels_across = 1024;
+//    double pixel_size_mas_start = pow(10.0, -1);
+//    double pixel_size_mas_stop = pow(10.0, -1);
 
     // Non-uniform pixel from ``pixel_size_mas_start`` (near BH) to ``pixel_size_mas_stop`` (image edges)
     // Uniform pixel size
-//    double pixel_size_mas_start = pow(10.0, -1.5);
-//    double pixel_size_mas_stop = pow(10.0, -1.5);
+    double pixel_size_mas_start = pow(10.0, -1.5);
+    double pixel_size_mas_stop = pow(10.0, -1.5);
     auto image_size = std::make_pair(number_of_pixels_across, number_of_pixels_along);
     auto pc_in_mas = mas_to_pc(redshift);
     std::cout << "pc_in_mas " << pc_in_mas << std::endl;
@@ -423,7 +423,7 @@ std::vector<double> run_on_analytic_params_kh(double redshift, double los_angle_
     double omega = 0.0;
     // TODO: Make accepting a list of B-fields!
     // Two Es modes
-    EquipartitionKHNfield kh_Es_nfield(&bkg_particles, &bk_bfield, &geometry, nullptr,
+    EquipartitionKHNfield kh_Es_nfield(&kh_particles, &bk_bfield, &geometry, nullptr,
                                        vfield, omega);
     kh_Es_nfield.set_background_fraction(background_fraction);
     kh_Es_nfield.set_spiral_width_frac({0.025, 0.025});
@@ -441,6 +441,8 @@ std::vector<double> run_on_analytic_params_kh(double redshift, double los_angle_
     kh_Eb_nfield.set_spiral_width_frac({0.05});
     kh_Eb_nfield.set_spiral_scale({3.0});
     kh_Eb_nfield.set_spiral(phase_2, lambda_2 * pc, amp_2 * R_1pc);
+    // Secondary thread
+    kh_Eb_nfield.set_spiral(phase_2 + M_PI, lambda_2 * pc, amp_2 * R_1pc);
 
 
     std::vector<NField*> nfields;
@@ -690,9 +692,11 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     double los_angle = los_angle_deg*M_PI/180.0;
 
     // Observed frequencies in GHz
-    std::vector<double> nu_observed_ghz{2.3, 8.6};
+	std::vector<double> nu_observed_ghz{2.3, 8.6};
+//	std::vector<double> nu_observed_ghz{15.4};
     double min_nu_ghz = *std::min_element(nu_observed_ghz.begin(), nu_observed_ghz.end());
-    std::vector<std::string> nu_observed_band{"S", "X"};
+	std::vector<std::string> nu_observed_band{"S", "X"};
+//	std::vector<std::string> nu_observed_band{"u"};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
@@ -1045,22 +1049,22 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     return total_fluxes;
 }
 
-//// To quickly show J + CJ images for freq_ghz GHz:
-//// j = np.loadtxt("jet_image_i_{}.txt".format(freq_ghz)); cj = np.loadtxt("cjet_image_i_{}.txt".format(freq_ghz)); jcj = np.hstack((cj[::, ::-1], j)); plt.matshow(jcj, aspect="auto");plt.colorbar(); plt.show()
-//int main() {
-//
-//    std::vector<double> total_fluxes;
-//    total_fluxes = run_on_analytic();
-//    for(auto total_flux: total_fluxes){
-//        std::cout << "Total flux [Jy] = " << total_flux << "\n";
-//    }
-//    return 0;
-//}
+// To quickly show J + CJ images for freq_ghz GHz:
+// j = np.loadtxt("jet_image_i_{}.txt".format(freq_ghz)); cj = np.loadtxt("cjet_image_i_{}.txt".format(freq_ghz)); jcj = np.hstack((cj[::, ::-1], j)); plt.matshow(jcj, aspect="auto");plt.colorbar(); plt.show()
+int main_simple() {
+
+    std::vector<double> total_fluxes;
+    total_fluxes = run_on_analytic();
+    for(auto total_flux: total_fluxes){
+        std::cout << "Total flux [Jy] = " << total_flux << "\n";
+    }
+    return 0;
+}
 
 
 // To run in parallel when file params_3ridges.txt has 3 parameter sets:
 // parallel --files --results t_obs_{11} --joblog log --jobs 7 -a params_flaring_jet.txt -n 1 -m --colsep ' ' "./bk_transfer"
-int main_t(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 
     std::vector<double> total_fluxes;
     std::vector<double> flare_params;
@@ -1162,7 +1166,7 @@ int main_t(int argc, char *argv[]) {
 }
 
 
-int main(int argc, char *argv[]) {
+int main_kh(int argc, char *argv[]) {
 
     std::vector<double> total_fluxes;
 
