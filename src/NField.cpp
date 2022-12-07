@@ -84,7 +84,7 @@ BKNField::BKNField(double n_0, double n_n, ParticlesDistribution* particles, boo
         is_spirals_present_(false) {}
 
 
-double BKNField::_nf(const Vector3d &point, const double t) const {
+double BKNField::_nf(const Vector3d &point, double t) const {
     double r = point.norm();
     double raw_density = n_0_ * pow(r / pc, -n_n_);
     bool in_spiral = false;
@@ -167,7 +167,7 @@ EquipartitionBKNfield::EquipartitionBKNfield(ParticlesDistribution *particles, s
     bfields_ = bfields;
 }
 
-double EquipartitionBKNfield::_nf(const Vector3d &point, const double t) const {
+double EquipartitionBKNfield::_nf(const Vector3d &point, double t) const {
     auto v = vfield_->vf(point);
     double b = 0.0;
     for(auto bfield: bfields_) {
@@ -194,7 +194,7 @@ EquipartitionKHNfield::EquipartitionKHNfield(ParticlesDistribution *particles, B
     bfield_ = bfield;
 }
 
-double EquipartitionKHNfield::_nf(const Vector3d &point, const double t) const {
+double EquipartitionKHNfield::_nf(const Vector3d &point, double t) const {
     auto v = vfield_->vf(point);
     double b = bfield_->bf_plasma_frame(point, v, t);
 //    std::cout << "B = " << b << "\n";
@@ -247,26 +247,42 @@ FlareBKNField::FlareBKNField(NField* bkg_nfield, double amp, double t_start, dou
 
 //// TODO: Implement equipartition!!!
 //// Note: original implementation of LTT delay through the apparent velocity. Only applicable for straight jets.
-//double FlareBKNField::_nf(const Vector3d &point, const double t) const {
+//double FlareBKNField::_nf(const Vector3d &point, double t) const {
 //    // Direction to the observer
+//	double theta_los_ = 5.74*M_PI/180.;
 //    Vector3d n_los = {sin(theta_los_), 0, cos(theta_los_)};
-//    Vector3d v = vfield_->vf(point);
+//    Vector3d v = flare_pattern_vfield_->vf(point);
 //    Vector3d v_hat = v.normalized();
 //    double cos_theta_local = v_hat.dot(n_los);
+////	std::cout << "cos_theta = " << cos_theta_local << "\n";
 //    double beta = v.norm()/c;
+////	std::cout << "beta = " << beta << "\n";
+//	double z_ = 0;
 //    double beta_app = beta/(1.0 - beta*cos_theta_local)/(1.0 + z_);
+////	std::cout << "beta_app = " << beta_app << "\n";
 //    double r = point.norm();
-//    return n_0_ * pow(r/pc, -n_n_) * exp(-pow(r - beta_app*c*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+////	return n_0_ * pow(r/pc, -n_n_) * exp(-pow(r - beta_app*c*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+////	double result = 500000 * pow(r/pc, -2) * exp(-pow(r - beta_app*c*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+////	double result = amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - beta_app*c*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+//	// FIXME: This works
+//	double result = amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, beta_app*c*(t - t_start_), width_pc_*pc, 20.0);
+//
+////	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, beta_app*c*(t - t_start_), width_pc_*pc, 20.0);
+////	double result = amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, beta_app*c*(t - t_start_), width_pc_*pc, 20.0);
+////	if(result > 0) {
+////		std::cout << "Flare N = " << result << "\n";
+////	}
+//	return result;
 //}
 
+
+// FIXME: Account redshift time (1 + z)!!!
 // Slow light approximation!!!
-double FlareBKNField::_nf(const Vector3d &point, const double t) const {
+double FlareBKNField::_nf(const Vector3d &point, double t) const {
 	// TODO: Here we should integrate flare pattern speed in time to find the position of the flare (e.g. blob center).
 	// We can model flare as a spherical blob.
     Vector3d v = flare_pattern_vfield_->vf(point);
     double r = point.norm();
-//    double n = amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
-//    std::cout << "Flare n = " << n << "\n";
 //	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
-	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 2.0);
+	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 20.0);
 }

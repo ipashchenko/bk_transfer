@@ -133,7 +133,7 @@ class FlareBKNField : public NField {
         // ``vfield`` argument accounts for possible difference between pattern and flow velocity. The last one is
         // specified in ``Jet`` ctor.
         FlareBKNField(NField* bkg_nfield, double amp, double t_start, double width_pc, VField* flare_pattern_vfield);
-        double _nf(const Vector3d &point, const double t = 0.0) const override;
+        double _nf(const Vector3d &point, double t = 0.0) const override;
     private:
         // Flare amplitude. To add flare to stationary BKNField with some ``n_0``, ``n_n``, use the same ``n_n`` but
         // define flare's ``n_0_fl`` as ``n_0*(1 + A_N)``, where ``A_N`` - fractional increase/decrease of particles in
