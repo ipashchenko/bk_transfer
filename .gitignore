@@ -1,2 +1,11 @@
 # Project exclude paths
 /cmake-build-debug/
+/papers
+/results
+/pics
+/lttd
+/Release
+/uvfits
+*.gif
+/vak
+*.png
