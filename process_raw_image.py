@@ -127,13 +127,11 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
     core_flux = np.sum(I_orig[:, :idx_tau_1])
     jet_flux = np.sum(I_orig[:, idx_tau_1:])
 
-
     return {"tau_1_1": pos_tau_1_1_pc, "tau_1_2": pos_tau_1_2_pc,
             "max_I_stripe": pos_max_I_stripe_pc, "max_I_mean": pos_max_I_mean_pc,
             "core_flux": core_flux, "tau_1_1_mas": pos_tau_1_1_mas, "tau_1_2_mas": pos_tau_1_2_mas,
             "max_I_stripe_mas": pos_max_I_stripe_mas, "max_I_mean_mas": pos_max_I_mean_mas,
             "core_flux": core_flux, "jet_flux": jet_flux}
-
 
 
 # z = 0.5
@@ -203,13 +201,11 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
 # # axes_I.legend(loc=1)
 # plt.show()
 
-
 if __name__ == "__main__":
     data_dir = "/home/ilya/data/rfc"
     # txt_dir = "/home/ilya/fs/sshfs/calculon/github/bk_transfer/Release"
     txt_dir = "/home/ilya/github/bk_transfer/Release"
-    save_dir = "/home/ilya/github/bk_transfer/pics"
-    source_template = "J0102+5824"
+    save_dir = "/home/ilya/github/bk_transfer/pics/flares"
     z = 1.0
     plot = True
     match_resolution = False
@@ -222,25 +218,40 @@ if __name__ == "__main__":
     n_along = 400
     n_across = 80
 
-    flare_params = [1.0, 0.0, 300.0, 0.2]
-    flare_shape = 2.0
+    n_along = 2000
+    n_across = 500
+    lg_pixsize_min = {2.3: -1., 8.6: -1.}
+    lg_pixsize_max = {2.3: -1., 8.6: -1.}
+
+    basename = "flare_shape_20_width_0.5_ampN_bck500_LTTD_tobs_from_0_to_10x360"
+    # basename = "test"
+    ts_obs_days = np.linspace(0.0, 8*360, 20)
+    ts_obs_days = [0.0]
+
+    # w/o LTTD
+    # ts_obs_days = np.linspace(0, 40*360, 60)
+
+    # flare_params = [5.0, 0.0, 0.0, 0.1]
+    flare_params = [2.0, 0.0, 0.0, 0.2]
+    flare_shape = 20.0
     t_start_days = flare_params[2]
     amp_N = flare_params[0]
     amp_B = flare_params[1]
     l_pc = flare_params[3]
-    Gamma = 8.6
-    theta_deg = 5.0
+    Gamma = 10.0
+    theta_deg = np.round(np.rad2deg(np.arcsin(0.5/Gamma)), 2)
     b = 1.0
-    B_1 = 0.85
+    B_1 = 2.0
     n = 2.0
     gamma_min = 10.
     gamma_max = 1E+04
     s = 2.
     N_1 = equipartition_bsq_coefficient(s, gamma_min, gamma_max)*B_1**2
     # ts_obs_days = np.loadtxt(os.path.join(data_dir, "{}_times.txt".format(source_template)))
-    ts_obs_days = np.linspace(0, 10*360, 100)
     corex_positions = list()
     cores_positions = list()
+    corex_positions_pc = list()
+    cores_positions_pc = list()
     corex_fluxes = list()
     cores_fluxes = list()
     jetx_fluxes = list()
@@ -256,30 +267,34 @@ if __name__ == "__main__":
 
         # convert -delay 10 -loop 0 `ls -tr tobs*.png` animation.gif
         if plot:
-            fig, axes = plt.subplots(2, 1, sharex=True)
+            fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 12))
             imagex = np.loadtxt(imagex_txt)
             images = np.loadtxt(images_txt)
             print("Total flux S = {:.2f} Jy".format(np.sum(images)))
             print("Total flux X = {:.2f} Jy".format(np.sum(imagex)))
-            axes[0].matshow(np.log10(images))
-            axes[1].matshow(np.log10(imagex))
+            axes[0].matshow(images, cmap="inferno", aspect="auto")
+            axes[1].matshow(imagex, cmap="inferno", aspect="auto")
             axes[1].xaxis.tick_bottom()
             axes[0].xaxis.tick_bottom()
-            axes[1].set_xlabel("Along")
+            axes[1].set_xlabel("Along, nu pixels")
+            axes[0].annotate("{:05.1f} months".format(t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="pink",
+                             weight='bold', ha='left', va='center', size=20)
             fig.subplots_adjust(hspace=0)
             fig.subplots_adjust(wspace=0)
             fig.tight_layout()
-            plt.savefig("tobs_{:.1f}.png".format(t_obs_days))
+            plt.savefig(os.path.join(save_dir, "{}_raw_nupixel_{:.1f}.png".format(basename, t_obs_days)))
             plt.close()
             # plt.show()
         taux_txt = os.path.join(txt_dir, "jet_image_tau_X_{:.1f}.txt".format(t_obs_days))
         taus_txt = os.path.join(txt_dir, "jet_image_tau_S_{:.1f}.txt".format(t_obs_days))
-        resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max,
+        resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixel_size_mas_min[8.6], lg_pixel_size_mas_max[8.6],
                                       n_along, n_across)
-        ress = get_proj_core_position(images_txt, taus_txt, z, lg_pixel_size_mas_min, lg_pixel_size_mas_max,
+        ress = get_proj_core_position(images_txt, taus_txt, z, lg_pixel_size_mas_min[2.3], lg_pixel_size_mas_max[2.3],
                                       n_along, n_across)
         corex_positions.append(resx["tau_1_1_mas"])
         cores_positions.append(ress["tau_1_1_mas"])
+        corex_positions_pc.append(resx["tau_1_1"])
+        cores_positions_pc.append(ress["tau_1_1"])
         corex_fluxes.append(resx["core_flux"])
         cores_fluxes.append(ress["core_flux"])
         jetx_fluxes.append(resx["jet_flux"])
@@ -294,9 +309,16 @@ if __name__ == "__main__":
         N_core_X.append(n_core_X)
         print("Core flux S = {:.2f}".format(cores_fluxes[-1]))
         print("Jet flux S = {:.2f}".format(jets_fluxes[-1]))
+        print("Projected core position S (pc) = {:.2f}".format(cores_positions_pc[-1]))
+        print("Projected core position X (pc) = {:.2f}".format(corex_positions_pc[-1]))
+        print("De-projected core position S (pc) = {:.2f}".format(cores_positions_pc[-1]/np.sin(np.deg2rad(theta_deg))))
+        print("De-projected core position X (pc) = {:.2f}".format(corex_positions_pc[-1]/np.sin(np.deg2rad(theta_deg))))
 
     CS = np.array(cores_positions)-np.array(corex_positions)
-
+    print("CS(mas) = ", CS)
+    CS_pc_proj = np.array(cores_positions_pc)-np.array(corex_positions_pc)
+    print("projected CS(pc) = ", CS_pc_proj)
+    print("de-projected CS(pc) = ", CS_pc_proj/np.sin(np.deg2rad(theta_deg)))
 
     fig, axes = plt.subplots(1, 1, figsize=(15, 15))
     axes.set_xlabel("Time, days")
@@ -322,7 +344,7 @@ if __name__ == "__main__":
     axes2.plot(ts_obs_days, cores_fluxes, color="C1")
     axes2.scatter(ts_obs_days, cores_fluxes, color="C1")
     axes.legend()
-    fig.savefig(os.path.join(save_dir, "CS_rc_Sc_t_true.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "{}_CS_rc_Sc_t_true.png".format(basename)), bbox_inches="tight")
     plt.show()
 
 
@@ -346,7 +368,7 @@ if __name__ == "__main__":
     axes2.plot(ts_obs_days, cores_fluxes, color="C1")
     axes2.scatter(ts_obs_days, cores_fluxes, color="C1")
     axes.legend()
-    fig.savefig(os.path.join(save_dir, "rc_Sc_t_true.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "{}_rc_Sc_t_true.png".format(basename)), bbox_inches="tight")
     plt.show()
 
 
@@ -354,13 +376,13 @@ if __name__ == "__main__":
     axes.scatter(cores_fluxes, cores_positions)
     axes.set_xlabel(r"$S_{\rm core}$, Jy")
     axes.set_ylabel(r"$r_{\rm core}$, mas")
-    fig.savefig(os.path.join(save_dir, "rc_Sc_true_Sband.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "{}_rc_Sc_true_Sband.png".format(basename)), bbox_inches="tight")
     plt.show()
     fig, axes = plt.subplots(1, 1)
     axes.scatter(corex_fluxes, corex_positions)
     axes.set_xlabel(r"$S_{\rm core}$, Jy")
     axes.set_ylabel(r"$r_{\rm core}$, mas")
-    fig.savefig(os.path.join(save_dir, "rc_Sc_true_Xband.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "{}_rc_Sc_true_Xband.png".format(basename)), bbox_inches="tight")
     plt.show()
 
     med_B = np.median(B_core_S)
@@ -371,9 +393,8 @@ if __name__ == "__main__":
     axes.set_xlabel(r"$N_{\rm core}, {\rm cm}^{-3}$")
     axes.set_ylabel(r"$B_{\rm core}, {\rm G}$")
     plt.legend()
-    fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Sband.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "{}_Bc_Nc_true_Sband.png".format(basename)), bbox_inches="tight")
     plt.show()
-
 
     med_B = np.median(B_core_X)
     med_N = np.median(N_core_X)
@@ -383,5 +404,5 @@ if __name__ == "__main__":
     axes.set_xlabel(r"$N_{\rm core}, {\rm cm}^{-3}$")
     axes.set_ylabel(r"$B_{\rm core}, {\rm G}$")
     plt.legend()
-    fig.savefig(os.path.join(save_dir, "Bc_Nc_true_Xband.png"), bbox_inches="tight")
+    fig.savefig(os.path.join(save_dir, "{}_Bc_Nc_true_Xband.png".format(basename)), bbox_inches="tight")
     plt.show()
