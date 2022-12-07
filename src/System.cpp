@@ -31,7 +31,8 @@ void Tau::operator()(const double &x, double &dxdt, const double t) {
     // directed to the observer.
     // ltt_delay is positive for points that lay closer to the observer than the plane
     double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
-    ltt_delay = 0.0;
+    // To turn-off the delay
+//    ltt_delay = 0.0;
 //    double extra_jet_delay_pc = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/pc;
 //    if(extra_jet_delay_pc < 10.0) {
 //        std::cout << "Delay due to extra jet distance [pc] = " << extra_jet_delay_pc << "\n";
@@ -51,7 +52,7 @@ void TauFR::operator()(const double &x, double &dxdt, double t) {
     ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
     // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS
     double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
-    ltt_delay = 0.0;
+//    ltt_delay = 0.0;
     ///////////////////////////////////////////////////////
     dxdt = jet->getKF(point, ray_direction, nu, ltt_delay);
 }
@@ -90,7 +91,7 @@ void I::operator()(const double &x, double &dxdt, const double t) {
     ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
     // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS
     double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
-    ltt_delay = 0.0;
+//    ltt_delay = 0.0;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     double k_i, eta_i;
@@ -106,7 +107,7 @@ void Speed::operator()(const double &x, double &dxdt, const double t) {
     ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
     // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS
     double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
-    ltt_delay = 0.0;
+//    ltt_delay = 0.0;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // If negative Stokes I resulted from previous step, remember its value to compensate for
@@ -150,7 +151,7 @@ void FullStokes::operator()(const state_type &x, state_type &dxdt,
     ///////////////////////////// LTT delay ////////////////////////////////////////////////////////////////////////////
     // Find LTT delay from this point to the plane containing (0, 0, 0) and normal to the LOS
     double ltt_delay = distance_plane_point(point, {0.0, 0.0, 0.0}, ray_direction)/c;
-    ltt_delay = 0.0;
+//    ltt_delay = 0.0;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	// If negative Stokes I resulted from previous step, remember its value to compensate for
