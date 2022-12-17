@@ -1,7 +1,7 @@
 import os
 import datetime
 import matplotlib
-matplotlib.use("Qt5Agg")
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage.measurements import label
@@ -977,6 +977,7 @@ if __name__ == "__main__":
     # Zoom first two ridges
     # blc = (460, 460)
     # trc = (600, 600)
+
 
     cmap = "coolwarm"
     color_clim = [-0.55, 0.55]
