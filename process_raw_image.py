@@ -219,9 +219,9 @@ if __name__ == "__main__":
     n_across = 80
 
     n_along = 2000
-    n_across = 500
-    lg_pixsize_min = {2.3: -1., 8.6: -1.}
-    lg_pixsize_max = {2.3: -1., 8.6: -1.}
+    n_across = 1400
+    lg_pixel_size_mas_min = {2.3: -1., 8.6: -1.}
+    lg_pixel_size_mas_max = {2.3: -1., 8.6: -1.}
 
     basename = "flare_shape_20_width_0.5_ampN_bck500_LTTD_tobs_from_0_to_10x360"
     # basename = "test"

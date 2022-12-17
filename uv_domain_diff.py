@@ -84,34 +84,41 @@ good = np.logical_and(r_uv/10**6 > uv_range[0], r_uv/10**6 < uv_range[1])
 toogood = np.logical_and(good, ~weights_mask)
 
 
-fig, axes = plt.subplots(1, 1, figsize=[6.4, 4.8])
-y_cc = np.real(np.sqrt(ft_cc*np.conj(ft_cc)))
+# fig, axes = plt.subplots(1, 1, figsize=[6.4, 4.8])
+# y_cc = np.real(np.sqrt(ft_cc*np.conj(ft_cc)))
 y_model = np.real(np.sqrt(ft_model*np.conj(ft_model)))
 diff = ft_cc - ft_model
 diff = np.real(np.sqrt(diff*np.conj(diff)))
-sc = axes.scatter(r_uv[toogood]/10**6, diff[toogood]/y_model[toogood], c=np.rad2deg(pa_uv[toogood]), cmap="plasma")
-# sc = axes.scatter(r_uv[toogood]/10**6, diff[toogood], c=np.rad2deg(pa_uv[toogood]), cmap="plasma")
-axes.set_yscale("log")
-axes.set_xlabel(r"$r_{uv}$, M$\lambda$")
-axes.set_ylabel(r"Frac. error")
-# axes.set_ylabel(r"Error, Jy")
-divider = make_axes_locatable(axes)
-cax = divider.append_axes("right", size="10%", pad=0.00)
-cb = fig.colorbar(sc, cax=cax)
-cb.set_label(r"PA$_{uv}$, deg")
-# plt.savefig(os.path.join(data_dir, "radplot_error_15GHz_2ridges.png"), bbox_inches="tight", dpi=600)
-plt.show()
+# sc = axes.scatter(r_uv[toogood]/10**6, diff[toogood]/y_model[toogood], c=np.rad2deg(pa_uv[toogood]), cmap="plasma")
+# # sc = axes.scatter(r_uv[toogood]/10**6, diff[toogood], c=np.rad2deg(pa_uv[toogood]), cmap="plasma")
+# axes.set_yscale("log")
+# axes.set_xlabel(r"$r_{uv}$, M$\lambda$")
+# axes.set_ylabel(r"Frac. error")
+# # axes.set_ylabel(r"Error, Jy")
+# divider = make_axes_locatable(axes)
+# cax = divider.append_axes("right", size="10%", pad=0.00)
+# cb = fig.colorbar(sc, cax=cax)
+# cb.set_label(r"PA$_{uv}$, deg")
+# # plt.savefig(os.path.join(data_dir, "radplot_error_15GHz_2ridges.png"), bbox_inches="tight", dpi=600)
+# plt.show()
 
+
+from matplotlib.ticker import LogFormatter
 
 # fig, axes = plt.subplots(1, 1, figsize=[10, 5])
 fig, axes = plt.subplots(1, 1, figsize=[6.4, 6.4])
-sc = axes.scatter(u[toogood]/10**6, v[toogood]/10**6, c=np.log10(diff[toogood]/y_model[toogood]), cmap="plasma")
-axes.scatter(-u[toogood]/10**6, -v[toogood]/10**6, c=np.log10(diff[toogood]/y_model[toogood]), cmap="plasma")
-# sc = axes.scatter(u[toogood]/10**6, v[toogood]/10**6, c=np.log10(diff[toogood]), cmap="plasma")
+sc = axes.scatter(u[toogood]/10**6, v[toogood]/10**6, c=diff[toogood]/y_model[toogood], cmap="plasma")
+axes.scatter(-u[toogood]/10**6, -v[toogood]/10**6, c=diff[toogood]/y_model[toogood], cmap="plasma")
+
+# sc = axes.scatter(u[toogood]/10**6, v[toogood]/10**6, c=diff[toogood]/y_model[toogood], cmap="inferno", norm=matplotlib.colors.LogNorm())
+# axes.scatter(-u[toogood]/10**6, -v[toogood]/10**6, c=diff[toogood]/y_model[toogood], cmap="inferno", norm=matplotlib.colors.LogNorm())
 divider = make_axes_locatable(axes)
+# formatter = LogFormatter(10, labelOnlyBase=False)
 cax = divider.append_axes("right", size="3%", pad=0.00)
 cb = fig.colorbar(sc, cax=cax)
-cb.set_label(r"$\lg({\rmFrac. error})$")
+# cb = fig.colorbar(sc, cax=cax, format=formatter)
+# cb.set_label(r"$\lg({\rmFrac. error})$")
+cb.set_label(r"Frac. error")
 # cb.set_label(r"$\lg({\rm Error (Jy)})$")
 axes.set_xlabel(r"$u$, M$\lambda$")
 axes.set_ylabel(r"$v$, M$\lambda$")
@@ -120,5 +127,47 @@ axes.set_aspect("equal")
 axes.set_ylim([-250, 250])
 axes.set_xlim([-250, 250])
 axes.invert_xaxis()
-plt.savefig(os.path.join(save_dir, "error_8GHz_2ridges_with_conj.png"), bbox_inches="tight", dpi=600)
+plt.savefig(os.path.join(save_dir, "fracerror_8GHz_2ridges_with_conj.png"), bbox_inches="tight", dpi=600)
+plt.show()
+
+
+
+
+import astropy.units as u
+deg2mas = u.deg.to(u.mas)
+flux = cc_data["FLUX"]
+x = cc_data["DELTAX"]*deg2mas
+y = cc_data["DELTAY"]*deg2mas
+strong = np.log10(flux) > -4.5
+x = x[strong]
+y = y[strong]
+flux = flux[strong]
+
+
+label_size = 10
+matplotlib.rcParams['xtick.labelsize'] = label_size
+matplotlib.rcParams['ytick.labelsize'] = label_size
+matplotlib.rcParams['axes.titlesize'] = label_size
+matplotlib.rcParams['axes.labelsize'] = label_size
+matplotlib.rcParams['font.size'] = label_size
+matplotlib.rcParams['legend.fontsize'] = label_size
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
+fig = plt.figure()
+fig.set_size_inches(4.5, 3.5)
+axes = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+sc = axes.scatter(x, y, s=0.5, color="k")#c=flux, cmap="gist_ncar", s=0.5)
+# divider = make_axes_locatable(axes)
+# formatter = LogFormatter(10, labelOnlyBase=False)
+# cax = divider.append_axes("right", size="3%", pad=0.00)
+# cb = fig.colorbar(sc, cax=cax, format=formatter)
+# cb.set_label(r"Flux, Jy")
+axes.invert_xaxis()
+axes.set_xlim([10, -45])
+axes.set_ylim([-5, 19])
+axes.set_xlabel(r'Rel. RA (mas)')
+axes.set_ylabel(r'Rel. DEC (mas)')
+axes.set_aspect('equal')
+plt.savefig("/home/ilya/Documents/EVN2022/cc.png", bbox_inches="tight", dpi=600)
 plt.show()

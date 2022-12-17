@@ -37,5 +37,5 @@ Now (r0=0.125) width = approx 7.2 mas
 
 
 0>wmodel model_8.1_filtered.dfm
+0>restore 0.8150984129713098, 1.5558717009300567, -0.07806703811263167, true, true
 Writing 3953 model components to file: model_8.1_filtered.dfm
-0>restore 0.8150984129713098, 1.5558717009300567, -0.07806703811263167, true, trueы

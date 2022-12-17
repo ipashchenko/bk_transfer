@@ -293,9 +293,12 @@ if __name__ == "__main__":
     trc = (980, 720)
     color_clim = [-1.5, 0.5]
 
-    template_ccimage = create_clean_image_from_fits_file("/home/ilya/data/alpha/BK145/X_template_beam.fits")
-    common_beam = template_ccimage.beam
+    # template_ccimage = create_clean_image_from_fits_file("/home/ilya/data/alpha/BK145/X_template_beam.fits")
+    # common_beam = template_ccimage.beam
+    # (2x1)deg at PA = -4 deg
+    common_beam = (2, 1, -0.034)
     small_beam = (0.5, 0.5, 0)
+    # sys.exit(0)
     npixels_beam_common = np.pi*common_beam[0]*common_beam[1]/(4*np.log(2)*common_mapsize[1]**2)
     template_uvfits_dict = {"X": "/home/ilya/data/alpha/BK145/1228+126.X.2009_05_23_ta60.uvf_cal",
                             "U": "/home/ilya/data/alpha/BK145/1228+126.U.2009_05_23C_ta60.uvf_cal"}

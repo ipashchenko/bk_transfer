@@ -24,11 +24,12 @@ from alpha_utils import CLEAN_difmap_RA
 deg2rad = un.deg.to(un.rad)
 
 
-done_convolved = False
+done_convolved = True
 done_artificial = False
 
 # freq = 4.8
-freq = 15.4
+# freq = 15.4
+freq = 1.65
 # MOJAVE:  (8.950327, 432.140576)
 # RA:  (1.82467625, 652.150144)
 # Excluding outer parts of RA uv-coverage
@@ -41,9 +42,14 @@ jet_model = "2ridges"
 common_beam_deg = (0.7, 0.7, 0)
 common_beam_rad = (0.7, 0.7, np.deg2rad(0))
 common_mapsize = (2048, 1024, 0.04)
+
+RA_dir = "/home/ilya/Downloads/gs032c"
+
 data_dir = "/home/ilya/data/alpha/RA"
 save_dir = "/home/ilya/data/alpha/RA"
-uvfits_ra = "/home/ilya/data/alpha/RA/m87.at02.uvf_cal"
+uvfits_ra = "/home/ilya/data/alpha/RA/m87.at"
+uvfits_ra_c = "/home/ilya/Downloads/gs032c/m87.at02.uvf_cal"
+uvfits_ra_l = "/home/ilya/Downloads/gs032c/m87.split.uvifavr.uvmatched.uvf"
 uvfits_moj = "/home/ilya/data/alpha/RA/1228+126.u.2014_03_26.uvf"
 wins_file_ra = "/home/ilya/data/alpha/RA/wins_RA_2ridges.txt"
 noise_scale_factor = 1.0
@@ -62,11 +68,11 @@ lg_pixel_size_mas_max = -1.5
 
 if not done_artificial:
     # uvdata = UVData(uvfits_ra)
-    uvdata = UVData(uvfits_moj)
+    uvdata = UVData(uvfits_ra_l)
     # RA
-    # need_downscale_uv = True
+    need_downscale_uv = True
     # MOJAVE
-    need_downscale_uv = False
+    # need_downscale_uv = False
     noise = uvdata.noise(average_freq=False, use_V=False)
     uvdata.zero_data()
     # If one needs to decrease the noise this is the way to do it
@@ -79,8 +85,10 @@ if not done_artificial:
     cjm = JetImage(z=z, n_along=n_along, n_across=n_across,
                    lg_pixel_size_mas_min=lg_pixel_size_mas_min, lg_pixel_size_mas_max=lg_pixel_size_mas_max,
                    jet_side=False, rot=np.deg2rad(rot_angle_deg))
-    jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
-    cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
+    # jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
+    # cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}_{}.txt".format(jetpol_files_directory, "i", freq, jet_model), scale=scale)
+    jm.load_image_stokes(stokes.upper(), "{}/jet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
+    cjm.load_image_stokes(stokes.upper(), "{}/cjet_image_{}_{}.txt".format(jetpol_files_directory, "i", freq), scale=scale)
     js = TwinJetImage(jm, cjm)
     # Convert to difmap model format
     js.save_image_to_difmap_format("{}/true_jet_model_i_{}.txt".format(save_dir, freq))
@@ -96,7 +104,7 @@ if not done_artificial:
                                             "{}/convolved_true_jet_model_i_rotated_{}.fits".format(save_dir, freq))
     uvdata.substitute([js])
     uvdata.noise_add(noise)
-    uvdata.save(os.path.join(save_dir, "template_{}.uvf".format(freq)), rewrite=True, downscale_by_freq=need_downscale_uv)
+    uvdata.save(os.path.join(RA_dir, "artificial_2ridges_{}.uvf".format(freq)), rewrite=True, downscale_by_freq=need_downscale_uv)
 
 
 sys.exit(0)

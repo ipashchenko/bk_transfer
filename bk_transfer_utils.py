@@ -271,15 +271,57 @@ def plot_raw(txt_files, labels, extent=None, log=True, first_level=0.000001, max
     plt.show()
 
 
+def plot_raw_single(txt_file, label, extent=None, log=True, first_level=0.000001, max_level=0.1, savename=None, cmap="jet",
+                    plot_colorbar=False, figsize=(5.7, 1.5), pixsize=10**(-1.5), colorbar_label=None):
+    if extent is None and pixsize is None:
+        raise Exception("Specify extent or pixsize!")
+    toplot = np.loadtxt(txt_file)
+    shape = toplot.shape
+    print(shape)
+    if extent is None:
+        extent_along = pixsize*shape[1]/2
+        extent_across = pixsize*shape[0]/2
+        extent = (-(1400-1200)/1400*extent_along, (2300-1400)/1400*extent_along, -(250-130)/500*extent_across, (370-250)/500*extent_across)
+
+    fig, axes = plt.subplots(1, 1, figsize=figsize)
+    plt.subplots_adjust(hspace=0, wspace=0)
+    if log:
+        norm = LogNorm(vmin=first_level, vmax=max_level*toplot.max())
+    else:
+        norm = None
+
+    # im = axes.matshow(toplot[130:370, 1200:2300], norm=norm, extent=extent, aspect="equal", cmap=cmap)
+    im = axes.matshow(toplot[100:400, 1200:], norm=norm, extent=extent, aspect="equal", cmap=cmap)
+    if label is not None:
+        axes.text(-6, 1.2, label)
+    axes.set_ylabel(r"$r$, mas")
+    axes.set_xlabel(r"$z_{\rm obs}$, mas")
+    plt.gca().xaxis.tick_bottom()
+    if plot_colorbar:
+        divider = make_axes_locatable(axes)
+        cax = divider.append_axes("right", size="5%", pad=0.00)
+        cb = fig.colorbar(im, cax=cax)
+        cb.set_label(colorbar_label)
+
+    plt.subplots_adjust(hspace=0)
+    if savename is not None:
+        fig.savefig(savename, bbox_inches="tight", dpi=300)
+    plt.show()
+
+
 if __name__ == "__main__":
     # Plot raw jet model images
     os.chdir("/home/ilya/data/alpha/txt/final")
     # for code in ("bk", "kh", "2ridges", "3ridges"):
     #     for freq in (15.4, 8.1):
     #         concatenate_jet_with_counter_jet(stokes="i", freq_ghz=freq, path="/home/ilya/data/alpha/txt", code=code)
-    plot_raw(["jet_cjet_image_i_15.4_bk.txt", "jet_cjet_image_i_15.4_2ridges.txt", "jet_cjet_image_i_15.4_3ridges.txt", "jet_cjet_image_i_15.4_kh.txt"],
-             labels=["BK", "2 ridges", "3 ridges", "KH"], cmap="jet", first_level=5e-7, max_level=0.1,
-             pixsize=10**(-1.5), plot_colorbar=False, figsize=(5*5.7, 1.7),
-             savename="jet_models_final_zoom.png")
+    # plot_raw(["jet_cjet_image_i_15.4_bk.txt", "jet_cjet_image_i_15.4_2ridges.txt", "jet_cjet_image_i_15.4_3ridges.txt", "jet_cjet_image_i_15.4_kh.txt"],
+    #          labels=["BK", "2 ridges", "3 ridges", "KH"], cmap="jet", first_level=5e-7, max_level=0.1,
+    #          pixsize=10**(-1.5), plot_colorbar=False, figsize=(5*5.7, 1.7),
+    #          savename="jet_models_final_zoom.png")
 
+    plot_raw_single("jet_cjet_image_i_15.4_2ridges.txt", figsize=(10, 3),
+             label=None, cmap="jet", first_level=5e-7, max_level=0.1,
+             pixsize=10**(-1.5), plot_colorbar=False,
+             savename="jet_model_2ridges.png")
 

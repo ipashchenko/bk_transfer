@@ -85,7 +85,7 @@ std::pair<vector<vector<double>>, vector<vector<double>>> run_on_analytic_params
     EquipartitionKHNfield kh_nfield(&kh_particles, &bk_bfield, &geometry, nullptr,
                                     vfield, omega);
     kh_nfield.set_background_fraction(background_fraction);
-    kh_nfield.set_spiral_width_frac(spiral_width_frac);
+    kh_nfield.set_spiral_width_frac({spiral_width_frac, spiral_width_frac, spiral_width_frac});
 //    bk_stat_nfield.set_spiral(phase_0, lambda_0 * R_1pc, amp_0 * R_1pc);
 //    bk_stat_nfield.set_spiral(phase_1, lambda_1 * R_1pc, amp_1 * R_1pc);
 //    if(amp_2 > 0.0) {

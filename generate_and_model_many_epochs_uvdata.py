@@ -19,7 +19,7 @@ z = 1.0
 # n_along = 400
 n_along = 2000
 # n_across = 80
-n_across = 500
+n_across = 1400
 match_resolution = False
 if match_resolution:
     lg_pixsize_min = {2.3: -2.5, 8.6: -2.5-np.log10(8.6/2.3)}
@@ -178,6 +178,7 @@ for freq_ghz in freqs_ghz:
 
             ccimage = create_clean_image_from_fits_file(os.path.join(save_dir, outfname))
             ipol = ccimage.image
+            # Here beam in rad
             beam = ccimage.beam
             # Number of pixels in beam
             npixels_beam = np.pi*beam[0]*beam[1]/(4*np.log(2)*mapsizes[freq_ghz][1]**2)
@@ -193,8 +194,13 @@ for freq_ghz in freqs_ghz:
                 if trc[0] == ipol.shape: trc = (trc[0]-1, trc[1])
                 if trc[1] == ipol.shape: trc = (trc[0], trc[1]-1)
 
-            blc = (240, 230)
-            trc = (400, 285)
+            if freq_ghz == 8.6:
+                blc = (240, 230)
+                trc = (400, 285)
+            else:
+                blc = (220, 210)
+                trc = (420, 305)
+
 
             if len(beam_fractions) == 1:
                 components = import_difmap_model("it2.mdl", save_dir)
@@ -202,8 +208,10 @@ for freq_ghz in freqs_ghz:
                 components = None
 
             # IPOL contours
+            # Beam must be in deg
+            beam_deg = (beam[0], beam[1], np.rad2deg(beam[2]))
             fig = iplot(ipol, x=ccimage.x, y=ccimage.y,
-                        min_abs_level=4*std, blc=blc, trc=trc, beam=beam, close=True, show_beam=True, show=False,
+                        min_abs_level=4*std, blc=blc, trc=trc, beam=beam_deg, close=True, show_beam=True, show=False,
                         contour_color='gray', contour_linewidth=0.25, components=components)
             axes = fig.get_axes()[0]
             axes.annotate("{:05.1f} months".format(epoch/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
