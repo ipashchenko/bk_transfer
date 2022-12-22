@@ -235,14 +235,23 @@ void EquipartitionKHNfield::set_spiral_scale(std::vector<double> scale) {
     scale_ = scale;
 }
 
-FlareBKNField::FlareBKNField(NField* bkg_nfield, double amp, double t_start, double width_pc, VField* flare_pattern_vfield) :
+FlareBKNField::FlareBKNField(NField* bkg_nfield, double amp, double t_start, double width_pc, VField* flare_pattern_vfield,
+							 Geometry* geometry_out, Geometry* geometry_in) :
         NField(bkg_nfield),
         amp_(amp),
         t_start_(t_start),
         width_pc_(width_pc)
         {
-        bkg_nfield_ = bkg_nfield;
-        flare_pattern_vfield_ = flare_pattern_vfield;
+			bkg_nfield_ = bkg_nfield;
+			flare_pattern_vfield_ = flare_pattern_vfield;
+			if(geometry_out)
+			{
+				geometry_out_ = geometry_out;
+			}
+			if(geometry_in)
+			{
+				geometry_in_ = geometry_in;
+			}
         }
 
 //// TODO: Implement equipartition!!!
@@ -284,5 +293,5 @@ double FlareBKNField::_nf(const Vector3d &point, double t) const {
     Vector3d v = flare_pattern_vfield_->vf(point);
     double r = point.norm();
 //	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
-	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 20.0);
+	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 2.0);
 }

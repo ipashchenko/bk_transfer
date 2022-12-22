@@ -710,6 +710,8 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     double big_scale = 1000*pc;
     double cone_half_angle = cone_half_angle_deg*M_PI/180.0;
     Cone geometry(origin, direction, cone_half_angle, big_scale);
+	Cone geometry_flare_out(origin, direction, 0.25*cone_half_angle, big_scale);
+	Cone geometry_flare_in(origin, direction, 0.25*cone_half_angle, big_scale);
 
     // We need to set VField for flares first===========================================================================
     VField* vfield;
@@ -764,7 +766,9 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
         // In sec
         t_start_days *= 24.0 * 60.0 * 60.0;
         flare_width_pc = flare_params[4*i + 3];
-        bk_flare_nfield = new FlareBKNField(&bk_stat_nfield, frac_amp, t_start_days, flare_width_pc, vfield);
+        bk_flare_nfield = new FlareBKNField(&bk_stat_nfield, frac_amp, t_start_days,
+											flare_width_pc, vfield,
+											&geometry_flare_out, nullptr);
         flaring_nfields.push_back(bk_flare_nfield);
     }
 
@@ -1151,7 +1155,7 @@ int main(int argc, char *argv[]) {
 
         total_fluxes = run_on_analytic_params_t(redshift, los_angle_deg, cone_half_angle_deg,
                                                 b_0, 1,
-                                                2.0, 10.0,
+                                                3.0, 10.0,
                                                 K_1, 2,
                                                 Gamma,
                                                 number_of_pixels_along, number_of_pixels_across,
