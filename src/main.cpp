@@ -753,6 +753,11 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
 //    BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
     EquipartitionBKNfield bk_stat_nfield(&particles, queiscent_sbfields, &geometry, nullptr, vfield);
 
+	
+	// TODO: Flare N-field which declines faster than background N-field.
+	double n_0 = b_0*b_0*particles.get_equipartition_bsq_coefficient();
+	BKNField flare_base_bfield(n_0, 2*(s+2)/3, &particles, true, &geometry, nullptr, vfield);
+	
     std::vector<NField*> queiscent_nfields;
     std::vector<NField*> flaring_nfields;
     queiscent_nfields.push_back(&bk_stat_nfield);
