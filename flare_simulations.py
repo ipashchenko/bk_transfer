@@ -73,6 +73,7 @@ def clear_pics(basename, files_dir):
 
 
 redo = [True, True, True]
+calculon = True
 basename = "test"
 only_band = None
 redshift = 1.0
@@ -113,10 +114,17 @@ use_scipy_for_extract_extended = True
 beam_fractions = (1.0,)
 two_stage = True
 n_components = 4
-exec_dir = "/home/ilya/github/bk_transfer/Release"
-parallels_run_file = "/home/ilya/github/bk_transfer/parallels_run.txt"
-save_dir = "/home/ilya/github/bk_transfer/pics/flares"
-path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
+
+if not calculon:
+    exec_dir = "/home/ilya/github/bk_transfer/Release"
+    parallels_run_file = "/home/ilya/github/bk_transfer/parallels_run.txt"
+    save_dir = "/home/ilya/github/bk_transfer/pics/flares"
+    path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
+else:
+    exec_dir = "/home/ilya/github/flares/bk_transfer/Release"
+    parallels_run_file = "/home/ilya/github/flares/bk_transfer/parallels_run.txt"
+    save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares"
+    path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
 
 
 if redo[0]:
