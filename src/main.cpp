@@ -778,7 +778,7 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
 		// Using adiabatically declined N-field as flare background
 		bk_flare_nfield = new FlareBKNField(&flare_base_nfield, frac_amp, t_start_days,
 											flare_width_pc, vfield,
-											&geometry_flare_out, nullptr);
+											nullptr, nullptr);
         flaring_nfields.push_back(bk_flare_nfield);
     }
 
@@ -1165,7 +1165,7 @@ int main(int argc, char *argv[]) {
 
         total_fluxes = run_on_analytic_params_t(redshift, los_angle_deg, cone_half_angle_deg,
                                                 b_0, 1,
-                                                3.0, 10.0,
+                                                2.0, 10.0,
                                                 K_1, 2,
                                                 Gamma,
                                                 number_of_pixels_along, number_of_pixels_across,

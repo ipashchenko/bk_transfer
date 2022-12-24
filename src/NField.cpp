@@ -293,5 +293,5 @@ double FlareBKNField::_nf(const Vector3d &point, double t) const {
     Vector3d v = flare_pattern_vfield_->vf(point);
     double r = point.norm();
 //	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
-	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 2.0);
+	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 10.0);
 }

@@ -6,7 +6,7 @@ def generate_txt_images(redshift, B_1, K_1, Gamma,
                         LOS_coeff, HOAngle_deg,
                         n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
                         flare_params, ts_obs_days,
-                        exec_dir, parallels_run_file):
+                        exec_dir, parallels_run_file, calculon):
     """
     :param redshift:
     :param B_1:
@@ -44,7 +44,10 @@ def generate_txt_images(redshift, B_1, K_1, Gamma,
             fo.write("\n")
 
     os.chdir(exec_dir)
-    os.system("parallel --files --results t_obs_{11} --joblog log --jobs 4" + f" -a {parallels_run_file} -n 1 -m --colsep ' ' \"./bk_transfer\"")
+    n_jobs = 4
+    if calculon:
+        n_jobs = 20
+    os.system("parallel --files --results t_obs_{11}" + f" --joblog log --jobs {n_jobs} -a {parallels_run_file} -n 1 -m --colsep ' ' \"./bk_transfer\"")
 
 
 if __name__ == "__main__":
@@ -60,11 +63,16 @@ if __name__ == "__main__":
     lg_pixsize_max_mas = -0.5
     flare_params = [30.0, 0.0, 0.0, 0.2]
     ts_obs_days = np.linspace(-400.0, 8*360, 20)
-    exec_dir = "/home/ilya/github/bk_transfer/Release"
-    parallels_run_file = "/home/ilya/github/bk_transfer/parallels_run.txt"
+    calculon = True
+    if not calculon:
+        exec_dir = "/home/ilya/github/bk_transfer/Release"
+        parallels_run_file = "/home/ilya/github/bk_transfer/parallels_run.txt"
+    else:
+        exec_dir = "/home/ilya/github/flares/bk_transfer/Release"
+        parallels_run_file = "/home/ilya/github/flares/bk_transfer/parallels_run.txt"
 
     generate_txt_images(redshift, B_1, K_1, Gamma,
                         LOS_coeff, HOAngle_deg,
                         n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
                         flare_params, ts_obs_days,
-                        exec_dir, parallels_run_file)
+                        exec_dir, parallels_run_file, calculon)

@@ -82,7 +82,7 @@ K_1 = 500.
 # TODO: Changing this => edit main.cpp! ################################################################################
 b = 1.0
 n = 2.0
-s = 3.
+s = 2.
 gamma_min = 10.
 ########################################################################################################################
 # TODO: Changing this => edit utils.h! #################################################################################
@@ -92,17 +92,17 @@ gamma_max = 1E+04
 Gamma = 10.
 LOS_coeff = 0.5
 HOAngle_deg = 15.
-n_along = 400
-n_across = 80
-lg_pixsize_min_mas = -2.5
-lg_pixsize_max_mas = -0.5
+n_along = 1000
+n_across = 200
+lg_pixsize_min_mas = -3.0
+lg_pixsize_max_mas = -1.0
 match_resolution = False
-flare_params = [30.0, 0.0, 0.0, 0.2]
+flare_params = [100.0, 0.0, 0.0, 0.2]
 # TODO: Changing this => edit NField.cpp! ##############################################################################
-flare_shape = 2.0
+flare_shape = 10.0
 ########################################################################################################################
 
-ts_obs_days = np.linspace(-400.0, 8*360, 20)
+ts_obs_days = np.linspace(-400.0, 8*360, 40)
 # ts_obs_days = np.array([0.0])
 noise_scale_factor = 1.0
 mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)}
@@ -138,7 +138,7 @@ if redo[0]:
                         LOS_coeff, HOAngle_deg,
                         n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
                         flare_params, ts_obs_days,
-                        exec_dir, parallels_run_file)
+                        exec_dir, parallels_run_file, calculon)
 
 if redo[1] and only_band is None:
     process_raw_images(basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
