@@ -45,6 +45,10 @@ def equipartition_Bsq_coefficient(s, gamma_min, gamma_max=None):
         return 1.0/(8*np.pi*m_e*c*c*gamma_min*np.log(gamma_max/gamma_min))
 
 
+def get_equipartition_n(B_1, s, gamma_min, gamma_max):
+    return B_1**2 * equipartition_Bsq_coefficient(s, gamma_min, gamma_max)
+
+
 def simulate_random_evpa(std_evpa, n_epochs=30, n_rep=1000):
     q = np.ones(n_epochs)
     u = np.ones(n_epochs)
