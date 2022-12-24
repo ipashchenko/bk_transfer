@@ -5,6 +5,7 @@ import numpy as np
 from vlbi_utils import find_image_std, find_bbox, downscale_uvdata_by_freq
 sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from uv_data import UVData
+from components import CGComponent
 from spydiff import clean_difmap, modelfit_difmap, import_difmap_model, modelfit_core_wo_extending
 from image import plot as iplot
 from from_fits import create_clean_image_from_fits_file
@@ -12,13 +13,12 @@ from jet_image import JetImage
 import matplotlib.pyplot as plt
 
 
-
 def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                                 lg_pixsize_min_mas=-2.5, lg_pixsize_max_mas=-0.5, n_along = 400, n_across = 80, match_resolution = False,
                                 ts_obs_days = np.linspace(-400.0, 8*360, 20),
                                 noise_scale_factor = 1.0, mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)},
                                 plot_clean = True, only_plot_raw = False,
-                                extract_extended = True, beam_fractions = (1.0,), two_stage=True,
+                                extract_extended = True, use_scipy = False, beam_fractions = (1.0,), two_stage=True,
                                 n_components=4,
                                 save_dir = "/home/ilya/github/bk_transfer/pics/flares",
                                 jetpol_run_directory = "/home/ilya/github/bk_transfer/Release",
@@ -43,7 +43,9 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
     :param only_plot_raw: (optional)
         Plot only raw images with NU pixel? (default: ``False``)
     :param extract_extended: (optional)
-        Estimate core parameters using extraction of the extended emission? (default: ``True``)
+        Use extraction of the extended emission to fit the core? (default: ``True``).
+    :param use_scipy: (optional)
+        Use scipy to fit core to the extracted from the extended emission data?
     :param beam_fractions: (optional)
         Iterable of the beam fractions to use for extended emission extraction. (default: ``(1.0, )``)
     :param two_stage: (opitional)
@@ -131,7 +133,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                                                      use_brightest_pixel_as_initial_guess=True,
                                                      estimate_rms=True,
                                                      stokes="i",
-                                                     use_ell=False, two_stage=two_stage)
+                                                     use_ell=False, two_stage=two_stage, use_scipy=use_scipy)
 
                 # Flux of the core
                 flux = np.mean([results[frac]['flux'] for frac in beam_fractions])
@@ -259,6 +261,16 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         axes.plot(epochs/30, CS, "--", label="CS", color="black")
         axes.scatter(epochs/30, CS, color="black")
 
+    if only_band is None:
+        axes.plot(epochs/30, core_positions[8.6], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
+        axes.scatter(epochs/30, core_positions[8.6], color="C0")
+        axes2.plot(epochs/30, core_fluxes[8.6], color="C0")
+        axes2.scatter(epochs/30, core_fluxes[8.6], color="C0")
+        axes.plot(epochs/30, core_positions[2.3], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
+        axes.scatter(epochs/30, core_positions[2.3], color="C1")
+        axes2.plot(epochs/30, core_fluxes[2.3], color="C1")
+        axes2.scatter(epochs/30, core_fluxes[2.3], color="C1")
+
     if only_band is not None and only_band == freq_names[8.6]:
         axes.plot(epochs/30, core_positions[8.6], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
         axes.scatter(epochs/30, core_positions[8.6], color="C0")
@@ -291,6 +303,7 @@ if __name__ == "__main__":
     plot_clean = True
     only_plot_raw = False
     extract_extended = True
+    use_scipy_for_extract_extended = False
     beam_fractions = (1.0,)
     two_stage = True
     n_components = 4
@@ -302,6 +315,6 @@ if __name__ == "__main__":
                                 ts_obs_days,
                                 noise_scale_factor, mapsizes_dict,
                                 plot_clean, only_plot_raw,
-                                extract_extended, beam_fractions, two_stage,
+                                extract_extended, use_scipy_for_extract_extended, beam_fractions, two_stage,
                                 n_components,
                                 save_dir, jetpol_run_directory, path_to_script)
