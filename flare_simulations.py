@@ -72,7 +72,7 @@ def clear_pics(basename, files_dir):
             pass
 
 
-redo = [False, True, True]
+redo = [True, True, True]
 basename = "test"
 only_band = None
 redshift = 1.0
@@ -102,12 +102,14 @@ flare_shape = 2.0
 ########################################################################################################################
 
 ts_obs_days = np.linspace(-400.0, 8*360, 20)
+# ts_obs_days = np.array([0.0])
 noise_scale_factor = 1.0
 mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
 extract_extended = True
+use_scipy_for_extract_extended = True
 beam_fractions = (1.0,)
 two_stage = True
 n_components = 4
@@ -142,7 +144,7 @@ if redo[2]:
                                 ts_obs_days,
                                 noise_scale_factor, mapsizes_dict,
                                 plot_clean, only_plot_raw,
-                                extract_extended, beam_fractions, two_stage,
+                                extract_extended, use_scipy_for_extract_extended, beam_fractions, two_stage,
                                 n_components,
                                 save_dir, exec_dir, path_to_script)
     create_movie_clean(basename, save_dir, only_band)
