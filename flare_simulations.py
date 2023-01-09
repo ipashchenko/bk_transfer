@@ -1,5 +1,7 @@
 import os
 import glob
+import sys
+
 import numpy as np
 from generate_many_epochs_images import generate_txt_images
 from process_raw_image import process_raw_images
@@ -73,12 +75,12 @@ def clear_pics(basename, files_dir):
 
 
 redo = [True, True, True]
-calculon = True
+calculon = False
 basename = "test"
 only_band = None
-redshift = 1.0
-B_1 = 1.0
-K_1 = 500.
+redshift = 0.8
+B_1 = 2.0
+K_1 = 5000.
 # TODO: Changing this => edit main.cpp! ################################################################################
 b = 1.0
 n = 2.0
@@ -91,26 +93,34 @@ gamma_max = 1E+04
 
 Gamma = 10.
 LOS_coeff = 0.5
-HOAngle_deg = 15.
+HOAngle_deg = 20.
+
+los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
+cone_half_angle_deg = np.round(np.rad2deg(np.arctan(np.tan(np.deg2rad(HOAngle_deg)) * np.sin(np.deg2rad(los_angle_deg)))), 2)
+print(f"LOS(deg) = {los_angle_deg}")
+print(f"Cone HA (deg) = {cone_half_angle_deg}")
+
+# sys.exit(0)
+
 n_along = 1000
 n_across = 200
 lg_pixsize_min_mas = -3.0
 lg_pixsize_max_mas = -1.0
 match_resolution = False
-flare_params = [100.0, 0.0, 0.0, 0.2]
+flare_params = [0.0, 0.0, 0.0, 0.2]
 # TODO: Changing this => edit NField.cpp! ##############################################################################
 flare_shape = 10.0
 ########################################################################################################################
 
-ts_obs_days = np.linspace(-400.0, 8*360, 40)
-# ts_obs_days = np.array([0.0])
+# ts_obs_days = np.linspace(-400.0, 8*360, 40)
+ts_obs_days = np.array([0.0])
 noise_scale_factor = 1.0
 mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
 extract_extended = True
-use_scipy_for_extract_extended = True
+use_scipy_for_extract_extended = False
 beam_fractions = (1.0,)
 two_stage = True
 n_components = 4

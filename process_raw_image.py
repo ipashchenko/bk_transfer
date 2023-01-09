@@ -175,12 +175,14 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
             images = np.loadtxt(images_txt)
             print("Total flux S = {:.2f} Jy".format(np.sum(images)))
             print("Total flux X = {:.2f} Jy".format(np.sum(imagex)))
+            images[images == 0] = np.nan
+            imagex[imagex == 0] = np.nan
             axes[0].matshow(images, cmap="inferno", aspect="auto")
             axes[1].matshow(imagex, cmap="inferno", aspect="auto")
             axes[1].xaxis.tick_bottom()
             axes[0].xaxis.tick_bottom()
             axes[1].set_xlabel("Along, nu pixels")
-            axes[0].annotate("{:05.1f} months".format(t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="pink",
+            axes[0].annotate("{:05.1f} months".format(t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="black",
                              weight='bold', ha='left', va='center', size=20)
             fig.subplots_adjust(hspace=0)
             fig.subplots_adjust(wspace=0)

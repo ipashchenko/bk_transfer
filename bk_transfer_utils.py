@@ -22,6 +22,15 @@ c = const.c.cgs.value
 m_e = const.m_e.cgs.value
 
 
+def r_obs_I_min(theta_deg, Gamma, phi_deg, n, m, alpha):
+    theta = np.deg2rad(theta_deg)
+    phi = np.deg2rad(phi_deg)
+    beta = np.sqrt(Gamma**2 - 1)/Gamma
+    D = 1/Gamma/(1 - beta*np.cos(theta))
+
+    return (D**(2+alpha) * (np.sin(theta))**(n+m*(1.5+alpha)) * phi)**(1/(n + m*(1.5+alpha) - 1))
+
+
 def gamma_mean(s, gamma_min, gamma_max=None):
     """
     Mean lorenz factor of power law particle density distribution:
@@ -314,18 +323,41 @@ def plot_raw_single(txt_file, label, extent=None, log=True, first_level=0.000001
 
 
 if __name__ == "__main__":
-    # Plot raw jet model images
-    os.chdir("/home/ilya/data/alpha/txt/final")
-    # for code in ("bk", "kh", "2ridges", "3ridges"):
-    #     for freq in (15.4, 8.1):
-    #         concatenate_jet_with_counter_jet(stokes="i", freq_ghz=freq, path="/home/ilya/data/alpha/txt", code=code)
-    # plot_raw(["jet_cjet_image_i_15.4_bk.txt", "jet_cjet_image_i_15.4_2ridges.txt", "jet_cjet_image_i_15.4_3ridges.txt", "jet_cjet_image_i_15.4_kh.txt"],
-    #          labels=["BK", "2 ridges", "3 ridges", "KH"], cmap="jet", first_level=5e-7, max_level=0.1,
-    #          pixsize=10**(-1.5), plot_colorbar=False, figsize=(5*5.7, 1.7),
-    #          savename="jet_models_final_zoom.png")
+    # # Plot raw jet model images
+    # os.chdir("/home/ilya/data/alpha/txt/final")
+    # # for code in ("bk", "kh", "2ridges", "3ridges"):
+    # #     for freq in (15.4, 8.1):
+    # #         concatenate_jet_with_counter_jet(stokes="i", freq_ghz=freq, path="/home/ilya/data/alpha/txt", code=code)
+    # # plot_raw(["jet_cjet_image_i_15.4_bk.txt", "jet_cjet_image_i_15.4_2ridges.txt", "jet_cjet_image_i_15.4_3ridges.txt", "jet_cjet_image_i_15.4_kh.txt"],
+    # #          labels=["BK", "2 ridges", "3 ridges", "KH"], cmap="jet", first_level=5e-7, max_level=0.1,
+    # #          pixsize=10**(-1.5), plot_colorbar=False, figsize=(5*5.7, 1.7),
+    # #          savename="jet_models_final_zoom.png")
+    #
+    # plot_raw_single("jet_cjet_image_i_15.4_2ridges.txt", figsize=(10, 3),
+    #          label=None, cmap="jet", first_level=5e-7, max_level=0.1,
+    #          pixsize=10**(-1.5), plot_colorbar=False,
+    #          savename="jet_model_2ridges.png")
 
-    plot_raw_single("jet_cjet_image_i_15.4_2ridges.txt", figsize=(10, 3),
-             label=None, cmap="jet", first_level=5e-7, max_level=0.1,
-             pixsize=10**(-1.5), plot_colorbar=False,
-             savename="jet_model_2ridges.png")
 
+    theta_deg = np.linspace(1, 30, 100)
+    import matplotlib
+    matplotlib.use('tkagg')
+    fig, axes = plt.subplots(1, 1)
+    phi_deg = 1.5
+    n = 2
+    m = 1
+    alpha = 0.5
+    colors = ("C0", "C1", "C2", "C3")
+    for color, Gamma in zip(colors, [3, 5, 10, 20]):
+
+        I = r_obs_I_min(theta_deg, Gamma, phi_deg, n, m, alpha)
+        I = I/np.max(I)
+        axes.plot(theta_deg, I, label=r"$\Gamma$ = {}".format(Gamma), color=color)
+        axes.axvline(np.rad2deg(2/Gamma), color=color, linestyle='dashed')
+        axes.axvline(np.rad2deg(0.5/Gamma), color=color, linestyle='dotted')
+
+    axes.set_xlabel(r"LOS angle, $^{\circ}$")
+    axes.set_ylabel(r"Distance to some $I_{\rm min}$")
+    plt.legend()
+    # plt.savefig("JetLength_vs_LOS.png", bbox_inches="tight", dpi=200)
+    plt.show()

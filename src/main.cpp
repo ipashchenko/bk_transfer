@@ -1164,7 +1164,7 @@ int main(int argc, char *argv[]) {
 //        double t_obs = 1000.;
 
         total_fluxes = run_on_analytic_params_t(redshift, los_angle_deg, cone_half_angle_deg,
-                                                b_0, 1,
+                                                b_0, 1.0,
                                                 2.0, 10.0,
                                                 K_1, 2,
                                                 Gamma,
