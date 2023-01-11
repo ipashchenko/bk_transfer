@@ -311,6 +311,6 @@ double FlareBKNField::_nf(const Vector3d &point, double t) const {
 	double R_cur = bkg_nfield_->get_geometry_out()->radius_at_given_distance(point);
 	Vector3d v = flare_pattern_vfield_->vf(point);
 	Vector3d blob_center = {0., 0., v.norm()*(t - t_start_)};
-	double distance_from_blob_center = (v - blob_center).norm();
+	double distance_from_blob_center = (point - blob_center).norm();
 	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(distance_from_blob_center, 0., width_pc_*R_cur, 2.0);
 }
