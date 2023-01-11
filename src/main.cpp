@@ -772,13 +772,9 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
         t_start_days *= 24.0 * 60.0 * 60.0;
         flare_width_pc = flare_params[4*i + 3];
 		// Using equipartition N-field as flare background
-//        bk_flare_nfield = new FlareBKNField(&bk_stat_nfield, frac_amp, t_start_days,
-//											flare_width_pc, vfield,
-//											&geometry_flare_out, nullptr);
+        bk_flare_nfield = new FlareBKNField(&bk_stat_nfield, frac_amp, t_start_days, flare_width_pc, vfield, &geometry_flare_out, nullptr);
 		// Using adiabatically declined N-field as flare background
-		bk_flare_nfield = new FlareBKNField(&flare_base_nfield, frac_amp, t_start_days,
-											flare_width_pc, vfield,
-											nullptr, nullptr);
+//		bk_flare_nfield = new FlareBKNField(&flare_base_nfield, frac_amp, t_start_days,flare_width_pc, vfield,nullptr, nullptr);
         flaring_nfields.push_back(bk_flare_nfield);
     }
 

@@ -18,6 +18,7 @@ class NField {
         virtual double _nf(const Vector3d &point, double t = 0.0) const = 0;
         double nf(const Vector3d &point, double t = 0.0) const;
         double nf_plasma_frame(const Vector3d &point, double gamma, double t = 0.0) const;
+		Geometry* get_geometry_out() const;
 
 
     protected:

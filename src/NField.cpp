@@ -12,6 +12,11 @@ NField::NField(bool in_plasma_frame, ParticlesDistribution* particles, Geometry*
     vfield_ = vfield;
 }
 
+Geometry* NField::get_geometry_out() const
+{
+	return geometry_out_;
+}
+
 double NField::nf(const Vector3d &point, const double t) const {
     double x, y, r_point, r_border;
     x = point[0];
@@ -285,13 +290,27 @@ FlareBKNField::FlareBKNField(NField* bkg_nfield, double amp, double t_start, dou
 //}
 
 
-// FIXME: Account redshift time (1 + z)!!!
+//// FIXME: Account redshift time (1 + z)!!!
+//// Slow light approximation!!!
+//// Plane front model
+//double FlareBKNField::_nf(const Vector3d &point, double t) const {
+//	// TODO: Here we should integrate flare pattern speed in time to find the position of the flare (e.g. blob center).
+//	// We can model flare as a spherical blob.
+//    Vector3d v = flare_pattern_vfield_->vf(point);
+//    double r = point.norm();
+////	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+//	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 10.0);
+//}
+
+
 // Slow light approximation!!!
+// Blob model!
 double FlareBKNField::_nf(const Vector3d &point, double t) const {
 	// TODO: Here we should integrate flare pattern speed in time to find the position of the flare (e.g. blob center).
 	// We can model flare as a spherical blob.
-    Vector3d v = flare_pattern_vfield_->vf(point);
-    double r = point.norm();
-//	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
-	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 10.0);
+	double R_cur = bkg_nfield_->get_geometry_out()->radius_at_given_distance(point);
+	Vector3d v = flare_pattern_vfield_->vf(point);
+	Vector3d blob_center = {0., 0., v.norm()*(t - t_start_)};
+	double distance_from_blob_center = (v - blob_center).norm();
+	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(distance_from_blob_center, 0., width_pc_*R_cur, 2.0);
 }

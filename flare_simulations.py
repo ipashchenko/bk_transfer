@@ -75,11 +75,11 @@ def clear_pics(basename, files_dir):
 
 
 redo = [True, True, True]
-calculon = False
+calculon = True
 basename = "test"
 only_band = None
 redshift = 0.8
-B_1 = 2.0
+B_1 = 0.5
 K_1 = 5000.
 # TODO: Changing this => edit main.cpp! ################################################################################
 b = 1.0
@@ -92,8 +92,8 @@ gamma_max = 1E+04
 ########################################################################################################################
 
 Gamma = 10.
-LOS_coeff = 0.5
-HOAngle_deg = 20.
+LOS_coeff = 0.25
+HOAngle_deg = 10.
 
 los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
 cone_half_angle_deg = np.round(np.rad2deg(np.arctan(np.tan(np.deg2rad(HOAngle_deg)) * np.sin(np.deg2rad(los_angle_deg)))), 2)
@@ -107,9 +107,9 @@ n_across = 200
 lg_pixsize_min_mas = -3.0
 lg_pixsize_max_mas = -1.0
 match_resolution = False
-flare_params = [0.0, 0.0, 0.0, 0.2]
+flare_params = [5.0, 0.0, 0.0, 0.3]
 # TODO: Changing this => edit NField.cpp! ##############################################################################
-flare_shape = 10.0
+flare_shape = 2.0
 ########################################################################################################################
 
 # ts_obs_days = np.linspace(-400.0, 8*360, 40)
