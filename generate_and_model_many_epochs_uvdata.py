@@ -132,6 +132,15 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
             beam_fracs = " ".join([str(bf) for bf in beam_fractions])
             fnames = " ".join(["template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch) for epoch in epochs])
             script_dir = os.path.split(jetpol_run_directory)[0]
+
+            # Remove old json files
+            json_files = glob.glob(oa.path.join(save_dir, "*.json"))
+            for jfn in json_files:
+                try:
+                    os.unlink(jfn)
+                except:
+                    pass
+
             os.system(f"parallel -k python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --fname ::: {fnames}")
 
 
