@@ -74,15 +74,15 @@ def clear_pics(basename, files_dir):
             pass
 
 
-redo = [True, True, True]
-calculon = True
+redo = [False, True, True]
+calculon = False
 basename = "test"
 only_band = None
 redshift = 0.8
-B_1 = 0.5
+B_1 = 2.0
 K_1 = 5000.
 # TODO: Changing this => edit main.cpp! ################################################################################
-b = 1.0
+b = 1.25
 n = 2.0
 s = 2.
 gamma_min = 10.
@@ -92,8 +92,8 @@ gamma_max = 1E+04
 ########################################################################################################################
 
 Gamma = 10.
-LOS_coeff = 0.25
-HOAngle_deg = 10.
+LOS_coeff = 0.5
+HOAngle_deg = 15.
 
 los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
 cone_half_angle_deg = np.round(np.rad2deg(np.arctan(np.tan(np.deg2rad(HOAngle_deg)) * np.sin(np.deg2rad(los_angle_deg)))), 2)
@@ -107,22 +107,22 @@ n_across = 200
 lg_pixsize_min_mas = -3.0
 lg_pixsize_max_mas = -1.0
 match_resolution = False
-flare_params = [5.0, 0.0, 0.0, 0.3]
+flare_params = [10.0, 0.0, 0.0, 0.3]
 # TODO: Changing this => edit NField.cpp! ##############################################################################
-flare_shape = 2.0
+flare_shape = 10.0
 ########################################################################################################################
 
-# ts_obs_days = np.linspace(-400.0, 8*360, 40)
-ts_obs_days = np.array([0.0])
+ts_obs_days = np.linspace(-400.0, 8*360, 40)
+# ts_obs_days = np.array([0.0])
 noise_scale_factor = 1.0
-mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)}
+mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
 extract_extended = True
 use_scipy_for_extract_extended = False
 beam_fractions = (1.0,)
-two_stage = True
+two_stage = False
 n_components = 4
 
 if not calculon:

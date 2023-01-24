@@ -1,12 +1,13 @@
 import os
 import sys
 import shutil
+import json
 import numpy as np
 from vlbi_utils import find_image_std, find_bbox, downscale_uvdata_by_freq
 sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from uv_data import UVData
 from components import CGComponent
-from spydiff import clean_difmap, modelfit_difmap, import_difmap_model, modelfit_core_wo_extending
+from spydiff import clean_difmap, modelfit_difmap, import_difmap_model, modelfit_core_wo_extending, find_nw_beam
 from image import plot as iplot
 from from_fits import create_clean_image_from_fits_file
 from jet_image import JetImage
@@ -88,7 +89,11 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         core_positions_err[freq_ghz] = list()
         core_fluxes[freq_ghz] = list()
         core_fluxes_err[freq_ghz] = list()
+        nw_beam_size = None
         for epoch in epochs:
+            if nw_beam_size is None:
+                nw_beam = find_nw_beam(template_uvfits[freq_ghz], "i", mapsize=mapsizes_dict[freq_ghz])
+                nw_beam_size = np.sqrt(nw_beam[0]*nw_beam[1])
             uvdata = UVData(template_uvfits[freq_ghz])
             downscale_uvdata_by_freq_flag = downscale_uvdata_by_freq(uvdata)
             noise = uvdata.noise(average_freq=False, use_V=False)
@@ -122,39 +127,52 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
             uvdata.noise_add(noise)
             uvdata.save(os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)), rewrite=True, downscale_by_freq=True)
 
-            if extract_extended:
-                results = modelfit_core_wo_extending("template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch),
-                                                     beam_fractions,
-                                                     path=save_dir,
-                                                     mapsize_clean=mapsizes_dict[freq_ghz],
-                                                     path_to_script=path_to_script,
-                                                     niter=500,
-                                                     out_path=save_dir,
-                                                     use_brightest_pixel_as_initial_guess=True,
-                                                     estimate_rms=True,
-                                                     stokes="i",
-                                                     use_ell=False, two_stage=two_stage, use_scipy=use_scipy)
 
-                # Flux of the core
-                flux = np.mean([results[frac]['flux'] for frac in beam_fractions])
-                rms_flux = np.std([results[frac]['flux'] for frac in beam_fractions])
+        if extract_extended:
+            beam_fracs = " ".join([str(bf) for bf in beam_fractions])
+            fnames = " ".join(["template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch) for epoch in epochs])
+            script_dir = os.path.split(jetpol_run_directory)[0]
+            os.system(f"parallel -k python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --fname ::: {fnames}")
 
-                # Position of the core
-                r = np.mean([np.hypot(results[frac]['ra'], results[frac]['dec']) for frac in beam_fractions])
-                rms_r = np.std([np.hypot(results[frac]['ra'], results[frac]['dec']) for frac in beam_fractions])
 
-                core_fluxes[freq_ghz].append(flux)
-                core_fluxes_err[freq_ghz].append(rms_flux)
-                core_positions[freq_ghz].append(r)
-                core_positions_err[freq_ghz].append(rms_r)
 
-                # Post-fit rms in the core region
-                postfit_rms = np.median([results[frac]['rms'] for frac in beam_fractions])
 
-                print("Core flux : {:.2f}+/-{:.2f} Jy".format(flux, rms_flux))
-                print("Core position : {:.2f}+/-{:.2f} mas".format(r, rms_r))
+            # sys.exit(0)
 
-            else:
+
+
+
+            # Gather results
+            for epoch in epochs:
+                fname = "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)
+                base = fname.split(".")[:-1]
+                base = ".".join(base)
+                with open(os.path.join(save_dir, f"{base}_core_modelfit_result.json"), "r") as fo:
+                    results = json.load(fo)
+                    # Flux of the core
+                    flux = np.mean([results[str(frac)]['flux'] for frac in beam_fractions])
+                    rms_flux = np.std([results[str(frac)]['flux'] for frac in beam_fractions])
+
+                    # Position of the core
+                    r = np.mean([np.hypot(results[str(frac)]['ra'], results[str(frac)]['dec']) for frac in beam_fractions])
+                    rms_r = np.std([np.hypot(results[str(frac)]['ra'], results[str(frac)]['dec']) for frac in beam_fractions])
+
+                    core_fluxes[freq_ghz].append(flux)
+                    core_fluxes_err[freq_ghz].append(rms_flux)
+                    core_positions[freq_ghz].append(r)
+                    core_positions_err[freq_ghz].append(rms_r)
+
+                    # Post-fit rms in the core region
+                    postfit_rms = np.median([results[str(frac)]['rms'] for frac in beam_fractions])
+
+                    print("Core flux : {:.2f}+/-{:.2f} Jy".format(flux, rms_flux))
+                    print("Core position : {:.2f}+/-{:.2f} mas".format(r, rms_r))
+
+            # Re-calculate it for next frequency
+            nw_beam_size = None
+
+        else:
+            for epoch in epochs:
                 modelfit_difmap("template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch),
                                 mdl_fname=f"in{n_components}.mdl", out_fname=f"out{n_components}.mdl", niter=200, stokes='i',
                                 path=save_dir, mdl_path=save_dir, out_path=save_dir,
@@ -175,7 +193,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 core_fluxes[freq_ghz].append(flux)
                 core_positions[freq_ghz].append(r)
 
-            if plot_clean:
+        if plot_clean:
+            for epoch in epochs:
 
                 outfname = "model_cc_i_{}_{:.1f}.fits".format(freq_names[freq_ghz], epoch)
                 if os.path.exists(os.path.join(save_dir, outfname)):
@@ -184,8 +203,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
                              outfname=outfname, outpath=save_dir, stokes="i",
                              mapsize_clean=(512, 0.2), path_to_script=path_to_script,
-                             show_difmap_output=False,
-                             dfm_model=os.path.join(save_dir, "model_cc_i.mdl"))
+                             show_difmap_output=False)
+                             # dfm_model=os.path.join(save_dir, "model_cc_i.mdl"))
 
                 ccimage = create_clean_image_from_fits_file(os.path.join(save_dir, outfname))
                 ipol = ccimage.image
@@ -214,6 +233,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
 
                 if len(beam_fractions) == 1:
+                    # FIXME: Create component from flux, r, size.
                     components = import_difmap_model("it2.mdl", save_dir)
                 else:
                     components = None
@@ -237,9 +257,15 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         if only_band is not None and only_band != freq_names[freq_ghz]:
             continue
         flux = core_fluxes[freq_ghz][0]
-        rms_flux = core_fluxes_err[freq_ghz][0]
+        if extract_extended:
+            rms_flux = core_fluxes_err[freq_ghz][0]
+        else:
+            rms_flux = 0.0
         r = core_positions[freq_ghz][0]
-        rms_r = core_positions_err[freq_ghz][0]
+        if extract_extended:
+            rms_r = core_positions_err[freq_ghz][0]
+        else:
+            rms_r = 0.0
         print("Core flux : {:.2f}+/-{:.2f} Jy".format(flux, rms_flux))
         print("Core position : {:.2f}+/-{:.2f} mas".format(r, rms_r))
 
@@ -284,6 +310,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         axes2.scatter(epochs/30, core_fluxes[2.3], color="C1")
 
     axes.legend()
+    axes.set_ylim([0, None])
     fig.savefig(os.path.join(save_dir, "{}_CS_rc_Sc_vs_epoch.png".format(basename)), bbox_inches="tight")
     plt.show()
 

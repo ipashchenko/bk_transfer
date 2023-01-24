@@ -46,7 +46,7 @@ def generate_txt_images(redshift, B_1, K_1, Gamma,
     os.chdir(exec_dir)
     n_jobs = 4
     if calculon:
-        n_jobs = 20
+        n_jobs = 40
     os.system("parallel --files --results t_obs_{11}" + f" --joblog log --jobs {n_jobs} -a {parallels_run_file} -n 1 -m --colsep ' ' \"./bk_transfer\"")
 
 

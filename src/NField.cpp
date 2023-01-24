@@ -290,27 +290,33 @@ FlareBKNField::FlareBKNField(NField* bkg_nfield, double amp, double t_start, dou
 //}
 
 
-//// FIXME: Account redshift time (1 + z)!!!
-//// Slow light approximation!!!
-//// Plane front model
-//double FlareBKNField::_nf(const Vector3d &point, double t) const {
-//	// TODO: Here we should integrate flare pattern speed in time to find the position of the flare (e.g. blob center).
-//	// We can model flare as a spherical blob.
-//    Vector3d v = flare_pattern_vfield_->vf(point);
-//    double r = point.norm();
-////	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
-//	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 10.0);
-//}
-
-
+// FIXME: Account redshift time (1 + z)!!!
 // Slow light approximation!!!
-// Blob model!
+// Plane front model
 double FlareBKNField::_nf(const Vector3d &point, double t) const {
 	// TODO: Here we should integrate flare pattern speed in time to find the position of the flare (e.g. blob center).
 	// We can model flare as a spherical blob.
-	Vector3d v = flare_pattern_vfield_->vf(point);
-	Vector3d blob_center = {0., 0., v.norm()*(t - t_start_)};
-	double R_cur = bkg_nfield_->get_geometry_out()->radius_at_given_distance(blob_center);
-	double distance_from_blob_center = (point - blob_center).norm();
-	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(distance_from_blob_center, 0., width_pc_*R_cur, 2.0);
+    Vector3d v = flare_pattern_vfield_->vf(point);
+    double r = point.norm();
+//	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 10.0);
 }
+
+
+//// Slow light approximation!!!
+//// Blob model!
+//double FlareBKNField::_nf(const Vector3d &point, double t) const {
+//	// TODO: Here we should integrate flare pattern speed in time to find the position of the flare (e.g. blob center).
+//	// We can model flare as a spherical blob.
+//	Vector3d v = flare_pattern_vfield_->vf(point);
+//	double z_blob_center = v.norm()*(t - t_start_);
+//	Vector3d blob_center;
+//	if(z_blob_center > 0.) {
+//		blob_center = {0., 0., z_blob_center};
+//	} else {
+//		blob_center = {0., 0., 0.};
+//	}
+//	double R_cur = bkg_nfield_->get_geometry_out()->radius_at_given_distance(blob_center);
+//	double distance_from_blob_center = (point - blob_center).norm();
+//	return amp_ * bkg_nfield_->_nf(point, t) * generalized1_gaussian1d(distance_from_blob_center, 0., width_pc_*R_cur, 2.0);
+//}
