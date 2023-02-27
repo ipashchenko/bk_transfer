@@ -74,8 +74,8 @@ def clear_pics(basename, files_dir):
             pass
 
 
-redo = [False, True, True]
-calculon = False
+redo = [True, True, True]
+calculon = True
 basename = "test"
 only_band = None
 redshift = 0.8
@@ -107,12 +107,17 @@ n_across = 200
 lg_pixsize_min_mas = -3.0
 lg_pixsize_max_mas = -1.0
 match_resolution = False
-flare_params = [10.0, 0.0, 0.0, 0.3]
+flare_params = [10.0, 0.0, 0.0, 0.1]
 # TODO: Changing this => edit NField.cpp! ##############################################################################
 flare_shape = 10.0
 ########################################################################################################################
+local_rfc_dir = "/home/ilya/data/rfc"
+# source = "J2258-2758"
+source = "J0006-0623"
+times_file = os.path.join(local_rfc_dir, f"{source}_times.txt")
+ts_obs_days = np.loadtxt(times_file)/(1+redshift)
 
-ts_obs_days = np.linspace(-400.0, 8*360, 4)
+ts_obs_days = np.linspace(-400.0, 12*360, 40)
 # ts_obs_days = np.array([0.0])
 noise_scale_factor = 1.0
 mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
@@ -169,4 +174,4 @@ if redo[2]:
 
 clear_tobs(exec_dir)
 clear_fits(save_dir)
-clear_pics(basename, save_dir)
+# clear_pics(basename, save_dir)
