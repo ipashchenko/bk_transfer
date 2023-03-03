@@ -1089,7 +1089,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Supply redshift, LOS-angle (deg), Cone half-angle (deg),"
                      " B_1 [G], K_1 [cm^{-3}], Gamma, N_along, N_across,"
                      " lg_pixel_size_mas_start, lg_pixel_size_mas_stop,\n"
-                     " t_obs (days), flare_params: [amp_N, amp_B, t_start (month), width (pc)]\n" << "\n";
+                     " t_obs (days), flare_params: [amp_N, amp_B, t_start (days), width (pc)]\n" << "\n";
         return 1;
     }
     else {
