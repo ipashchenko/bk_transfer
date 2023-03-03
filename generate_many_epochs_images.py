@@ -1,4 +1,6 @@
 import os
+import sys
+
 import numpy as np
 
 
@@ -21,7 +23,7 @@ def generate_txt_images(redshift, B_1, K_1, Gamma,
     :param lg_pixsize_min_mas:
     :param lg_pixsize_max_mas:
     :param flare_params:
-        frac.amp.N, frac.amp.B, t_start[days], width[pc]
+        Iterable of (frac.amp.N, frac.amp.B, t_start[days], width[pc])
     :param ts_obs_days:
     :param exec_dir:
     :param parallels_run_file:
@@ -38,10 +40,11 @@ def generate_txt_images(redshift, B_1, K_1, Gamma,
                                                                     lg_pixsize_min_mas, lg_pixsize_max_mas,
                                                                     t_obs_days))
             # Write flare parameters
-            for flare_param in flare_params[:-1]:
-                fo.write("{} ".format(flare_param))
-            fo.write("{}".format(flare_params[-1]))
-            fo.write("\n")
+            for single_flare_params in flare_params:
+                for flare_param in single_flare_params[:-1]:
+                    fo.write("{} ".format(flare_param))
+                fo.write("{}".format(single_flare_params[-1]))
+                fo.write("\n")
 
     os.chdir(exec_dir)
     n_jobs = 4
@@ -61,9 +64,9 @@ if __name__ == "__main__":
     n_across = 80
     lg_pixsize_min_mas = -2.5
     lg_pixsize_max_mas = -0.5
-    flare_params = [30.0, 0.0, 0.0, 0.2]
-    ts_obs_days = np.linspace(-400.0, 8*360, 20)
-    calculon = True
+    flare_params = [(10.0, 0.0, 0.0, 0.1), (5.0, 0.0, 5*30*12, 0.2)]
+    ts_obs_days = np.linspace(-400.0, 12*360, 20)
+    calculon = False
     if not calculon:
         exec_dir = "/home/ilya/github/bk_transfer/Release"
         parallels_run_file = "/home/ilya/github/bk_transfer/parallels_run.txt"

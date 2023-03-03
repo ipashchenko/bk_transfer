@@ -79,7 +79,6 @@ calculon = True
 basename = "test"
 only_band = None
 redshift = 0.8
-B_1 = 2.0
 K_1 = 5000.
 # TODO: Changing this => edit main.cpp! ################################################################################
 b = 1.25
@@ -91,14 +90,6 @@ gamma_min = 10.
 gamma_max = 1E+04
 ########################################################################################################################
 
-Gamma = 10.
-LOS_coeff = 0.5
-HOAngle_deg = 15.
-
-los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
-cone_half_angle_deg = np.round(np.rad2deg(np.arctan(np.tan(np.deg2rad(HOAngle_deg)) * np.sin(np.deg2rad(los_angle_deg)))), 2)
-print(f"LOS(deg) = {los_angle_deg}")
-print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
 # sys.exit(0)
 
@@ -107,7 +98,6 @@ n_across = 200
 lg_pixsize_min_mas = -3.0
 lg_pixsize_max_mas = -1.0
 match_resolution = False
-flare_params = [10.0, 0.0, 0.0, 0.1]
 # TODO: Changing this => edit NField.cpp! ##############################################################################
 flare_shape = 10.0
 ########################################################################################################################
@@ -117,7 +107,7 @@ source = "J0006-0623"
 times_file = os.path.join(local_rfc_dir, f"{source}_times.txt")
 ts_obs_days = np.loadtxt(times_file)/(1+redshift)
 
-ts_obs_days = np.linspace(-400.0, 12*360, 40)
+# ts_obs_days = np.linspace(-400.0, 12*360, 40)
 # ts_obs_days = np.array([0.0])
 noise_scale_factor = 1.0
 mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
@@ -142,36 +132,55 @@ else:
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
 
 
-if redo[0]:
-    clear_txt_images(exec_dir)
+n_sources = 5
+for i in range(n_sources):
+    B_1 = 2.0
+    Gamma = 10.
+    LOS_coeff = 0.5
+    HOAngle_deg = 15.
+
+    los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
+    cone_half_angle_deg = np.round(np.rad2deg(np.arctan(np.tan(np.deg2rad(HOAngle_deg)) * np.sin(np.deg2rad(los_angle_deg)))), 2)
+    print(f"LOS(deg) = {los_angle_deg}")
+    print(f"Cone HA (deg) = {cone_half_angle_deg}")
+
+    # amp_N, amp_B, t_start(days), width(pc)
+    flare_params = [(10.0, 0.0, 0.0, 0.1), (5.0, 0.0, 5*30*12, 0.2)]
+    ts_obs_days = np.linspace(-400.0, 12*360, 40)
+
+    if redo[0]:
+        clear_txt_images(exec_dir)
+        clear_tobs(exec_dir)
+    clear_fits(save_dir)
+    clear_pics(basename + f"_{i-1}", save_dir)
+
+    source_basename = basename + f"_{i}"
+
+
+    if redo[0]:
+        generate_txt_images(redshift, B_1, K_1, Gamma,
+                            LOS_coeff, HOAngle_deg,
+                            n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
+                            flare_params, ts_obs_days,
+                            exec_dir, parallels_run_file, calculon)
+
+    if redo[1] and only_band is None:
+        process_raw_images(source_basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
+                           n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
+                           ts_obs_days, flare_params, flare_shape,
+                           Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s)
+        create_movie_raw(source_basename, save_dir)
+
+    if redo[2]:
+        make_and_model_visibilities(source_basename, only_band, redshift, lg_pixsize_min_mas, lg_pixsize_max_mas, n_along, n_across, match_resolution,
+                                    ts_obs_days,
+                                    noise_scale_factor, mapsizes_dict,
+                                    plot_clean, only_plot_raw,
+                                    extract_extended, use_scipy_for_extract_extended, beam_fractions, two_stage,
+                                    n_components,
+                                    save_dir, exec_dir, path_to_script)
+        create_movie_clean(source_basename, save_dir, only_band)
+
     clear_tobs(exec_dir)
-clear_fits(save_dir)
-clear_pics(basename, save_dir)
-
-if redo[0]:
-    generate_txt_images(redshift, B_1, K_1, Gamma,
-                        LOS_coeff, HOAngle_deg,
-                        n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-                        flare_params, ts_obs_days,
-                        exec_dir, parallels_run_file, calculon)
-
-if redo[1] and only_band is None:
-    process_raw_images(basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
-                       n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-                       ts_obs_days, flare_params, flare_shape,
-                       Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s)
-    create_movie_raw(basename, save_dir)
-
-if redo[2]:
-    make_and_model_visibilities(basename, only_band, redshift, lg_pixsize_min_mas, lg_pixsize_max_mas, n_along, n_across, match_resolution,
-                                ts_obs_days,
-                                noise_scale_factor, mapsizes_dict,
-                                plot_clean, only_plot_raw,
-                                extract_extended, use_scipy_for_extract_extended, beam_fractions, two_stage,
-                                n_components,
-                                save_dir, exec_dir, path_to_script)
-    create_movie_clean(basename, save_dir, only_band)
-
-clear_tobs(exec_dir)
-clear_fits(save_dir)
-# clear_pics(basename, save_dir)
+    clear_fits(save_dir)
+    # clear_pics(basename, save_dir)
