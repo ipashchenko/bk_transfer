@@ -35,16 +35,15 @@ def generate_txt_images(redshift, B_1, K_1, Gamma,
     # Construct params file
     with open(f"{parallels_run_file}", "w") as fo:
         for t_obs_days in ts_obs_days:
-            fo.write("{} {} {} {} {} {} {} {} {} {} {:.1f} ".format(redshift, los_angle_deg, cone_half_angle_deg,
-                                                                    B_1, K_1, Gamma, n_along, n_across,
-                                                                    lg_pixsize_min_mas, lg_pixsize_max_mas,
-                                                                    t_obs_days))
+            fo.write("{} {} {} {} {} {} {} {} {} {} {:.1f}".format(redshift, los_angle_deg, cone_half_angle_deg,
+                                                                   B_1, K_1, Gamma, n_along, n_across,
+                                                                   lg_pixsize_min_mas, lg_pixsize_max_mas,
+                                                                   t_obs_days))
             # Write flare parameters
             for single_flare_params in flare_params:
-                for flare_param in single_flare_params[:-1]:
-                    fo.write("{} ".format(flare_param))
-                fo.write("{}".format(single_flare_params[-1]))
-                fo.write("\n")
+                for flare_param in single_flare_params:
+                    fo.write(" {}".format(flare_param))
+            fo.write("\n")
 
     os.chdir(exec_dir)
     n_jobs = 4
