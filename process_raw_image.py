@@ -145,10 +145,11 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
         lg_pixel_size_mas_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas}
         lg_pixel_size_mas_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas}
 
-    t_start_days = flare_params[2]
-    amp_N = flare_params[0]
-    amp_B = flare_params[1]
-    l_pc = flare_params[3]
+    print("WARNING: Assuming single flare!!!")
+    t_start_days = flare_params[0][2]
+    amp_N = flare_params[0][0]
+    amp_B = flare_params[0][1]
+    l_pc = flare_params[0][3]
     theta_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
     N_1 = equipartition_bsq_coefficient(s, gamma_min, gamma_max)*B_1**2
     corex_positions = list()
@@ -328,7 +329,7 @@ if __name__ == "__main__":
     ts_obs_days = np.linspace(-400.0, 8*360, 20)
     # ts_obs_days = [0.0]
 
-    flare_params = [2.0, 0.0, 0.0, 0.2]
+    flare_params = [(2.0, 0.0, 0.0, 0.2)]
     flare_shape = 20.0
     Gamma = 10.0
     LOS_coeff = 0.5
