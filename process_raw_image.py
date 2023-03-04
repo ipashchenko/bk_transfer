@@ -41,8 +41,9 @@ def N(r_proj_pc, t_obs_days, t_start_days, amp, l_pc, Gamma, theta_deg, N_1, n, 
     theta = np.deg2rad(theta_deg)
     r_pc = r_proj_pc/np.sin(theta)
     beta = np.sqrt(Gamma**2 - 1)/Gamma
-    beta_obs = beta/(1 - beta*np.cos(theta))/(1+z)
-    # return N_1*r_pc**(-n)*(1 + amp*np.exp(-(r_pc - beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc)**2 / l_pc**2))
+    # beta_obs = beta/(1 - beta*np.cos(theta))/(1+z)
+    # This is velocity at given z. We correct for this just expanding time intervals!
+    beta_obs = beta/(1 - beta*np.cos(theta))
     return N_1*r_pc**(-n)*(1 + amp * generalized1_gaussian1d(r_pc, beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc, l_pc, shape))
 
 
@@ -50,8 +51,9 @@ def B(r_proj_pc, t_obs_days, t_start_days, amp, l_pc, Gamma, theta_deg, B_1, b, 
     theta = np.deg2rad(theta_deg)
     r_pc = r_proj_pc/np.sin(theta)
     beta = np.sqrt(Gamma**2 - 1)/Gamma
-    beta_obs = beta/(1 - beta*np.cos(theta))/(1+z)
-    # return B_1*r_pc**(-b)*(1 + amp*np.exp(-(r_pc - beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc)**2 / l_pc**2))
+    # beta_obs = beta/(1 - beta*np.cos(theta))/(1+z)
+    # This is velocity at given z. We correct for this just expanding time intervals!
+    beta_obs = beta/(1 - beta*np.cos(theta))
     return B_1*r_pc**(-b)*(1 + amp * generalized1_gaussian1d(r_pc, beta_obs*c*(t_obs_days - t_start_days)*day_to_sec/pc, l_pc, shape))
 
 
@@ -145,11 +147,6 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
         lg_pixel_size_mas_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas}
         lg_pixel_size_mas_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas}
 
-    print("WARNING: Assuming single flare!!!")
-    t_start_days = flare_params[0][2]
-    amp_N = flare_params[0][0]
-    amp_B = flare_params[0][1]
-    l_pc = flare_params[0][3]
     theta_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
     N_1 = equipartition_bsq_coefficient(s, gamma_min, gamma_max)*B_1**2
     corex_positions = list()
@@ -188,7 +185,7 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
             fig.subplots_adjust(hspace=0)
             fig.subplots_adjust(wspace=0)
             fig.tight_layout()
-            plt.savefig(os.path.join(save_dir, "{}_raw_nupixel_{:.1f}.png".format(basename, t_obs_days)))
+            plt.savefig(os.path.join(save_dir, "{}_raw_nupixel_{:.1f}.png".format(basename, t_obs_days*(1+z))))
             plt.close()
             # plt.show()
         taux_txt = os.path.join(txt_dir, "jet_image_tau_X_{:.1f}.txt".format(t_obs_days))
@@ -205,10 +202,22 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
         cores_fluxes.append(ress["core_flux"])
         jetx_fluxes.append(resx["jet_flux"])
         jets_fluxes.append(ress["jet_flux"])
-        b_core_S = B(ress["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
-        n_core_S = N(ress["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
-        b_core_X = B(resx["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
-        n_core_X = N(resx["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
+
+        b_core_S = 0
+        n_core_S = 0
+        b_core_X = 0
+        n_core_X = 0
+        count = 1
+        for amp_N, amp_B, t_start_days, l_pc in zip(flare_params):
+
+            b_core_S += B(ress["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
+            n_core_S += N(ress["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
+            b_core_X += B(resx["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
+            n_core_X += N(resx["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
+            print(f"B_core X after {count}-th flare : {b_core_X}\n")
+            print(f"N_core X after {count}-th flare : {n_core_X}\n")
+            count += 1
+
         B_core_S.append(b_core_S)
         N_core_S.append(n_core_S)
         B_core_X.append(b_core_X)
