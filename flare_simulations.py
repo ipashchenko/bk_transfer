@@ -1,11 +1,35 @@
 import os
 import glob
 import sys
-
+import astropy.io.fits as pf
+from astropy.time import Time
 import numpy as np
 from generate_many_epochs_images import generate_txt_images
 from process_raw_image import process_raw_images
 from generate_and_model_many_epochs_uvdata import make_and_model_visibilities
+
+
+# Find sources
+local_rfc_dir = "/home/ilya/data/rfc"
+table1_file = "/home/ilya/data/rfc/J_MNRAS_485_1822_table1.fits"
+table2_file = "/home/ilya/data/rfc/J_MNRAS_485_1822_table2.fits"
+
+tab1 = pf.getdata(table1_file)
+tab2 = pf.getdata(table2_file)
+sources = tab1["J2000"]
+source_epochs = dict()
+all_cadences = list()
+for source in sources:
+    source_idx = tab2["J2000"] == source
+    source_tab2 = tab2[source_idx]
+    epochs = source_tab2["Obs.date"]
+    times = Time(epochs)
+    times = Time(sorted(times, key=lambda x: x.jd))
+    # Times relative to the first time (thus, first time will be always zero)
+    dtimes = times - times[0]
+    vdtimes = dtimes.value
+    source_epochs[str(source)] = vdtimes
+
 
 
 def clear_txt_images(files_dir):
@@ -130,7 +154,7 @@ else:
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
 
 
-n_sources = 1
+n_sources = 5
 for i in range(n_sources):
     B_1 = 2.0
     Gamma = 10.
@@ -142,9 +166,27 @@ for i in range(n_sources):
     print(f"LOS(deg) = {los_angle_deg}")
     print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
+    # Fixed times
+    # ts_obs_days = np.linspace(-400.0, 12*360, 40)
+    # From real sources times
+    # This will be multiplied on (1+z) to bring to the observer z = 0.
+    ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
+
+    n_flares = np.random.uniform(1, 3, size=1)[0]
+
+    flare_params = list()
+    for i_fl_enum, i_fl in enumerate(range(n_flares)):
+        amp_N = np.random.uniform(5, 10, size=1)[0]
+        amp_B = 0.0
+        # From 0 to full time - 3 years
+        t_start_years = np.random.uniform(0, ts_obs_days/(12*30) - 3., size=1)[0]
+        t_start_days = t_start_years*12*30
+        width_pc = np.random.uniform(0.1, 0.3)
+        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
     # amp_N, amp_B, t_start(days), width(pc)
-    flare_params = [(10.0, 0.0, 0.0, 0.1), (5.0, 0.0, 5*30*12, 0.2)]
-    ts_obs_days = np.linspace(-400.0, 12*360, 40)
+    # flare_params = [(10.0, 0.0, 0.0, 0.1), (5.0, 0.0, t_start_months*30*12, 0.2)]
+
+    np.savetxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"), np.atleast_2d(flare_params))
 
     if redo[0]:
         clear_txt_images(exec_dir)
