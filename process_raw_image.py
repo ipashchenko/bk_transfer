@@ -208,7 +208,7 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
         b_core_X = 0
         n_core_X = 0
         count = 1
-        for amp_N, amp_B, t_start_days, l_pc in zip(flare_params):
+        for amp_N, amp_B, t_start_days, l_pc in flare_params:
 
             b_core_S += B(ress["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
             n_core_S += N(ress["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
