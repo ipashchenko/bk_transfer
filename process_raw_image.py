@@ -162,7 +162,7 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
     N_core_S = list()
     N_core_X = list()
     for t_obs_days in ts_obs_days:
-        print("T[days] = {:.1f}".format(t_obs_days))
+        print("Processing raw images for T[days] = {:.1f}".format(t_obs_days))
         imagex_txt = os.path.join(txt_dir, "jet_image_i_X_{:.1f}.txt".format(t_obs_days))
         images_txt = os.path.join(txt_dir, "jet_image_i_S_{:.1f}.txt".format(t_obs_days))
 

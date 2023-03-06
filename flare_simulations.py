@@ -10,7 +10,6 @@ from generate_and_model_many_epochs_uvdata import make_and_model_visibilities
 
 
 # Find sources
-local_rfc_dir = "/home/ilya/data/rfc"
 table1_file = "/home/ilya/data/rfc/J_MNRAS_485_1822_table1.fits"
 table2_file = "/home/ilya/data/rfc/J_MNRAS_485_1822_table2.fits"
 
@@ -36,8 +35,10 @@ def clear_txt_images(files_dir):
     files = glob.glob(os.path.join(files_dir, "jet_image_[i,tau]*_[X, S]_*.txt"))
     for fn in files:
         try:
+            print(f"Removing {fn}...")
             os.unlink(fn)
         except FileNotFoundError:
+            print(f"No file {fn} to remove...")
             pass
 
 
@@ -45,8 +46,10 @@ def clear_tobs(files_dir):
     files = glob.glob(os.path.join(files_dir, "t_obs_*"))
     for fn in files:
         try:
+            print(f"Removing {fn}...")
             os.unlink(fn)
         except FileNotFoundError:
+            print(f"No file {fn} to remove...")
             pass
 
 
@@ -54,14 +57,18 @@ def clear_fits(files_dir):
     files = glob.glob(os.path.join(files_dir, "template_[X, S]_*.uvf"))
     for fn in files:
         try:
+            print(f"Removing {fn}...")
             os.unlink(fn)
         except FileNotFoundError:
+            print(f"No file {fn} to remove...")
             pass
     files = glob.glob(os.path.join(files_dir, "model_cc_i_[X, S]_*.fits"))
     for fn in files:
         try:
+            print(f"Removing {fn}...")
             os.unlink(fn)
         except FileNotFoundError:
+            print(f"No file {fn} to remove...")
             pass
 
 
@@ -172,16 +179,16 @@ for i in range(n_sources):
     # This will be multiplied on (1+z) to bring to the observer z = 0.
     ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
 
-    n_flares = np.random.uniform(1, 3, size=1)[0]
+    n_flares = np.random.randint(1, 3, size=1)[0]
 
     flare_params = list()
     for i_fl_enum, i_fl in enumerate(range(n_flares)):
         amp_N = np.random.uniform(5, 10, size=1)[0]
         amp_B = 0.0
         # From 0 to full time - 3 years
-        t_start_years = np.random.uniform(0, ts_obs_days/(12*30) - 3., size=1)[0]
+        t_start_years = np.random.uniform(0, ts_obs_days[-1]/(12*30) - 3., size=1)[0]
         t_start_days = t_start_years*12*30
-        width_pc = np.random.uniform(0.1, 0.3)
+        width_pc = np.random.uniform(0.1, 0.3, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
     # amp_N, amp_B, t_start(days), width(pc)
     # flare_params = [(10.0, 0.0, 0.0, 0.1), (5.0, 0.0, t_start_months*30*12, 0.2)]
@@ -198,6 +205,9 @@ for i in range(n_sources):
 
 
     if redo[0]:
+        print("==========================================")
+        print(f"Generating txt model images for {source_basename}\n")
+        print("==========================================")
         generate_txt_images(redshift, B_1, K_1, Gamma,
                             LOS_coeff, HOAngle_deg,
                             n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
@@ -205,6 +215,9 @@ for i in range(n_sources):
                             exec_dir, parallels_run_file, calculon)
 
     if redo[1] and only_band is None:
+        print("==========================================")
+        print(f"Processing raw image for {source_basename}\n")
+        print("==========================================")
         process_raw_images(source_basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
                            n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
                            ts_obs_days, flare_params, flare_shape,
@@ -212,6 +225,9 @@ for i in range(n_sources):
         create_movie_raw(source_basename, save_dir)
 
     if redo[2]:
+        print("==========================================")
+        print(f"Generating and modelling visibilities for {source_basename}")
+        print("==========================================")
         make_and_model_visibilities(source_basename, only_band, redshift, lg_pixsize_min_mas, lg_pixsize_max_mas, n_along, n_across, match_resolution,
                                     ts_obs_days,
                                     noise_scale_factor, mapsizes_dict,
