@@ -299,6 +299,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
     if only_band is None:
         CS = np.array(core_positions[2.3])-np.array(core_positions[8.6])
+        np.savetxt(os.path.join(save_dir, f"source_{basename}_CS.txt"), core_fluxes[8.6])
 
     np.savetxt(os.path.join(save_dir, f"source_{basename}_epochs.txt"), epochs*(1+z))
     np.savetxt(os.path.join(save_dir, f"source_{basename}_S_2.txt"), core_fluxes[2.3])
