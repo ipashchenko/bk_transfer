@@ -149,7 +149,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
 
             if calculon:
-                n_jobs = 40
+                n_jobs = 44
             else:
                 n_jobs = 4
             os.system(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --fname ::: {fnames}")
