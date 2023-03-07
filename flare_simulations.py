@@ -174,22 +174,65 @@ for i in range(n_sources):
     print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
     # Fixed times
-    # ts_obs_days = np.linspace(-400.0, 12*360, 40)
+    ts_obs_days = np.linspace(-400.0, 12*360, 40)
     # From real sources times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
+    # ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
 
-    n_flares = np.random.randint(1, 3, size=1)[0]
+    # n_flares = np.random.randint(1, 3, size=1)[0]
 
     flare_params = list()
-    for i_fl_enum, i_fl in enumerate(range(n_flares)):
-        amp_N = np.random.uniform(5, 10, size=1)[0]
-        amp_B = 0.0
-        # From 0 to full time - 3 years
-        t_start_years = np.random.uniform(0, ts_obs_days[-1]/(12*30) - 3., size=1)[0]
+
+    # Two flares
+    if np.random.uniform(0, 1, size=1)[0] < 0.5:
+
+        # First flare
+        t_start_years = np.random.uniform(-1, 3., size=1)[0]
         t_start_days = t_start_years*12*30
-        width_pc = np.random.uniform(0.1, 0.3, size=1)[0]
+        amp_N = np.random.uniform(3, 8, size=1)[0]
+        amp_B = 0.0
+        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+        # Second flare
+        t_start_years = np.random.uniform(5, 12., size=1)[0]
+        t_start_days = t_start_years*12*30
+        amp_N = np.random.uniform(3, 8, size=1)[0]
+        amp_B = 0.0
+        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+
+    # Three flares
+    else:
+        # First flare
+        t_start_years = np.random.uniform(-1, 3., size=1)[0]
+        t_start_days = t_start_years*12*30
+        amp_N = np.random.uniform(3, 8, size=1)[0]
+        amp_B = 0.0
+        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+        # Second flare
+        t_start_years = np.random.uniform(4, 8., size=1)[0]
+        t_start_days = t_start_years*12*30
+        amp_N = np.random.uniform(3, 8, size=1)[0]
+        amp_B = 0.0
+        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+        # Third flare
+        t_start_years = np.random.uniform(8, 10., size=1)[0]
+        t_start_days = t_start_years*12*30
+        amp_N = np.random.uniform(3, 8, size=1)[0]
+        amp_B = 0.0
+        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+
+    # for i_fl_enum, i_fl in enumerate(range(n_flares)):
+    #     amp_N = np.random.uniform(3, 8, size=1)[0]
+    #     amp_B = 0.0
+    #     # From 0 to full time - 3 years
+    #     t_start_years = np.random.uniform(0, ts_obs_days[-1]/(12*30) - 3., size=1)[0]
+    #     t_start_days = t_start_years*12*30
+    #     width_pc = np.random.uniform(0.1, 0.3, size=1)[0]
+    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
     # amp_N, amp_B, t_start(days), width(pc)
     # flare_params = [(10.0, 0.0, 0.0, 0.1), (5.0, 0.0, t_start_months*30*12, 0.2)]
 
@@ -206,7 +249,7 @@ for i in range(n_sources):
 
     if redo[0]:
         print("==========================================")
-        print(f"Generating txt model images for {source_basename}\n")
+        print(f"Generating txt model images for {source_basename}")
         print("==========================================")
         generate_txt_images(redshift, B_1, K_1, Gamma,
                             LOS_coeff, HOAngle_deg,
@@ -216,7 +259,7 @@ for i in range(n_sources):
 
     if redo[1] and only_band is None:
         print("==========================================")
-        print(f"Processing raw image for {source_basename}\n")
+        print(f"Processing raw image for {source_basename}")
         print("==========================================")
         process_raw_images(source_basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
                            n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
