@@ -161,7 +161,7 @@ else:
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
 
 
-n_sources = 3
+n_sources = 30
 for i in range(n_sources):
     B_1 = 2.0
     Gamma = 10.
@@ -187,14 +187,14 @@ for i in range(n_sources):
     if np.random.uniform(0, 1, size=1)[0] < 0.5:
 
         # First flare
-        t_start_years = np.random.uniform(-1, 3., size=1)[0]
+        t_start_years = np.random.uniform(-1, 0., size=1)[0]
         t_start_days = t_start_years*12*30
         amp_N = np.random.uniform(3, 8, size=1)[0]
         amp_B = 0.0
         width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
         # Second flare
-        t_start_years = np.random.uniform(4, 9., size=1)[0]
+        t_start_years = np.random.uniform(3, 8., size=1)[0]
         t_start_days = t_start_years*12*30
         amp_N = np.random.uniform(3, 8, size=1)[0]
         amp_B = 0.0
@@ -204,21 +204,21 @@ for i in range(n_sources):
     # Three flares
     else:
         # First flare
-        t_start_years = np.random.uniform(-1, 2., size=1)[0]
+        t_start_years = np.random.uniform(-1, 0., size=1)[0]
         t_start_days = t_start_years*12*30
         amp_N = np.random.uniform(3, 8, size=1)[0]
         amp_B = 0.0
         width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
         # Second flare
-        t_start_years = np.random.uniform(3, 6., size=1)[0]
+        t_start_years = np.random.uniform(2, 5., size=1)[0]
         t_start_days = t_start_years*12*30
         amp_N = np.random.uniform(3, 8, size=1)[0]
         amp_B = 0.0
         width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
         # Third flare
-        t_start_years = np.random.uniform(7, 9., size=1)[0]
+        t_start_years = np.random.uniform(6, 8., size=1)[0]
         t_start_days = t_start_years*12*30
         amp_N = np.random.uniform(3, 8, size=1)[0]
         amp_B = 0.0
