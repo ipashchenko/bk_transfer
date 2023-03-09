@@ -72,9 +72,10 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
     freqs_ghz = [2.3, 8.6]
     freq_names = {2.3: "S", 8.6: "X"}
     # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
-    template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis_doscat.fits",
-                       8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis_doscat.fits"}
-
+    template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis.fits",
+                       8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis.fits"}
+    # template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis_doscat.fits",
+    #                    8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis_doscat.fits"}
     core_positions = dict()
     core_positions_err = dict()
     core_fluxes = dict()
@@ -198,17 +199,19 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
             nw_beam_size = None
 
         else:
-            for epoch in epochs:
+            for i, epoch in enumerate(epochs):
+                if i == 0:
+                    mdl_fname = f"in_{n_components}_{freq_names[freq_ghz]}_last.mdl"
+                else:
+                    mdl_fname = "out{}_{:.1f}.mdl".format(n_components, epoch[i-1])
                 modelfit_difmap("template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch),
-                                mdl_fname=f"in{n_components}.mdl", out_fname=f"out{n_components}.mdl", niter=200, stokes='i',
+                                mdl_fname=mdl_fname, out_fname="out{}_{:.1f}.mdl".format(n_components, epoch), niter=200, stokes='i',
                                 path=save_dir, mdl_path=save_dir, out_path=save_dir,
                                 show_difmap_output=True,
                                 save_dirty_residuals_map=False,
                                 dmap_name=None, dmap_size=(1024, 0.1))
 
-                shutil.copy(os.path.join(save_dir, f"out{n_components}.mdl"),
-                            os.path.join(save_dir, "out{}_{:.1f}.mdl".format(n_components, epoch)))
-                components = import_difmap_model(f"out{n_components}.mdl", save_dir)
+                components = import_difmap_model("out{}_{:.1f}.mdl".format(n_components, epoch), save_dir)
                 # Find closest to phase center component
                 comps = sorted(components, key=lambda x: np.hypot(x.p[1], x.p[2]))
                 core = comps[0]
