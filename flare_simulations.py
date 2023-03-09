@@ -178,6 +178,8 @@ for i in range(n_sources):
     # From real sources times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
     # ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
+    # Shift to sample flares right
+    # ts_obs_days -= 400
 
     # n_flares = np.random.randint(1, 3, size=1)[0]
 
