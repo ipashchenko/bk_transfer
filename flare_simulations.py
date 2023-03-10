@@ -124,9 +124,9 @@ gamma_max = 1E+04
 
 # sys.exit(0)
 
-n_along = 1000
+n_along = 500
 n_across = 200
-lg_pixsize_min_mas = -3.0
+lg_pixsize_min_mas = -2.0
 lg_pixsize_max_mas = -1.0
 match_resolution = False
 # TODO: Changing this => edit NField.cpp! ##############################################################################
@@ -143,7 +143,7 @@ mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
-extract_extended = True
+extract_extended = False
 use_scipy_for_extract_extended = False
 beam_fractions = (1.0,)
 two_stage = False
