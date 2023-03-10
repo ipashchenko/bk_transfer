@@ -30,7 +30,6 @@ for source in sources:
     source_epochs[str(source)] = vdtimes
 
 
-
 def clear_txt_images(files_dir):
     files = glob.glob(os.path.join(files_dir, "jet_image_[i,tau]*_[X, S]_*.txt"))
     for fn in files:
@@ -112,7 +111,6 @@ only_band = None
 redshift = 0.8
 K_1 = 5000.
 # TODO: Changing this => edit main.cpp! ################################################################################
-b = 1.25
 n = 2.0
 s = 2.
 gamma_min = 10.
@@ -161,10 +159,17 @@ else:
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
 
 
+# n_sources = 1
+# flare_params = [(0.0, 0.0, 0.0, 0.1)]
+# ts_obs_days = np.array([0.0])
+
 n_sources = 30
 idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
-    B_1 = 2.0
+    # B_1 = 2.0
+    # b = 1.25
+    B_1 = 0.5
+    b = 1.0
     Gamma = 10.
     LOS_coeff = 0.5
     HOAngle_deg = 15.
@@ -178,15 +183,11 @@ for i in range(n_sources):
     # ts_obs_days = np.linspace(-400.0, 9*360, 44)
     # From real sources times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    # ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
     ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
     # Shift to sample flares right
     ts_obs_days -= 400
 
-    # n_flares = np.random.randint(1, 3, size=1)[0]
-
     flare_params = list()
-
 
     # First flare
     t_start_years = np.random.uniform(-1, 0., size=1)[0]
@@ -212,49 +213,6 @@ for i in range(n_sources):
         if t_start_days > ts_obs_days[-1]:
             break
 
-    # # Two flares
-    # if np.random.uniform(0, 1, size=1)[0] < 0.5:
-    #
-    #     # First flare
-    #     t_start_years = np.random.uniform(-1, 0., size=1)[0]
-    #     t_start_days = t_start_years*12*30
-    #     amp_N = np.random.uniform(3, 8, size=1)[0]
-    #     amp_B = 0.0
-    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-    #     # Second flare
-    #     t_start_years = np.random.uniform(3, 8., size=1)[0]
-    #     t_start_days = t_start_years*12*30
-    #     amp_N = np.random.uniform(3, 8, size=1)[0]
-    #     amp_B = 0.0
-    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-    #
-    # # Three flares
-    # else:
-    #     # First flare
-    #     t_start_years = np.random.uniform(-1, 0., size=1)[0]
-    #     t_start_days = t_start_years*12*30
-    #     amp_N = np.random.uniform(3, 8, size=1)[0]
-    #     amp_B = 0.0
-    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-    #     # Second flare
-    #     t_start_years = np.random.uniform(2, 5., size=1)[0]
-    #     t_start_days = t_start_years*12*30
-    #     amp_N = np.random.uniform(3, 8, size=1)[0]
-    #     amp_B = 0.0
-    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-    #     # Third flare
-    #     t_start_years = np.random.uniform(6, 8., size=1)[0]
-    #     t_start_days = t_start_years*12*30
-    #     amp_N = np.random.uniform(3, 8, size=1)[0]
-    #     amp_B = 0.0
-    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-
-
     np.savetxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"), np.atleast_2d(flare_params))
 
     if redo[0]:
@@ -270,7 +228,7 @@ for i in range(n_sources):
         print("==========================================")
         print(f"Generating txt model images for {source_basename}")
         print("==========================================")
-        generate_txt_images(redshift, B_1, K_1, Gamma,
+        generate_txt_images(redshift, B_1, b, K_1, Gamma,
                             LOS_coeff, HOAngle_deg,
                             n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
                             flare_params, ts_obs_days,

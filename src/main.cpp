@@ -1080,14 +1080,14 @@ int main(int argc, char *argv[]) {
     std::vector<double> total_fluxes;
     std::vector<double> flare_params;
 
-    int num_of_flares = (argc - 12) / 4;
+    int num_of_flares = (argc - 13) / 4;
     std::cout << "Number of flares : " << num_of_flares << "\n";
-    int argc_pred = 12 + 4 * num_of_flares;
+    int argc_pred = 13 + 4 * num_of_flares;
 
     if(argc != argc_pred){
         std::cout << argc << "\n";
         std::cout << "Supply redshift, LOS-angle (deg), Cone half-angle (deg),"
-                     " B_1 [G], K_1 [cm^{-3}], Gamma, N_along, N_across,"
+                     " B_1 [G], m_b, K_1 [cm^{-3}], Gamma, N_along, N_across,"
                      " lg_pixel_size_mas_start, lg_pixel_size_mas_stop,\n"
                      " t_obs (days), flare_params: [amp_N, amp_B, t_start (days), width (pc)]\n" << "\n";
         return 1;
@@ -1105,37 +1105,40 @@ int main(int argc, char *argv[]) {
 
         double b_0 = atof(argv[4]);
         std::cout << "B_1 (G) = " << argv[4] << "\n";
+	
+		double m_b = atof(argv[5]);
+		std::cout << "m_b = " << argv[5] << "\n";
+		
+        double K_1 = atof(argv[6]);
+        std::cout << "K_1 = " << argv[6] << "\n";
 
-        double K_1 = atof(argv[5]);
-        std::cout << "K_1 = " << argv[5] << "\n";
+        double Gamma = atof(argv[7]);
+        std::cout << "Gamma = " << argv[7] << "\n";
 
-        double Gamma = atof(argv[6]);
-        std::cout << "Gamma = " << argv[6] << "\n";
+        int number_of_pixels_along = atoi(argv[8]);
+        std::cout << "N_along = " << argv[8] << "\n";
 
-        int number_of_pixels_along = atoi(argv[7]);
-        std::cout << "N_along = " << argv[7] << "\n";
+        int number_of_pixels_across = atoi(argv[9]);
+        std::cout << "N_across = " << argv[9] << "\n";
 
-        int number_of_pixels_across = atoi(argv[8]);
-        std::cout << "N_across = " << argv[8] << "\n";
+        double lg_pixel_size_mas_start = atof(argv[10]);
+        std::cout << "lg(min_pixel_size[mas]) = " << argv[10] << "\n";
 
-        double lg_pixel_size_mas_start = atof(argv[9]);
-        std::cout << "lg(min_pixel_size[mas]) = " << argv[9] << "\n";
+        double lg_pixel_size_mas_stop = atof(argv[11]);
+        std::cout << "lg(max_pixel_size[mas]) = " << argv[11] << "\n";
 
-        double lg_pixel_size_mas_stop = atof(argv[10]);
-        std::cout << "lg(max_pixel_size[mas]) = " << argv[10] << "\n";
-
-        double t_obs = atof(argv[11]);
-        std::cout << "t_obs(days) = " << argv[11] << "\n";
+        double t_obs = atof(argv[12]);
+        std::cout << "t_obs(days) = " << argv[12] << "\n";
 
         double frac_amp, frac_amp_B, t_start_days, flare_width_pc;
         for(int i = 0; i < num_of_flares; i++){
-            frac_amp = atof(argv[11 + 4*i + 1]);
+            frac_amp = atof(argv[12 + 4*i + 1]);
             std::cout << "Frac.amp N = " << frac_amp << "\n";
-            frac_amp_B = atof(argv[11 + 4*i + 2]);
+            frac_amp_B = atof(argv[12 + 4*i + 2]);
             std::cout << "Frac.amp B = " << frac_amp_B << "\n";
-            t_start_days = atof(argv[11 + 4*i + 3]);
+            t_start_days = atof(argv[12 + 4*i + 3]);
             std::cout << "T_start (days) = " << t_start_days << "\n";
-            flare_width_pc = atof(argv[11 + 4*i + 4]);
+            flare_width_pc = atof(argv[12 + 4*i + 4]);
             std::cout << "Width (pc) = " << flare_width_pc << "\n";
             flare_params.push_back(frac_amp);
             flare_params.push_back(frac_amp_B);
@@ -1161,7 +1164,7 @@ int main(int argc, char *argv[]) {
 //        double t_obs = 1000.;
 
         total_fluxes = run_on_analytic_params_t(redshift, los_angle_deg, cone_half_angle_deg,
-                                                b_0, 1.25,
+                                                b_0, m_b,
                                                 2.0, 10.0,
                                                 K_1, 2,
                                                 Gamma,
