@@ -162,6 +162,7 @@ else:
 
 
 n_sources = 30
+idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
     B_1 = 2.0
     Gamma = 10.
@@ -177,7 +178,8 @@ for i in range(n_sources):
     # ts_obs_days = np.linspace(-400.0, 9*360, 44)
     # From real sources times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
+    # ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
+    ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
     # Shift to sample flares right
     ts_obs_days -= 400
 
