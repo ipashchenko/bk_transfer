@@ -174,69 +174,82 @@ for i in range(n_sources):
     print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
     # Fixed times
-    ts_obs_days = np.linspace(-400.0, 9*360, 44)
+    # ts_obs_days = np.linspace(-400.0, 9*360, 44)
     # From real sources times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    # ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
+    ts_obs_days = source_epochs[sources[np.random.randint(0, len(sources), 1)[0]]]/(1+redshift)
     # Shift to sample flares right
-    # ts_obs_days -= 400
+    ts_obs_days -= 400
 
     # n_flares = np.random.randint(1, 3, size=1)[0]
 
     flare_params = list()
 
-    # Two flares
-    if np.random.uniform(0, 1, size=1)[0] < 0.5:
 
-        # First flare
-        t_start_years = np.random.uniform(-1, 0., size=1)[0]
-        t_start_days = t_start_years*12*30
-        amp_N = np.random.uniform(3, 8, size=1)[0]
-        amp_B = 0.0
-        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-        # Second flare
-        t_start_years = np.random.uniform(3, 8., size=1)[0]
-        t_start_days = t_start_years*12*30
-        amp_N = np.random.uniform(3, 8, size=1)[0]
-        amp_B = 0.0
-        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+    # First flare
+    t_start_years = np.random.uniform(-1, 0., size=1)[0]
+    t_start_days = t_start_years*12*30
+    amp_N = np.random.uniform(2, 7, size=1)[0]
+    amp_B = 0.0
+    width_pc = np.random.uniform(0.1, 0.3, size=1)[0]
+    flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
-    # Three flares
-    else:
-        # First flare
-        t_start_years = np.random.uniform(-1, 0., size=1)[0]
+    # Maximal number of flares
+    for i_fl in range(10):
+        # Waiting time 3 yrs
+        dt_yrs = np.random.exponential(3.0)
+        t_start_years += dt_yrs
         t_start_days = t_start_years*12*30
-        amp_N = np.random.uniform(3, 8, size=1)[0]
+        amp_N = np.random.uniform(2, 7, size=1)[0]
         amp_B = 0.0
-        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-        # Second flare
-        t_start_years = np.random.uniform(2, 5., size=1)[0]
-        t_start_days = t_start_years*12*30
-        amp_N = np.random.uniform(3, 8, size=1)[0]
-        amp_B = 0.0
-        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
-        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-        # Third flare
-        t_start_years = np.random.uniform(6, 8., size=1)[0]
-        t_start_days = t_start_years*12*30
-        amp_N = np.random.uniform(3, 8, size=1)[0]
-        amp_B = 0.0
-        width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+        width_pc = np.random.uniform(0.1, 0.3, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
-    # for i_fl_enum, i_fl in enumerate(range(n_flares)):
+        if t_start_days > ts_obs_days[-1]:
+            break
+
+    # # Two flares
+    # if np.random.uniform(0, 1, size=1)[0] < 0.5:
+    #
+    #     # First flare
+    #     t_start_years = np.random.uniform(-1, 0., size=1)[0]
+    #     t_start_days = t_start_years*12*30
     #     amp_N = np.random.uniform(3, 8, size=1)[0]
     #     amp_B = 0.0
-    #     # From 0 to full time - 3 years
-    #     t_start_years = np.random.uniform(0, ts_obs_days[-1]/(12*30) - 3., size=1)[0]
-    #     t_start_days = t_start_years*12*30
-    #     width_pc = np.random.uniform(0.1, 0.3, size=1)[0]
+    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
     #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-    # amp_N, amp_B, t_start(days), width(pc)
-    # flare_params = [(10.0, 0.0, 0.0, 0.1), (5.0, 0.0, t_start_months*30*12, 0.2)]
+    #     # Second flare
+    #     t_start_years = np.random.uniform(3, 8., size=1)[0]
+    #     t_start_days = t_start_years*12*30
+    #     amp_N = np.random.uniform(3, 8, size=1)[0]
+    #     amp_B = 0.0
+    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+    #
+    # # Three flares
+    # else:
+    #     # First flare
+    #     t_start_years = np.random.uniform(-1, 0., size=1)[0]
+    #     t_start_days = t_start_years*12*30
+    #     amp_N = np.random.uniform(3, 8, size=1)[0]
+    #     amp_B = 0.0
+    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+    #     # Second flare
+    #     t_start_years = np.random.uniform(2, 5., size=1)[0]
+    #     t_start_days = t_start_years*12*30
+    #     amp_N = np.random.uniform(3, 8, size=1)[0]
+    #     amp_B = 0.0
+    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+    #     # Third flare
+    #     t_start_years = np.random.uniform(6, 8., size=1)[0]
+    #     t_start_days = t_start_years*12*30
+    #     amp_N = np.random.uniform(3, 8, size=1)[0]
+    #     amp_B = 0.0
+    #     width_pc = np.random.uniform(0.1, 0.25, size=1)[0]
+    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+
 
     np.savetxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"), np.atleast_2d(flare_params))
 
