@@ -124,10 +124,10 @@ gamma_max = 1E+04
 
 # sys.exit(0)
 
-n_along = 500
-n_across = 200
+n_along = 300
+n_across = 100
 lg_pixsize_min_mas = -2.0
-lg_pixsize_max_mas = -1.0
+lg_pixsize_max_mas = -0.5
 match_resolution = False
 # TODO: Changing this => edit NField.cpp! ##############################################################################
 flare_shape = 10.0
@@ -193,18 +193,20 @@ for i in range(n_sources):
     t_start_days = t_start_years*12*30
     amp_N = np.random.uniform(2, 7, size=1)[0]
     amp_B = 0.0
-    width_pc = np.random.uniform(0.1, 0.3, size=1)[0]
+    width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
     # Maximal number of flares
     for i_fl in range(10):
         # Waiting time 3 yrs
-        dt_yrs = np.random.exponential(3.0)
+        dt_yrs = 0.0
+        while dt_yrs < 2.0:
+            dt_yrs = np.random.exponential(3.0)
         t_start_years += dt_yrs
         t_start_days = t_start_years*12*30
         amp_N = np.random.uniform(2, 7, size=1)[0]
         amp_B = 0.0
-        width_pc = np.random.uniform(0.1, 0.3, size=1)[0]
+        width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
         if t_start_days > ts_obs_days[-1]:
