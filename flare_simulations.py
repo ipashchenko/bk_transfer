@@ -170,7 +170,7 @@ for i in range(n_sources):
     # B_1 = 2.0
     # b = 1.25
     # Second set
-    B_1 = 0.5
+    B_1 = 0.7
     b = 1.0
     Gamma = 10.
     LOS_coeff = 0.5
