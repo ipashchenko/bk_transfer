@@ -190,7 +190,7 @@ for i in range(n_sources):
     flare_params = list()
 
     # First flare
-    t_start_years = np.random.uniform(-1, 0., size=1)[0]
+    t_start_years = np.random.uniform(-1, 2., size=1)[0]
     t_start_days = t_start_years*12*30
     amp_N = np.random.uniform(2, 7, size=1)[0]
     amp_B = 0.0
@@ -206,7 +206,12 @@ for i in range(n_sources):
         t_start_years += dt_yrs
         t_start_days = t_start_years*12*30
         amp_N = np.random.uniform(2, 7, size=1)[0]
+        # Only N flare
         amp_B = 0.0
+        # Equipartition flare
+        # amp_B = np.sqrt(amp_N)
+        # Increasing N, decreasing B flare
+        # amp_B = -0.1
         width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
