@@ -131,15 +131,10 @@ class EquipartitionKHNfield : public NField {
 
 class FlareBKNField : public NField {
     public:
-        // ``vfield`` argument accounts for possible difference between pattern and flow velocity. The last one is
-        // specified in ``Jet`` ctor.
         FlareBKNField(NField* bkg_nfield, double amp, double t_start, double width_pc, VField* flare_pattern_vfield,
 					  Geometry* geometry_out = nullptr, Geometry* geometry_in = nullptr);
         double _nf(const Vector3d &point, double t = 0.0) const override;
     private:
-        // Flare amplitude. To add flare to stationary BKNField with some ``n_0``, ``n_n``, use the same ``n_n`` but
-        // define flare's ``n_0_fl`` as ``n_0*(1 + A_N)``, where ``A_N`` - fractional increase/decrease of particles in
-        // flare
         double amp_;
         double t_start_;
         double width_pc_;

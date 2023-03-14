@@ -729,22 +729,22 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     std::vector<VectorBField*> vbfields;
     std::vector<ScalarBField*> queiscent_sbfields;
     std::vector<ScalarBField*> flaring_sbfields;
-    queiscent_sbfields.push_back(&bk_bfield);
+	queiscent_sbfields.push_back(&bk_bfield);
+	flaring_sbfields.push_back(&bk_bfield);
 
     double frac_amp, frac_amp_B, t_start_days, flare_width_pc;
     int num_flares = flare_params.size()/4;
-//    FlareBKScalarBField* bk_flare_bfield;
-//    for(int i = 0; i < num_flares; i++){
-//        frac_amp = flare_params[4*i + 0];
-//        frac_amp_B = flare_params[4*i + 1];
-//        t_start_days = flare_params[4*i + 2];
-//        // In sec
-//        t_start_days *= 24.0 * 60.0 * 60.0;
-//        flare_width_pc = flare_params[4*i + 3];
-//        bk_flare_bfield = new FlareBKScalarBField(frac_amp_B*b_0, m_b, t_start_days, flare_width_pc,
-//                                                  los_angle, redshift, &geometry, nullptr, vfield);
-//        queiscent_sbfields.push_back(bk_flare_bfield);
-//    }
+    FlareBKBField* bk_flare_bfield;
+    for(int i = 0; i < num_flares; i++){
+        frac_amp = flare_params[4*i + 0];
+        frac_amp_B = flare_params[4*i + 1];
+        t_start_days = flare_params[4*i + 2];
+        // In sec
+        t_start_days *= 24.0 * 60.0 * 60.0;
+        flare_width_pc = flare_params[4*i + 3];
+        bk_flare_bfield = new FlareBKBField(&bk_bfield, frac_amp_B, t_start_days, flare_width_pc, vfield, &geometry, nullptr);
+        flaring_sbfields.push_back(bk_flare_bfield);
+    }
 
     // =================================================================================================================
 
@@ -783,7 +783,9 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     // Quiscent jet
 //    Jet bkjet(&geometry, vfield, queiscent_sbfields, vbfields, queiscent_nfields);
     // Flare N-only jet
-    Jet bkjet(&geometry, vfield, queiscent_sbfields, vbfields, flaring_nfields);
+//	Jet bkjet(&geometry, vfield, queiscent_sbfields, vbfields, flaring_nfields);
+	// Flare B and N jet
+	Jet bkjet(&geometry, vfield, flaring_sbfields, vbfields, flaring_nfields);
 
 //    // FIXME: Put inside frequency loop for dep. on frequency
 //    // Setting parameters of pixels and image ==========================================================================

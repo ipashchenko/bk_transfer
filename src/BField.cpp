@@ -15,6 +15,14 @@ ScalarBField::ScalarBField(Geometry *geometry_out, Geometry *geometry_in, VField
     vfield_ = vfield;
 }
 
+
+ScalarBField::ScalarBField(ScalarBField *pField) {
+	in_plasma_frame_ = pField->in_plasma_frame_;
+	geometry_in_ = pField->geometry_in_;
+	geometry_out_ = pField->geometry_out_;
+	vfield_ = pField->vfield_;
+}
+
 // Always specified in plasma frame
 double ScalarBField::bf_plasma_frame(const Vector3d &point, Vector3d &v, double t) const {
     double Gamma = getG(v);
@@ -93,6 +101,37 @@ double FlareBKScalarBField::_bf(const Vector3d &point, const double t) const {
     Vector3d v = vfield_->vf(point);
     double r = point.norm();
     return amp_*BKScalarBField::_bf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+}
+
+
+
+FlareBKBField::FlareBKBField(ScalarBField* bkg_bfield, double amp, double t_start, double width_pc, VField* flare_pattern_vfield,
+							 Geometry* geometry_out, Geometry* geometry_in) :
+	 ScalarBField(bkg_bfield),
+	 amp_(amp),
+	 t_start_(t_start),
+	 width_pc_(width_pc)
+	{
+		bkg_bfield_ = bkg_bfield;
+		flare_pattern_vfield_ = flare_pattern_vfield;
+		if(geometry_out)
+		{
+			geometry_out_ = geometry_out;
+		}
+		if(geometry_in)
+		{
+			geometry_in_ = geometry_in;
+		}
+	}
+	
+
+double FlareBKBField::_bf(const Vector3d &point, double t) const {
+	// TODO: Here we should integrate flare pattern speed in time to find the position of the flare (e.g. blob center).
+	// We can model flare as a spherical blob.
+	Vector3d v = flare_pattern_vfield_->vf(point);
+	double r = point.norm();
+	//	return amp_ * bkg_nfield_->_nf(point, t) * exp(-pow(r - v.norm()*(t - t_start_), 2.0)/(width_pc_*width_pc_*pc*pc));
+	return amp_ * bkg_bfield_->_bf(point, t) * generalized1_gaussian1d(r, v.norm()*(t - t_start_), width_pc_*pc, 10.0);
 }
 
 

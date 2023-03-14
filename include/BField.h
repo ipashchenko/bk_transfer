@@ -21,6 +21,7 @@ class ScalarBField {
         double bf_plasma_frame(const Vector3d &point, Vector3d &v, double t = 0.0) const;
     protected:
         ScalarBField(Geometry* geometry_out=nullptr, Geometry* geometry_in=nullptr, VField* vfield= nullptr, bool in_plasma_frame=true);
+		ScalarBField(ScalarBField *pField);
         Geometry* geometry_in_;
         Geometry* geometry_out_;
         VField* vfield_;
@@ -61,6 +62,20 @@ class FlareBKScalarBField : public BKScalarBField {
 
 
 
+
+class FlareBKBField : public ScalarBField {
+	public:
+		FlareBKBField(ScalarBField* bkg_bfield, double amp, double t_start, double width_pc, VField* flare_pattern_vfield,
+							Geometry* geometry_out, Geometry* geometry_in = nullptr);
+		double _bf(const Vector3d &point, double t = 0.0) const override;
+	private:
+		double amp_;
+		double t_start_;
+		double width_pc_;
+		ScalarBField* bkg_bfield_;
+		VField* flare_pattern_vfield_;
+
+};
 
 
 
