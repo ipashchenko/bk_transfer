@@ -195,7 +195,7 @@ for i in range(n_sources):
     flare_params = list()
 
     # First flare
-    t_start_years = np.random.uniform(-1, 2., size=1)[0]
+    t_start_years = np.random.uniform(-1, 1., size=1)[0]
     t_start_days = t_start_years*12*30
     # FIXME:
     amp_N = np.random.uniform(2, 7, size=1)[0]
