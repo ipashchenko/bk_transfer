@@ -106,7 +106,7 @@ def clear_pics(basename, files_dir):
 
 redo = [True, True, True]
 calculon = True
-basename = "test"
+basename = "search"
 only_band = None
 redshift = 0.8
 K_1 = 5000.
@@ -145,7 +145,7 @@ extract_extended = False
 use_scipy_for_extract_extended = False
 beam_fractions = (1.0,)
 two_stage = False
-n_components = 4
+n_components = 5
 
 if not calculon:
     exec_dir = "/home/ilya/github/bk_transfer/Release"
@@ -163,7 +163,7 @@ else:
 # flare_params = [(0.0, 0.0, 0.0, 0.1)]
 # ts_obs_days = np.array([0.0])
 
-n_sources = 1
+n_sources = 5
 idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
     # First set
@@ -173,7 +173,7 @@ for i in range(n_sources):
     B_1 = 0.7
     b = 1.0
     Gamma = 10.
-    LOS_coeff = 0.5
+    LOS_coeff = 1.5
     HOAngle_deg = 15.
 
     los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
@@ -182,7 +182,7 @@ for i in range(n_sources):
     print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
     # Fixed times
-    ts_obs_days = np.linspace(-400.0, 9*360, 44)
+    ts_obs_days = np.linspace(-400.0, 9*360, 40)
     # ts_obs_days = np.array([0.0])
 
     # FIXME:
