@@ -207,7 +207,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 modelfit_difmap("template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch),
                                 mdl_fname=mdl_fname, out_fname="out{}_{:.1f}.mdl".format(n_components, epoch), niter=200, stokes='i',
                                 path=save_dir, mdl_path=save_dir, out_path=save_dir,
-                                show_difmap_output=True,
+                                show_difmap_output=False,
                                 save_dirty_residuals_map=False,
                                 dmap_name=None, dmap_size=(1024, 0.1))
 
