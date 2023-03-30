@@ -78,13 +78,10 @@ def create_movie_raw(basename, files_dir):
     os.chdir(cwd)
 
 
-def create_movie_clean(basename, files_dir, only_band):
+def create_movie_clean(basename, files_dir):
     cwd = os.getcwd()
     os.chdir(files_dir)
-    if only_band is None or only_band != "S":
-        os.system(f"convert -delay 10 -loop 0 `ls -tr {basename}_observed_i_X_*.png` {basename}_CLEAN_X.gif")
-    if only_band is None or only_band != "X":
-        os.system(f"convert -delay 10 -loop 0 `ls -tr {basename}_observed_i_S_*.png` {basename}_CLEAN_S.gif")
+    os.system(f"convert -delay 10 -loop 0 `ls -tr {basename}_observed_pol_u_*.png` {basename}_CLEAN_POL.gif")
     os.chdir(cwd)
 
 
@@ -104,9 +101,9 @@ def clear_pics(basename, files_dir):
             pass
 
 
-redo = [True, True, True]
-calculon = True
-basename = "test"
+redo = [False, True, True]
+calculon = False
+basename = "pol"
 only_band = None
 redshift = 0.8
 K_1 = 5000.
@@ -137,7 +134,8 @@ flare_shape = 10.0
 # ts_obs_days = np.loadtxt(times_file)/(1+redshift)
 
 noise_scale_factor = 1.0
-mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
+# mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
+mapsizes_dict = {15.4: (1024, 0.1,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
@@ -151,19 +149,21 @@ if not calculon:
     exec_dir = "/home/ilya/github/bk_transfer/Release"
     parallels_run_file = "/home/ilya/github/bk_transfer/parallels_run.txt"
     save_dir = "/home/ilya/github/bk_transfer/pics/flares"
-    path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
+    # path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
+    path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
 else:
     exec_dir = "/home/ilya/github/flares/bk_transfer/Release"
     parallels_run_file = "/home/ilya/github/flares/bk_transfer/parallels_run.txt"
     save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares"
-    path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
+    # path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
+    path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
 
 
 # n_sources = 1
 # flare_params = [(0.0, 0.0, 0.0, 0.1)]
 # ts_obs_days = np.array([0.0])
 
-n_sources = 30
+n_sources = 1
 idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
     # B_1 = 2.0
@@ -180,19 +180,19 @@ for i in range(n_sources):
     print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
     # Fixed times
-    # ts_obs_days = np.linspace(-400.0, 9*360, 44)
-    # From real sources times
-    # This will be multiplied on (1+z) to bring to the observer z = 0.
-    ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
-    # Shift to sample flares right
-    ts_obs_days -= 400
+    ts_obs_days = np.linspace(-400.0, 9*360, 44)
+    # # From real sources times
+    # # This will be multiplied on (1+z) to bring to the observer z = 0.
+    # ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
+    # # Shift to sample flares right
+    # ts_obs_days -= 400
 
     flare_params = list()
 
     # First flare
     t_start_years = np.random.uniform(-1, 0., size=1)[0]
     t_start_days = t_start_years*12*30
-    amp_N = np.random.uniform(2, 7, size=1)[0]
+    amp_N = np.random.uniform(5, 7, size=1)[0]
     amp_B = 0.0
     width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
@@ -205,7 +205,7 @@ for i in range(n_sources):
             dt_yrs = np.random.exponential(3.0)
         t_start_years += dt_yrs
         t_start_days = t_start_years*12*30
-        amp_N = np.random.uniform(2, 7, size=1)[0]
+        amp_N = np.random.uniform(4, 7, size=1)[0]
         amp_B = 0.0
         width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
@@ -234,15 +234,15 @@ for i in range(n_sources):
                             flare_params, ts_obs_days,
                             exec_dir, parallels_run_file, calculon)
 
-    if redo[1] and only_band is None:
-        print("==========================================")
-        print(f"Processing raw image for {source_basename}")
-        print("==========================================")
-        process_raw_images(source_basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
-                           n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-                           ts_obs_days, flare_params, flare_shape,
-                           Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s)
-        create_movie_raw(source_basename, save_dir)
+    # if redo[1] and only_band is None:
+    #     print("==========================================")
+    #     print(f"Processing raw image for {source_basename}")
+    #     print("==========================================")
+    #     process_raw_images(source_basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
+    #                        n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
+    #                        ts_obs_days, flare_params, flare_shape,
+    #                        Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s)
+    #     create_movie_raw(source_basename, save_dir)
 
     if redo[2]:
         print("==========================================")
@@ -255,7 +255,7 @@ for i in range(n_sources):
                                     extract_extended, use_scipy_for_extract_extended, beam_fractions, two_stage,
                                     n_components,
                                     save_dir, exec_dir, path_to_script)
-        create_movie_clean(source_basename, save_dir, only_band)
+        create_movie_clean(source_basename, save_dir)
 
     clear_tobs(exec_dir)
     clear_fits(save_dir)

@@ -692,11 +692,11 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     double los_angle = los_angle_deg*M_PI/180.0;
 
     // Observed frequencies in GHz
-	std::vector<double> nu_observed_ghz{2.3, 8.6};
-//	std::vector<double> nu_observed_ghz{15.4};
+//	std::vector<double> nu_observed_ghz{2.3, 8.6};
+	std::vector<double> nu_observed_ghz{15.4};
     double min_nu_ghz = *std::min_element(nu_observed_ghz.begin(), nu_observed_ghz.end());
-	std::vector<std::string> nu_observed_band{"S", "X"};
-//	std::vector<std::string> nu_observed_band{"u"};
+//	std::vector<std::string> nu_observed_band{"S", "X"};
+	std::vector<std::string> nu_observed_band{"u"};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
@@ -757,6 +757,11 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
 	// TODO: Flare N-field which declines faster than background N-field.
 	double n_0 = b_0*b_0*particles.get_equipartition_bsq_coefficient();
 	BKNField flare_base_nfield(n_0, 2*(s+2)/3, &particles, true, &geometry, nullptr, vfield);
+	
+	// We need polarization!
+	ToroidalBField vector_bfield(b_0, m_b, true, 0.0, &geometry, nullptr);
+	vbfields.push_back(&vector_bfield);
+	
 	
     std::vector<NField*> queiscent_nfields;
     std::vector<NField*> flaring_nfields;
@@ -844,8 +849,8 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
         double relerr = 1e-10;
 
         // Solve for all Stokes parameters ("full") or only full intensity ("I")?
-        string polarization = "I";
-//        string polarization = "full";
+//        string polarization = "I";
+        string polarization = "full";
 
         for(int i_nu=0; i_nu < nu_observed_ghz.size(); i_nu++) {
             if(jet_side) {
@@ -951,10 +956,13 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
             if(jet_side) {
                 file_tau = "jet_image_tau_" + freq_name + "_" + epoch_obs + ".txt";
                 file_tau_fr = "jet_image_taufr_" + freq_name + ".txt";
-                file_i = "jet_image_i_" + freq_name + "_" + epoch_obs + ".txt";
-                file_q = "jet_image_q_" + freq_name + ".txt";
-                file_u = "jet_image_u_" + freq_name + ".txt";
-                file_v = "jet_image_v_" + freq_name + ".txt";
+				file_i = "jet_image_i_" + freq_name + "_" + epoch_obs + ".txt";
+				file_q = "jet_image_q_" + freq_name + "_" + epoch_obs + ".txt";
+				file_u = "jet_image_u_" + freq_name + "_" + epoch_obs + ".txt";
+				file_v = "jet_image_v_" + freq_name + "_" + epoch_obs + ".txt";
+//                file_q = "jet_image_q_" + freq_name + ".txt";
+//                file_u = "jet_image_u_" + freq_name + ".txt";
+//                file_v = "jet_image_v_" + freq_name + ".txt";
                 file_l = "jet_image_l_" + freq_name + ".txt";
             } else {
                 file_tau = "cjet_image_tau_" + freq_name + ".txt";
