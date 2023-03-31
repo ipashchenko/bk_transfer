@@ -275,8 +275,7 @@ Vector3d HelicalConicalBField::_bf(const Vector3d &point, double t) const {
 //}
 
 
-ReversedPinchCylindricalBField::ReversedPinchCylindricalBField(double b_0, double tangled_fraction,
-                                                               Geometry* geometry_out, Geometry* geometry_in) :
+ReversedPinchCylindricalBField::ReversedPinchCylindricalBField(double b_0, Geometry* geometry_out, double tangled_fraction, Geometry* geometry_in) :
     VectorBField(true, tangled_fraction, geometry_out, geometry_in), b_0_(b_0) {};
 
 Vector3d ReversedPinchCylindricalBField::_bf(const Vector3d &point, double t) const {
@@ -298,9 +297,8 @@ Vector3d ReversedPinchCylindricalBField::_bf(const Vector3d &point, double t) co
 }
 
 
-ReversedPinchConicalBField::ReversedPinchConicalBField(double b_0, double n_b, Geometry* geometry, double tangled_fraction) :
-    VectorBField(true, tangled_fraction), b_0_{b_0}, n_b_(n_b) {
-    geometry_ = geometry;
+ReversedPinchConicalBField::ReversedPinchConicalBField(double b_0, double n_b, Geometry* geometry_out, double tangled_fraction, Geometry* geometry_in) :
+    VectorBField(true, tangled_fraction, geometry_out, geometry_in), b_0_{b_0}, n_b_(n_b) {
 }
 
 Vector3d ReversedPinchConicalBField::_bf(const Vector3d &point, double t) const {
@@ -310,7 +308,7 @@ Vector3d ReversedPinchConicalBField::_bf(const Vector3d &point, double t) const 
     double b = b_0_*pow(z/pc, -n_b_);
     double phi = atan2(y, x);
     // Find radius at given point
-    double r_border = geometry_->radius_at_given_distance(point);
+    double r_border = geometry_out_->radius_at_given_distance(point);
     double ro_normed = sqrt(x*x + y*y)/r_border;
 
     double bessel_0 = boost::math::cyl_bessel_i(0, 2.405*ro_normed);

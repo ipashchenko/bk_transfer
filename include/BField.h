@@ -179,7 +179,7 @@ class HelicalConicalBField : public VectorBField {
 
 class ReversedPinchCylindricalBField : public VectorBField {
     public:
-        ReversedPinchCylindricalBField(double b_0, double tangled_fraction=0.0, Geometry* geometry_out= nullptr, Geometry* geometry_in= nullptr);
+        ReversedPinchCylindricalBField(double b_0, Geometry* geometry_out, double tangled_fraction=0.0, Geometry* geometry_in= nullptr);
         Vector3d _bf(const Vector3d &point, double t = 0.0) const override ;
     private:
         double b_0_;
@@ -188,12 +188,11 @@ class ReversedPinchCylindricalBField : public VectorBField {
 
 class ReversedPinchConicalBField : public VectorBField {
     public:
-        ReversedPinchConicalBField(double b_0, double n_b, Geometry* geometry, double tangled_fraction=0.0);
+        ReversedPinchConicalBField(double b_0, double n_b, Geometry* geometry_out, double tangled_fraction=0.0, Geometry* geometry_in= nullptr);
         Vector3d _bf(const Vector3d &point, double t = 0.0) const override ;
     private:
         double b_0_;
         double n_b_;
-        Geometry* geometry_;
 };
 
 
