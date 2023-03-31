@@ -1,8 +1,11 @@
+import sys
 import os
 import math
 import numpy as np
 from astropy import cosmology
 import astropy.units as u
+sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
+from image import plot as iplot
 import matplotlib
 label_size = 20
 matplotlib.rcParams['xtick.labelsize'] = label_size
@@ -26,13 +29,13 @@ day_to_sec = 86400.0
 m_e = 9.10938356e-28
 
 
-def plot(contours=None, colors=None, vectors=None, vectors_values=None,
+def plot_function(contours=None, colors=None, vectors=None, vectors_values=None,
          cmap='gist_rainbow', abs_levels=None, rel_levels=None, min_abs_level=None,
          min_rel_level=None, k=2, vinc=2, contours_mask=None, colors_mask=None,
          vectors_mask=None, color_clim=None, outfile=None, outdir=None, close=False,
          colorbar_label=None, show=True, contour_color='k', vector_color="k", plot_colorbar=True,
          max_vector_value_length=5., mas_in_pixel=None, vector_enlarge_factor=1.0,
-         label_size=14, figsize=(20, 5)):
+         label_size=14, figsize=(20, 5), fig=None):
     """
     :param contours: (optional)
         Numpy 2D array (possibly masked) that should be plotted using contours.
@@ -112,13 +115,16 @@ def plot(contours=None, colors=None, vectors=None, vectors_values=None,
         vectors = np.ma.array(vectors, mask=vectors_mask)
 
     # Actually plotting
-    fig = plt.figure(figsize=figsize)
-    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    if fig is None:
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    else:
+        ax = fig.get_axes()[0]
 
     # Plot contours
     if contours is not None:
         if abs_levels is None:
-            max_level = contours.max()
+            max_level = np.nanmax(contours)
             if rel_levels is not None:
                 abs_levels = [-max_level] + [max_level * i for i in rel_levels]
             else:
@@ -326,6 +332,9 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
             imageu = np.loadtxt(imageu_txt)
             imagetau = np.loadtxt(imagetau_txt)
 
+            min_abs_lev = 0.001*np.max(imagei)
+            colors_mask = imagei > min_abs_lev
+
             mask = imagei == 0
             imagei[mask] = np.nan
             imageq[mask] = np.nan
@@ -334,18 +343,35 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
 
             imagep = np.hypot(imageq, imageu)
             imagef = imagep/imagei
-            imagepang = 0.5&np.arctan2(imageu, imageq)
+            imagepang = 0.5*np.arctan2(imageu, imageq)
 
-            fig = plot(contours=imagep, colors=imagetau, vectors=imagepang,
-                       vectors_values=None, colors_mask=mask, min_rel_level=0.05,
-                       vinc=4, vectors_mask=mask, contour_color="gray", vector_color="k", cmap="gist_rainbow",
-                       vector_enlarge_factor=8, colorbar_label="opt.depth")
-            fig = plot(contours=imagei, abs_levels=[0.01*np.max(imagei)])
+            # fig = plot_function(contours=imagep, colors=imagetau, vectors=imagepang,
+            #            vectors_values=None, colors_mask=~mask, min_rel_level=0.05,
+            #            vinc=4, vectors_mask=~mask, contour_color="gray", vector_color="k", cmap="gist_rainbow",
+            #            vector_enlarge_factor=8, colorbar_label="opt.depth")
+            # fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
+            # axes = fig.get_axes()[0]
+            # axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
+            #               weight='bold', ha='left', va='center', size=10)
+            # fig.savefig(os.path.join(save_dir, "{}_true_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            # plt.close()
+
+
+            # PPOL contours
+            fig = iplot(contours=imagep, min_abs_level=min_abs_lev,
+                        close=False, contour_color='gray', contour_linewidth=0.25)
+            # Add single IPOL contour and vectors of the PANG
+            fig = iplot(contours=imagei, vectors=imagepang,
+                        vinc=4, contour_linewidth=1.0,
+                        vectors_mask=colors_mask, abs_levels=[2*min_abs_lev],
+                        close=True, show=False,
+                        contour_color='gray', fig=fig, vector_color="black", plot_colorbar=False,
+                        vector_scale=4)
             axes = fig.get_axes()[0]
             axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
                           weight='bold', ha='left', va='center', size=10)
-            fig.savefig(os.path.join(save_dir, "{}_true_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
-            plt.close()
+            fig.savefig(os.path.join(save_dir, "{}_observed_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+
 
 
 if __name__ == "__main__":
