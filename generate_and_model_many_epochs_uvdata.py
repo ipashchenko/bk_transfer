@@ -120,7 +120,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         lg_pixsize_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas, 15.4: lg_pixsize_max_mas}
 
     epochs = ts_obs_days
-    rot_angle_deg = -90.0
+    rot_angle_deg = 0.0
     freqs_ghz = [15.4]
     freq_names = {15.4: "u"}
     # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
@@ -239,10 +239,10 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
             # PPOL contours
             fig = iplot(contours=ppol, x=ccimage_i.x, y=ccimage_i.y, min_abs_level=ppol_quantile,
                         blc=blc, trc=trc, beam=beam_deg, close=False,
-                        contour_color='black', contour_linewidth=1)
+                        contour_color='gray', contour_linewidth=0.25)
             # Add single IPOL contour and vectors of the PANG
             fig = iplot(contours=ipol, vectors=pang,
-                        x=ccimage_i.x, y=ccimage_i.y, vinc=4, contour_linewidth=0.25,
+                        x=ccimage_i.x, y=ccimage_i.y, vinc=4, contour_linewidth=1.0,
                         vectors_mask=masks_dict["P"], abs_levels=[2*std], blc=blc, trc=trc,
                         beam=beam, close=True, show_beam=True, show=False,
                         contour_color='gray', fig=fig, vector_color="black", plot_colorbar=False)

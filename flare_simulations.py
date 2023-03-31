@@ -81,7 +81,7 @@ def create_movie_raw(basename, files_dir):
 def create_movie_clean(basename, files_dir):
     cwd = os.getcwd()
     os.chdir(files_dir)
-    os.system(f"convert -delay 10 -loop 0 `ls -tr {basename}_observed_pol_u_*.png` {basename}_CLEAN_POL.gif")
+    os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_observed_pol_u_*.png` {basename}_CLEAN_POL.gif")
     os.chdir(cwd)
 
 
@@ -93,7 +93,7 @@ def clear_pics(basename, files_dir):
         except FileNotFoundError:
             pass
 
-    files = glob.glob(os.path.join(files_dir, f"{basename}_observed_i_[X, S]_*.png"))
+    files = glob.glob(os.path.join(files_dir, f"{basename}_observed_pol_[X, S, u]_*.png"))
     for fn in files:
         try:
             os.unlink(fn)
@@ -101,11 +101,11 @@ def clear_pics(basename, files_dir):
             pass
 
 
-redo = [False, True, True]
-calculon = False
+redo = [True, True, True]
+calculon = True
 basename = "pol"
 only_band = None
-redshift = 0.8
+redshift = 0.3
 K_1 = 5000.
 # TODO: Changing this => edit main.cpp! ################################################################################
 n = 2.0
@@ -168,10 +168,10 @@ idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, repl
 for i in range(n_sources):
     # B_1 = 2.0
     # b = 1.25
-    B_1 = 0.5
+    B_1 = 0.3
     b = 1.0
     Gamma = 10.
-    LOS_coeff = 0.5
+    LOS_coeff = 0.3
     HOAngle_deg = 15.
 
     los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
@@ -180,7 +180,7 @@ for i in range(n_sources):
     print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
     # Fixed times
-    ts_obs_days = np.linspace(-400.0, 9*360, 44)
+    ts_obs_days = np.linspace(-400.0, 9*360, 88)
     # # From real sources times
     # # This will be multiplied on (1+z) to bring to the observer z = 0.
     # ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
@@ -189,31 +189,32 @@ for i in range(n_sources):
 
     flare_params = list()
 
-    # First flare
-    t_start_years = np.random.uniform(-1, 0., size=1)[0]
-    t_start_days = t_start_years*12*30
-    amp_N = np.random.uniform(5, 7, size=1)[0]
-    amp_B = 0.0
-    width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
-    flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-
-    # Maximal number of flares
-    for i_fl in range(10):
-        # Waiting time 3 yrs
-        dt_yrs = 0.0
-        while dt_yrs < 2.0:
-            dt_yrs = np.random.exponential(3.0)
-        t_start_years += dt_yrs
-        t_start_days = t_start_years*12*30
-        amp_N = np.random.uniform(4, 7, size=1)[0]
-        amp_B = 0.0
-        width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
-        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-
-        if t_start_days > ts_obs_days[-1]:
-            break
-
-    np.savetxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"), np.atleast_2d(flare_params))
+    # # First flare
+    # t_start_years = np.random.uniform(-1, 0., size=1)[0]
+    # t_start_days = t_start_years*12*30
+    # amp_N = np.random.uniform(5, 7, size=1)[0]
+    # amp_B = 0.0
+    # width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
+    # flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+    #
+    # # Maximal number of flares
+    # for i_fl in range(10):
+    #     # Waiting time 3 yrs
+    #     dt_yrs = 0.0
+    #     while dt_yrs < 2.0:
+    #         dt_yrs = np.random.exponential(3.0)
+    #     t_start_years += dt_yrs
+    #     t_start_days = t_start_years*12*30
+    #     amp_N = np.random.uniform(4, 7, size=1)[0]
+    #     amp_B = 0.0
+    #     width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
+    #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+    #
+    #     if t_start_days > ts_obs_days[-1]:
+    #         break
+    #
+    # np.savetxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"), np.atleast_2d(flare_params))
+    flare_params = np.loadtxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"))
 
     if redo[0]:
         clear_txt_images(exec_dir)
@@ -248,6 +249,7 @@ for i in range(n_sources):
         print("==========================================")
         print(f"Generating and modelling visibilities for {source_basename}")
         print("==========================================")
+        clear_pics(source_basename, save_dir)
         make_and_model_visibilities(source_basename, only_band, redshift, lg_pixsize_min_mas, lg_pixsize_max_mas, n_along, n_across, match_resolution,
                                     ts_obs_days,
                                     noise_scale_factor, mapsizes_dict,
@@ -255,7 +257,7 @@ for i in range(n_sources):
                                     extract_extended, use_scipy_for_extract_extended, beam_fractions, two_stage,
                                     n_components,
                                     save_dir, exec_dir, path_to_script)
-        create_movie_clean(source_basename, save_dir)
+    create_movie_clean(source_basename, save_dir)
 
     clear_tobs(exec_dir)
     clear_fits(save_dir)

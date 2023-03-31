@@ -180,17 +180,22 @@ Vector3d ConstCylinderBFieldZ::_bf(const Vector3d &point, double t) const {
 }
 
 
-//RadialConicalBField::RadialConicalBField(double b_0, double n_b, bool in_plasma_frame, double tangled_fraction) :
-//    VectorBField(in_plasma_frame, tangled_fraction), b_0_(b_0), n_b_(n_b) {};
-//
-//Vector3d RadialConicalBField::bf(const Vector3d &point) const {
-//    double r = point.norm();
-//    double z = point[2];
-//    return Vector3d(b_0_*pow(r/pc, -n_b_)*point[0]/r,
-//                    b_0_*pow(r/pc, -n_b_)*point[1]/r,
-//                    b_0_*pow(r/pc, -n_b_)*point[2]/r);
-//}
-//
+RadialConicalBField::RadialConicalBField(double b_0, double n_b, bool in_plasma_frame, double tangled_fraction, Geometry* geometry_out, Geometry* geometry_in) :
+    VectorBField(in_plasma_frame, tangled_fraction, geometry_out, geometry_in), b_0_(b_0), n_b_(n_b) {};
+
+Vector3d RadialConicalBField::_bf(const Vector3d &point, double t) const {
+	double r = abs(point[2]);
+	double z = point[2];
+	if(z > 0) {
+		return Vector3d(b_0_*pow(r/pc, -n_b_)*point[0]/r,
+						b_0_*pow(r/pc, -n_b_)*point[1]/r,
+						b_0_*pow(r/pc, -n_b_)*point[2]/r);
+	} else {
+		return Vector3d(b_0_*pow(r/pc, -n_b_)*point[0]/r,
+						b_0_*pow(r/pc, -n_b_)*point[1]/r,
+						-b_0_*pow(r/pc, -n_b_)*point[2]/r);
+	}
+}
 
 
 ToroidalBField::ToroidalBField(double b_0, double n_b, bool in_plasma_frame, double tangled_fraction, Geometry* geometry_out, Geometry* geometry_in) :

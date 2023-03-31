@@ -115,15 +115,15 @@ class ConstCylinderBFieldZ : public VectorBField {
 };
 
 
-//
-//class RadialConicalBField : public VectorBField {
-//    public:
-//        RadialConicalBField(double b_0, double n_b, bool in_plasma_frame, double tangled_fraction=0.0) ;
-//        Vector3d bf(const Vector3d &point) const override ;
-//    private:
-//        double b_0_;
-//        double n_b_;
-//};
+
+class RadialConicalBField : public VectorBField {
+    public:
+        RadialConicalBField(double b_0, double n_b, bool in_plasma_frame, double tangled_fraction=0.0, Geometry* geometry_out= nullptr, Geometry* geometry_in= nullptr);
+        Vector3d _bf(const Vector3d &point, double t = 0.0) const override ;
+    private:
+        double b_0_;
+        double n_b_;
+};
 
 
 class ToroidalBField : public VectorBField {
