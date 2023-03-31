@@ -1,4 +1,5 @@
 import os
+import math
 import numpy as np
 from astropy import cosmology
 import astropy.units as u
@@ -23,6 +24,169 @@ pc = 3.0856775814671913e+18
 day_to_sec = 86400.0
 # g
 m_e = 9.10938356e-28
+
+
+def plot(contours=None, colors=None, vectors=None, vectors_values=None,
+         cmap='gist_rainbow', abs_levels=None, rel_levels=None, min_abs_level=None,
+         min_rel_level=None, k=2, vinc=2, contours_mask=None, colors_mask=None,
+         vectors_mask=None, color_clim=None, outfile=None, outdir=None, close=False,
+         colorbar_label=None, show=True, contour_color='k', vector_color="k", plot_colorbar=True,
+         max_vector_value_length=5., mas_in_pixel=None, vector_enlarge_factor=1.0,
+         label_size=14, figsize=(20, 5)):
+    """
+    :param contours: (optional)
+        Numpy 2D array (possibly masked) that should be plotted using contours.
+    :param colors: (optional)
+        Numpy 2D array (possibly masked) that should be plotted using colors.
+    :param vectors: (optional)
+        Numpy 2D array (possibly masked) that should be plotted using vectors.
+    :param vectors_values: (optional)
+        Numpy 2D array (possibly masked) that should be used as vector's lengths
+        when plotting ``vectors`` array.
+    :param cmap: (optional)
+        Colormap to use for plotting colors.
+        (default: ``gist_rainbow``)
+    :param abs_levels: (optional)
+        Iterable of absolute levels. If ``None`` then construct levels in other
+        way. (default: ``None``)
+    :param min_abs_level: (optional)
+        Values of minimal absolute level. Used with conjunction of ``k``
+        argument for building sequence of absolute levels. If ``None`` then
+        construct levels in other way. (default: ``None``)
+    :param rel_levels: (optional)
+        Iterable of relative levels. If ``None`` then construct levels in other
+        way. (default: ``None``)
+    :param min_rel_level: (optional)
+        Values of minimal relative level. Used with conjunction of ``k``
+        argument for building sequence of relative levels. If ``None`` then
+        construct levels in other way. (default: ``None``)
+    :param k: (optional)
+        Factor of incrementation for levels. (default: ``2.0``)
+    :param colorbar_label: (optional)
+        String to label colorbar. If ``None`` then don't label. (default:
+        ``None``)
+    :param plot_colorbar: (optional)
+        If colors is set then should we plot colorbar? (default: ``True``).
+    :param max_vector_value_length: (optional)
+        Determines what part of the image is the length of the vector with
+        maximum magnitude. E.g. if ``5`` then maximum value of vector quantity
+        corresponds to arrow with length equal to 1/5 of the image length.
+        (default: ``5``)
+    :param mas_in_pixel: (optonal)
+        Number of milliarcseconds in one pixel. If ``None`` then plot in pixels.
+        (default: ``None``)
+    :param vector_enlarge_factor: (optional)
+        Additional factor to increase length of vectors representing direction and values of linear polarization.
+    """
+    matplotlib.rcParams['xtick.labelsize'] = label_size
+    matplotlib.rcParams['ytick.labelsize'] = label_size
+    matplotlib.rcParams['axes.titlesize'] = label_size
+    matplotlib.rcParams['axes.labelsize'] = label_size
+    matplotlib.rcParams['font.size'] = label_size
+    matplotlib.rcParams['legend.fontsize'] = label_size
+    matplotlib.rcParams['pdf.fonttype'] = 42
+    matplotlib.rcParams['ps.fonttype'] = 42
+
+    image = None
+    if contours is not None:
+        image = contours
+    elif colors is not None and image is None:
+        image = colors
+    elif vectors is not None and image is None:
+        image = vectors
+    else:
+        raise Exception("No image to plot")
+
+    x = np.arange(image.shape[0]) - image.shape[0]/2
+    y = np.arange(image.shape[1]) - image.shape[1]/2
+    if mas_in_pixel is not None:
+        x *= mas_in_pixel
+        y *= mas_in_pixel
+
+    # Optionally mask arrays
+    if contours is not None and contours_mask is not None:
+        contours = np.ma.array(contours, mask=contours_mask)
+    if colors is not None and colors_mask is not None:
+        colors = np.ma.array(colors, mask=colors_mask)
+    if vectors is not None and vectors_mask is not None:
+        vectors = np.ma.array(vectors, mask=vectors_mask)
+
+    # Actually plotting
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+
+    # Plot contours
+    if contours is not None:
+        if abs_levels is None:
+            max_level = contours.max()
+            if rel_levels is not None:
+                abs_levels = [-max_level] + [max_level * i for i in rel_levels]
+            else:
+                if min_abs_level is not None:
+                    n_max = int(math.ceil(math.log(max_level / min_abs_level, k)))
+                elif min_rel_level is not None:
+                    min_abs_level = min_rel_level * max_level / 100.
+                    n_max = int(math.ceil(math.log(max_level / min_abs_level, k)))
+                else:
+                    raise Exception("Not enough information for levels")
+                abs_levels = [-min_abs_level] + [min_abs_level * k ** i for i in
+                                                 range(n_max)]
+        co = ax.contour(y, x, contours, abs_levels, colors=contour_color)
+    if colors is not None:
+        im = ax.imshow(colors, interpolation='none',
+                       origin='lower', extent=[y[0], y[-1], x[0], x[-1]],
+                       cmap=plt.get_cmap(cmap), clim=color_clim)
+    if vectors is not None:
+        if vectors_values is not None:
+            u = vectors_values * np.cos(vectors)
+            v = vectors_values * np.sin(vectors)
+            max_vector_value = np.max(np.abs(vectors_values))
+            scale = max_vector_value_length*max_vector_value/vector_enlarge_factor
+        else:
+            u = np.cos(vectors)
+            v = np.sin(vectors)
+            scale = None
+
+        if vectors_mask is not None:
+            u = np.ma.array(u, mask=vectors_mask)
+            v = np.ma.array(v, mask=vectors_mask)
+
+        vec = ax.quiver(y[::vinc], x[::vinc], u[::vinc, ::vinc],
+                        v[::vinc, ::vinc], angles='uv',
+                        units='width', headwidth=0., headlength=0., scale=scale,
+                        width=0.0025, headaxislength=0., pivot='middle',
+                        scale_units='width', color=vector_color)
+
+    # Set equal aspect
+    ax.set_aspect('equal')
+
+    if colors is not None:
+        if plot_colorbar:
+            from mpl_toolkits.axes_grid1 import make_axes_locatable
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.00)
+            cb = fig.colorbar(im, cax=cax)
+            if colorbar_label is not None:
+                cb.set_label(colorbar_label)
+
+    # Saving output
+    if outfile:
+        if outdir is None:
+            outdir = '.'
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+
+        path = os.path.join(outdir, outfile)
+        plt.savefig("{}.png".format(path), bbox_inches='tight', dpi=300)
+
+    if show:
+        plt.ioff()
+        plt.show()
+    if close:
+        plt.close()
+
+    return fig
+
 
 
 def generalized1_gaussian1d(x, loc, scale, shape):
@@ -147,180 +311,41 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
         lg_pixel_size_mas_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas}
         lg_pixel_size_mas_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas}
 
-    theta_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
-    N_1 = equipartition_bsq_coefficient(s, gamma_min, gamma_max)*B_1**2
-    corex_positions = list()
-    cores_positions = list()
-    corex_positions_pc = list()
-    cores_positions_pc = list()
-    corex_fluxes = list()
-    cores_fluxes = list()
-    jetx_fluxes = list()
-    jets_fluxes = list()
-    B_core_S = list()
-    B_core_X = list()
-    N_core_S = list()
-    N_core_X = list()
     for t_obs_days in ts_obs_days:
         print("Processing raw images for T[days] = {:.1f}".format(t_obs_days))
-        imagex_txt = os.path.join(txt_dir, "jet_image_i_X_{:.1f}.txt".format(t_obs_days))
-        images_txt = os.path.join(txt_dir, "jet_image_i_S_{:.1f}.txt".format(t_obs_days))
+        imagei_txt = os.path.join(txt_dir, "jet_image_i_u_{:.1f}.txt".format(t_obs_days))
+        imageq_txt = os.path.join(txt_dir, "jet_image_q_u_{:.1f}.txt".format(t_obs_days))
+        imageu_txt = os.path.join(txt_dir, "jet_image_u_u_{:.1f}.txt".format(t_obs_days))
+        imagetau_txt = os.path.join(txt_dir, "jet_image_tau_u_{:.1f}.txt".format(t_obs_days))
 
         # convert -delay 10 -loop 0 `ls -tr tobs*.png` animation.gif
         if plot:
             fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 12))
-            imagex = np.loadtxt(imagex_txt)
-            images = np.loadtxt(images_txt)
-            print("Total flux S = {:.2f} Jy".format(np.sum(images)))
-            print("Total flux X = {:.2f} Jy".format(np.sum(imagex)))
-            images[images == 0] = np.nan
-            imagex[imagex == 0] = np.nan
-            axes[0].matshow(images, cmap="inferno", aspect="auto")
-            axes[1].matshow(imagex, cmap="inferno", aspect="auto")
-            axes[1].xaxis.tick_bottom()
-            axes[0].xaxis.tick_bottom()
-            axes[1].set_xlabel("Along, nu pixels")
-            axes[0].annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="black",
-                             weight='bold', ha='left', va='center', size=20)
-            fig.subplots_adjust(hspace=0)
-            fig.subplots_adjust(wspace=0)
-            fig.tight_layout()
-            plt.savefig(os.path.join(save_dir, "{}_raw_nupixel_{:.1f}.png".format(basename, t_obs_days*(1+z))))
+            imagei = np.loadtxt(imagei_txt)
+            imageq = np.loadtxt(imageq_txt)
+            imageu = np.loadtxt(imageu_txt)
+            imagetau = np.loadtxt(imagetau_txt)
+
+            mask = imagei == 0
+            imagei[mask] = np.nan
+            imageq[mask] = np.nan
+            imageu[mask] = np.nan
+            imagetau[mask] = np.nan
+
+            imagep = np.hypot(imageq, imageu)
+            imagef = imagep/imagei
+            imagepang = 0.5&np.arctan2(imageu, imageq)
+
+            fig = plot(contours=imagep, colors=imagetau, vectors=imagepang,
+                       vectors_values=None, colors_mask=mask, min_rel_level=0.05,
+                       vinc=4, vectors_mask=mask, contour_color="gray", vector_color="k", cmap="gist_rainbow",
+                       vector_enlarge_factor=8, colorbar_label="opt.depth")
+            fig = plot(contours=imagei, abs_levels=[0.01*np.max(imagei)])
+            axes = fig.get_axes()[0]
+            axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
+                          weight='bold', ha='left', va='center', size=10)
+            fig.savefig(os.path.join(save_dir, "{}_true_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
             plt.close()
-            # plt.show()
-        taux_txt = os.path.join(txt_dir, "jet_image_tau_X_{:.1f}.txt".format(t_obs_days))
-        taus_txt = os.path.join(txt_dir, "jet_image_tau_S_{:.1f}.txt".format(t_obs_days))
-        resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixel_size_mas_min[8.6], lg_pixel_size_mas_max[8.6],
-                                      n_along, n_across)
-        ress = get_proj_core_position(images_txt, taus_txt, z, lg_pixel_size_mas_min[2.3], lg_pixel_size_mas_max[2.3],
-                                      n_along, n_across)
-        corex_positions.append(resx["tau_1_1_mas"])
-        cores_positions.append(ress["tau_1_1_mas"])
-        corex_positions_pc.append(resx["tau_1_1"])
-        cores_positions_pc.append(ress["tau_1_1"])
-        corex_fluxes.append(resx["core_flux"])
-        cores_fluxes.append(ress["core_flux"])
-        jetx_fluxes.append(resx["jet_flux"])
-        jets_fluxes.append(ress["jet_flux"])
-
-        b_core_S = 0
-        n_core_S = 0
-        b_core_X = 0
-        n_core_X = 0
-        count = 1
-        for amp_N, amp_B, t_start_days, l_pc in flare_params:
-
-            b_core_S += B(ress["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
-            n_core_S += N(ress["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
-            b_core_X += B(resx["tau_1_1"], t_obs_days, t_start_days, amp_B, l_pc, Gamma, theta_deg, B_1, b, z, shape=flare_shape)
-            n_core_X += N(resx["tau_1_1"], t_obs_days, t_start_days, amp_N, l_pc, Gamma, theta_deg, N_1, n, z, shape=flare_shape)
-            print(f"B_core X after {count}-th flare : {b_core_X}\n")
-            print(f"N_core X after {count}-th flare : {n_core_X}\n")
-            count += 1
-
-        B_core_S.append(b_core_S)
-        N_core_S.append(n_core_S)
-        B_core_X.append(b_core_X)
-        N_core_X.append(n_core_X)
-        print("Core flux S = {:.2f}".format(cores_fluxes[-1]))
-        print("Jet flux S = {:.2f}".format(jets_fluxes[-1]))
-        print("Projected core position S (pc) = {:.2f}".format(cores_positions_pc[-1]))
-        print("Projected core position X (pc) = {:.2f}".format(corex_positions_pc[-1]))
-        print("De-projected core position S (pc) = {:.2f}".format(cores_positions_pc[-1]/np.sin(np.deg2rad(theta_deg))))
-        print("De-projected core position X (pc) = {:.2f}".format(corex_positions_pc[-1]/np.sin(np.deg2rad(theta_deg))))
-
-    CS = np.array(cores_positions)-np.array(corex_positions)
-    print("CS(mas) = ", CS)
-    CS_pc_proj = np.array(cores_positions_pc)-np.array(corex_positions_pc)
-    print("projected CS(pc) = ", CS_pc_proj)
-    print("de-projected CS(pc) = ", CS_pc_proj/np.sin(np.deg2rad(theta_deg)))
-
-    fig, axes = plt.subplots(1, 1, figsize=(15, 15))
-    axes.set_xlabel("Time, days")
-    axes2 = axes.twinx()
-    axes2.set_ylabel("Flux density, Jy")
-    axes.set_ylabel("Core shift, mas")
-    axes.tick_params("y")
-    axes2.tick_params("y")
-
-    axes.plot([], [], color="C0", label=r"$S_{\rm core,8 GHz}$")
-    axes.plot([], [], color="C1", label=r"$S_{\rm core,2 GHz}$")
-
-    axes.plot(ts_obs_days*(1+z), CS, "--", label="CS", color="black")
-    axes.scatter(ts_obs_days*(1+z), CS, color="black")
-
-    axes.plot(ts_obs_days*(1+z), corex_positions, "--", label=r"$r_{\rm 8 GHz}$", color="C0")
-    axes.scatter(ts_obs_days*(1+z), corex_positions, color="C0")
-    axes.plot(ts_obs_days*(1+z), cores_positions, "--", label=r"$r_{\rm 2 GHz}$", color="C1")
-    axes.scatter(ts_obs_days*(1+z), cores_positions, color="C1")
-
-    axes2.plot(ts_obs_days*(1+z), corex_fluxes, color="C0")
-    axes2.scatter(ts_obs_days*(1+z), corex_fluxes, color="C0")
-    axes2.plot(ts_obs_days*(1+z), cores_fluxes, color="C1")
-    axes2.scatter(ts_obs_days*(1+z), cores_fluxes, color="C1")
-    axes.legend()
-    fig.savefig(os.path.join(save_dir, "{}_CS_rc_Sc_t_true.png".format(basename)), bbox_inches="tight")
-    plt.show()
-
-
-    fig, axes = plt.subplots(1, 1, figsize=(15, 15))
-    axes.set_xlabel("Time, days")
-    axes2 = axes.twinx()
-    axes2.set_ylabel("Flux density, Jy")
-    axes.set_ylabel("Core position, mas")
-    axes.tick_params("y")
-    axes2.tick_params("y")
-
-    axes.plot([], [], color="C0", label=r"$S_{\rm core,8 GHz}$")
-    axes.plot([], [], color="C1", label=r"$S_{\rm core,2 GHz}$")
-
-    axes.plot(ts_obs_days*(1+z), corex_positions, "--", label=r"$r_{\rm 8 GHz}$", color="C0")
-    axes.scatter(ts_obs_days*(1+z), corex_positions, color="C0")
-    axes.plot(ts_obs_days*(1+z), cores_positions, "--", label=r"$r_{\rm 2 GHz}$", color="C1")
-    axes.scatter(ts_obs_days*(1+z), cores_positions, color="C1")
-    axes2.plot(ts_obs_days*(1+z), corex_fluxes, color="C0")
-    axes2.scatter(ts_obs_days*(1+z), corex_fluxes, color="C0")
-    axes2.plot(ts_obs_days*(1+z), cores_fluxes, color="C1")
-    axes2.scatter(ts_obs_days*(1+z), cores_fluxes, color="C1")
-    axes.legend()
-    fig.savefig(os.path.join(save_dir, "{}_rc_Sc_t_true.png".format(basename)), bbox_inches="tight")
-    plt.show()
-
-
-    fig, axes = plt.subplots(1, 1)
-    axes.scatter(cores_fluxes, cores_positions)
-    axes.set_xlabel(r"$S_{\rm core}$, Jy")
-    axes.set_ylabel(r"$r_{\rm core}$, mas")
-    fig.savefig(os.path.join(save_dir, "{}_rc_Sc_true_Sband.png".format(basename)), bbox_inches="tight")
-    plt.show()
-    fig, axes = plt.subplots(1, 1)
-    axes.scatter(corex_fluxes, corex_positions)
-    axes.set_xlabel(r"$S_{\rm core}$, Jy")
-    axes.set_ylabel(r"$r_{\rm core}$, mas")
-    fig.savefig(os.path.join(save_dir, "{}_rc_Sc_true_Xband.png".format(basename)), bbox_inches="tight")
-    plt.show()
-
-    med_B = np.median(B_core_S)
-    med_N = np.median(N_core_S)
-    fig, axes = plt.subplots(1, 1)
-    axes.scatter(N_core_S, B_core_S, label="flare")
-    axes.scatter(med_N, med_B, s=20, color="C1", label="stationary")
-    axes.set_xlabel(r"$N_{\rm core}, {\rm cm}^{-3}$")
-    axes.set_ylabel(r"$B_{\rm core}, {\rm G}$")
-    plt.legend()
-    fig.savefig(os.path.join(save_dir, "{}_Bc_Nc_true_Sband.png".format(basename)), bbox_inches="tight")
-    plt.show()
-
-    med_B = np.median(B_core_X)
-    med_N = np.median(N_core_X)
-    fig, axes = plt.subplots(1, 1)
-    axes.scatter(N_core_X, B_core_X, label="flare")
-    axes.scatter(med_N, med_B, s=20, color="C1", label="stationary")
-    axes.set_xlabel(r"$N_{\rm core}, {\rm cm}^{-3}$")
-    axes.set_ylabel(r"$B_{\rm core}, {\rm G}$")
-    plt.legend()
-    fig.savefig(os.path.join(save_dir, "{}_Bc_Nc_true_Xband.png".format(basename)), bbox_inches="tight")
-    plt.show()
 
 
 if __name__ == "__main__":

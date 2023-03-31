@@ -74,7 +74,7 @@ def clear_fits(files_dir):
 def create_movie_raw(basename, files_dir):
     cwd = os.getcwd()
     os.chdir(files_dir)
-    os.system(f"convert -delay 10 -loop 0 `ls -tr {basename}_raw_nupixel_*.png` {basename}_raw.gif")
+    os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_true_pol_u_*.png` {basename}_raw.gif")
     os.chdir(cwd)
 
 
@@ -86,7 +86,7 @@ def create_movie_clean(basename, files_dir):
 
 
 def clear_pics(basename, files_dir):
-    files = glob.glob(os.path.join(files_dir, f"{basename}_raw_nupixel_*.png"))
+    files = glob.glob(os.path.join(files_dir, f"{basename}_true_pol_u_*.png"))
     for fn in files:
         try:
             os.unlink(fn)
@@ -101,7 +101,12 @@ def clear_pics(basename, files_dir):
             pass
 
 
-redo = [True, True, True]
+redo = [False, True, False]
+# For second stage: in make_and_model_visibilities - should we create new data sets and CLEAN? Helpful for plotting
+# tweaks.
+do_not_substitute = False
+do_not_clean = False
+
 calculon = True
 basename = "pol"
 only_band = None
@@ -180,7 +185,8 @@ for i in range(n_sources):
     print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
     # Fixed times
-    ts_obs_days = np.linspace(-400.0, 9*360, 88)
+    # ts_obs_days = np.linspace(-400.0, 9*360, 88)
+    ts_obs_days = np.linspace(-400.0, 9*360, 1)
     # # From real sources times
     # # This will be multiplied on (1+z) to bring to the observer z = 0.
     # ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
@@ -235,15 +241,15 @@ for i in range(n_sources):
                             flare_params, ts_obs_days,
                             exec_dir, parallels_run_file, calculon)
 
-    # if redo[1] and only_band is None:
-    #     print("==========================================")
-    #     print(f"Processing raw image for {source_basename}")
-    #     print("==========================================")
-    #     process_raw_images(source_basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
-    #                        n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-    #                        ts_obs_days, flare_params, flare_shape,
-    #                        Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s)
-    #     create_movie_raw(source_basename, save_dir)
+    if redo[1] and only_band is None:
+        print("==========================================")
+        print(f"Processing raw image for {source_basename}")
+        print("==========================================")
+        process_raw_images(source_basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
+                           n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
+                           ts_obs_days, flare_params, flare_shape,
+                           Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s)
+        create_movie_raw(source_basename, save_dir)
 
     if redo[2]:
         print("==========================================")
@@ -253,11 +259,12 @@ for i in range(n_sources):
         make_and_model_visibilities(source_basename, only_band, redshift, lg_pixsize_min_mas, lg_pixsize_max_mas, n_along, n_across, match_resolution,
                                     ts_obs_days,
                                     noise_scale_factor, mapsizes_dict,
+                                    do_not_substitute, do_not_clean,
                                     plot_clean, only_plot_raw,
                                     extract_extended, use_scipy_for_extract_extended, beam_fractions, two_stage,
                                     n_components,
                                     save_dir, exec_dir, path_to_script)
-    create_movie_clean(source_basename, save_dir)
+        create_movie_clean(source_basename, save_dir)
 
     clear_tobs(exec_dir)
     clear_fits(save_dir)

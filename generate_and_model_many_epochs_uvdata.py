@@ -71,6 +71,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                                 lg_pixsize_min_mas=-2.5, lg_pixsize_max_mas=-0.5, n_along = 400, n_across = 80, match_resolution = False,
                                 ts_obs_days = np.linspace(-400.0, 8*360, 20),
                                 noise_scale_factor = 1.0, mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)},
+                                do_not_substitute=False, do_not_clean=False,
                                 plot_clean = True, only_plot_raw = False,
                                 extract_extended = True, use_scipy = False, beam_fractions = (1.0,), two_stage=True,
                                 n_components=4,
@@ -145,61 +146,66 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
     for freq_ghz in freqs_ghz:
         nw_beam_size = None
         for epoch in epochs:
-            if nw_beam_size is None:
-                nw_beam = find_nw_beam(template_uvfits[freq_ghz], "i", mapsize=mapsizes_dict[freq_ghz])
-                nw_beam_size = np.sqrt(nw_beam[0]*nw_beam[1])
-                print("NW beam size = ", nw_beam_size)
-            uvdata = UVData(template_uvfits[freq_ghz])
-            downscale_uvdata_by_freq_flag = downscale_uvdata_by_freq(uvdata)
-            noise = uvdata.noise(average_freq=False, use_V=False)
-            # If one needs to decrease the noise this is the way to do it
-            for baseline, baseline_noise_std in noise.items():
-                noise.update({baseline: noise_scale_factor*baseline_noise_std})
 
-            jm_i = JetImage(z=z, n_along=n_along, n_across=n_across,
-                            lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
-                            jet_side=True, rot=np.deg2rad(rot_angle_deg))
-            jm_q = JetImage(z=z, n_along=n_along, n_across=n_across,
-                            lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
-                            jet_side=True, rot=np.deg2rad(rot_angle_deg))
-            jm_u = JetImage(z=z, n_along=n_along, n_across=n_across,
-                            lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
-                            jet_side=True, rot=np.deg2rad(rot_angle_deg))
+            if not do_not_substitute:
 
-            image_file = "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], epoch)
-            image = np.loadtxt(image_file)
-            print(f"Flux = {np.sum(image)}")
+                if nw_beam_size is None:
+                    nw_beam = find_nw_beam(template_uvfits[freq_ghz], "i", mapsize=mapsizes_dict[freq_ghz])
+                    nw_beam_size = np.sqrt(nw_beam[0]*nw_beam[1])
+                    print("NW beam size = ", nw_beam_size)
+                uvdata = UVData(template_uvfits[freq_ghz])
+                downscale_uvdata_by_freq_flag = downscale_uvdata_by_freq(uvdata)
+                noise = uvdata.noise(average_freq=False, use_V=False)
+                # If one needs to decrease the noise this is the way to do it
+                for baseline, baseline_noise_std in noise.items():
+                    noise.update({baseline: noise_scale_factor*baseline_noise_std})
+
+                jm_i = JetImage(z=z, n_along=n_along, n_across=n_across,
+                                lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
+                                jet_side=True, rot=np.deg2rad(rot_angle_deg))
+                jm_q = JetImage(z=z, n_along=n_along, n_across=n_across,
+                                lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
+                                jet_side=True, rot=np.deg2rad(rot_angle_deg))
+                jm_u = JetImage(z=z, n_along=n_along, n_across=n_across,
+                                lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
+                                jet_side=True, rot=np.deg2rad(rot_angle_deg))
+
+                image_file = "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], epoch)
+                image = np.loadtxt(image_file)
+                print(f"Flux = {np.sum(image)}")
 
 
-            jm_i.load_image_stokes("I", "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], epoch), scale=1.0)
-            jm_q.load_image_stokes("Q", "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "q", freq_names[freq_ghz], epoch), scale=1.0)
-            jm_u.load_image_stokes("U", "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "u", freq_names[freq_ghz], epoch), scale=1.0)
-            uvdata.zero_data()
-            uvdata.substitute([jm_i, jm_q, jm_u])
-            uvdata.noise_add(noise)
-            uvdata.save(os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)), rewrite=True, downscale_by_freq=False)
+                jm_i.load_image_stokes("I", "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], epoch), scale=1.0)
+                jm_q.load_image_stokes("Q", "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "q", freq_names[freq_ghz], epoch), scale=1.0)
+                jm_u.load_image_stokes("U", "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "u", freq_names[freq_ghz], epoch), scale=1.0)
+                uvdata.zero_data()
+                uvdata.substitute([jm_i, jm_q, jm_u])
+                uvdata.noise_add(noise)
+                uvdata.save(os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)), rewrite=True, downscale_by_freq=False)
 
         for i, epoch in enumerate(epochs):
 
             outfname_i = "model_cc_i_{}_{:.1f}.fits".format(freq_names[freq_ghz], epoch)
             outfname_q = "model_cc_q_{}_{:.1f}.fits".format(freq_names[freq_ghz], epoch)
             outfname_u = "model_cc_u_{}_{:.1f}.fits".format(freq_names[freq_ghz], epoch)
-            if os.path.exists(os.path.join(save_dir, outfname_i)):
-                os.unlink(os.path.join(save_dir, outfname_i))
 
-            clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
-                         outfname=outfname_i, outpath=save_dir, stokes="i",
-                         mapsize_clean=(1024, 0.1), path_to_script=path_to_script,
-                         show_difmap_output=True)
-            clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
-                         outfname=outfname_q, outpath=save_dir, stokes="q",
-                         mapsize_clean=(1024, 0.1), path_to_script=path_to_script,
-                         show_difmap_output=True)
-            clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
-                         outfname=outfname_u, outpath=save_dir, stokes="u",
-                         mapsize_clean=(1024, 0.1), path_to_script=path_to_script,
-                         show_difmap_output=True)
-                         # dfm_model=os.path.join(save_dir, "model_cc_i.mdl"))
+            if not do_not_clean:
+                if os.path.exists(os.path.join(save_dir, outfname_i)):
+                    os.unlink(os.path.join(save_dir, outfname_i))
+
+                clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
+                             outfname=outfname_i, outpath=save_dir, stokes="i",
+                             mapsize_clean=(1024, 0.1), path_to_script=path_to_script,
+                             show_difmap_output=True)
+                clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
+                             outfname=outfname_q, outpath=save_dir, stokes="q",
+                             mapsize_clean=(1024, 0.1), path_to_script=path_to_script,
+                             show_difmap_output=True)
+                clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
+                             outfname=outfname_u, outpath=save_dir, stokes="u",
+                             mapsize_clean=(1024, 0.1), path_to_script=path_to_script,
+                             show_difmap_output=True)
+                             # dfm_model=os.path.join(save_dir, "model_cc_i.mdl"))
 
             ccimage_i = create_clean_image_from_fits_file(os.path.join(save_dir, outfname_i))
             ccimage_q = create_clean_image_from_fits_file(os.path.join(save_dir, outfname_q))
@@ -245,7 +251,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                         x=ccimage_i.x, y=ccimage_i.y, vinc=4, contour_linewidth=1.0,
                         vectors_mask=masks_dict["P"], abs_levels=[2*std], blc=blc, trc=trc,
                         beam=beam, close=True, show_beam=True, show=False,
-                        contour_color='gray', fig=fig, vector_color="black", plot_colorbar=False)
+                        contour_color='gray', fig=fig, vector_color="black", plot_colorbar=False,
+                        vector_scale=4)
             axes = fig.get_axes()[0]
             axes.annotate("{:05.1f} months".format((1+z)*epoch/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
                           weight='bold', ha='left', va='center', size=10)

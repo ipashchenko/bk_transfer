@@ -760,6 +760,8 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
 	
 	// We need polarization!
 	ToroidalBField vector_bfield(b_0, m_b, true, 0.0, &geometry, nullptr);
+//	ReversedPinchConicalBField vector_bfield(b_0, m_b, &geometry, 0.0, nullptr);
+//	RadialConicalBField vector_bfield(b_0, m_b, true, 0.0, &geometry, nullptr);
 	vbfields.push_back(&vector_bfield);
 	
 	
