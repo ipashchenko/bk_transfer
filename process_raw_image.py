@@ -4,10 +4,8 @@ import math
 import numpy as np
 from astropy import cosmology
 import astropy.units as u
-sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
-from image import plot as iplot
 import matplotlib
-matplotlib.use("TkAgg")
+# matplotlib.use("TkAgg")
 label_size = 20
 matplotlib.rcParams['xtick.labelsize'] = label_size
 matplotlib.rcParams['ytick.labelsize'] = label_size
@@ -373,7 +371,6 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
                                 quiver_linewidth=0.01, plot_title="{:05.1f} months".format((1+z)*t_obs_days/30))
             fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
             fig.savefig(os.path.join(save_dir, "{}_true_poltau_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
-            plt.show()
             plt.close()
 
             fig = plot_function(contours=imagep, colors=imagef, vectors=imagepang,
@@ -383,7 +380,6 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
                                 quiver_linewidth=0.01, plot_title="{:05.1f} months".format((1+z)*t_obs_days/30))
             fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
             fig.savefig(os.path.join(save_dir, "{}_true_polfrac_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
-            plt.show()
             plt.close()
 
             fig = plot_function(contours=imagei, colors=imagep, vectors=imagepang,
@@ -393,7 +389,6 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
                                 quiver_linewidth=0.01, plot_title="{:05.1f} months".format((1+z)*t_obs_days/30))
             fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
             fig.savefig(os.path.join(save_dir, "{}_true_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
-            plt.show()
             plt.close()
 
 
