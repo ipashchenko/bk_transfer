@@ -383,14 +383,24 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
             plt.close()
 
             fig = plot_function(contours=imagei, colors=imagep, vectors=imagepang,
-                                vectors_values=None, min_rel_level=0.05,
+                                vectors_values=None, min_rel_level=0.001,
                                 vinc=10, contour_color="gray", vector_color="k", cmap="gist_rainbow",
                                 vector_enlarge_factor=8, colorbar_label="PPOL, Jy/pixel", contour_linewidth=1.0,
                                 quiver_linewidth=0.01, plot_title="{:05.1f} months".format((1+z)*t_obs_days/30))
             fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
             fig.savefig(os.path.join(save_dir, "{}_true_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            plt.show()
             plt.close()
 
+            fig = plot_function(contours=imagep, colors=imagei, vectors=imagepang,
+                                vectors_values=None, min_rel_level=0.001,
+                                vinc=10, contour_color="gray", vector_color="k", cmap="gist_rainbow",
+                                vector_enlarge_factor=8, colorbar_label="IPOL, Jy/pixel", contour_linewidth=1.0,
+                                quiver_linewidth=0.01, plot_title="{:05.1f} months".format((1+z)*t_obs_days/30))
+            fig = plot_function(contours=imagei, abs_levels=[0.001*np.max(imagei)], fig=fig, contour_color="k",
+                                contour_linewidth=1.0)
+            fig.savefig(os.path.join(save_dir, "{}_true_poli_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            plt.close()
 
 if __name__ == "__main__":
     txt_dir = "/home/ilya/data/flares/pol"

@@ -76,6 +76,7 @@ def create_movie_raw(basename, files_dir):
     os.chdir(files_dir)
     os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_true_poltau_u_*.png` {basename}_raw_poltau.gif")
     os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_true_polfrac_u_*.png` {basename}_raw_polfrac.gif")
+    os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_true_poli_u_*.png` {basename}_raw_pol.gif")
     os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_true_pol_u_*.png` {basename}_raw_pol.gif")
     os.chdir(cwd)
 
@@ -96,6 +97,13 @@ def clear_pics(basename, files_dir):
             pass
 
     files = glob.glob(os.path.join(files_dir, f"{basename}_true_pol_u_*.png"))
+    for fn in files:
+        try:
+            os.unlink(fn)
+        except FileNotFoundError:
+            pass
+
+    files = glob.glob(os.path.join(files_dir, f"{basename}_true_poli_u_*.png"))
     for fn in files:
         try:
             os.unlink(fn)
