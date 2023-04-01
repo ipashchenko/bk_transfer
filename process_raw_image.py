@@ -326,7 +326,8 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
 
         # convert -delay 10 -loop 0 `ls -tr tobs*.png` animation.gif
         if plot:
-            fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 12))
+            # fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 12))
+            # fig, axes = plt.subplots(1, 1)
             imagei = np.loadtxt(imagei_txt)
             imageq = np.loadtxt(imageq_txt)
             imageu = np.loadtxt(imageu_txt)
@@ -341,42 +342,64 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
             imageu[mask] = np.nan
             imagetau[mask] = np.nan
 
+            # plt.matshow(imagei)
+            # plt.show()
+            # plt.matshow(imageq)
+            # plt.show()
+            # plt.matshow(imageu)
+            # plt.show()
+            # plt.matshow(imagetau)
+            # plt.show()
+
             imagep = np.hypot(imageq, imageu)
             imagef = imagep/imagei
             imagepang = 0.5*np.arctan2(imageu, imageq)
 
-            # fig = plot_function(contours=imagep, colors=imagetau, vectors=imagepang,
-            #            vectors_values=None, colors_mask=~mask, min_rel_level=0.05,
-            #            vinc=4, vectors_mask=~mask, contour_color="gray", vector_color="k", cmap="gist_rainbow",
-            #            vector_enlarge_factor=8, colorbar_label="opt.depth")
-            # fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
-            # axes = fig.get_axes()[0]
-            # axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
-            #               weight='bold', ha='left', va='center', size=10)
-            # fig.savefig(os.path.join(save_dir, "{}_true_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
-            # plt.close()
+            tau_mask = np.logical_and(np.log10(imagetau) > 1, np.log10(imagetau) < -1)
+            imagetau[tau_mask] = np.nan
 
-
-            # PPOL contours
-            fig = iplot(contours=imagep, min_abs_level=min_abs_lev,
-                        close=False, contour_color='gray', contour_linewidth=0.25)
-            # Add single IPOL contour and vectors of the PANG
-            fig = iplot(contours=imagei, vectors=imagepang,
-                        vinc=4, contour_linewidth=1.0,
-                        vectors_mask=colors_mask, abs_levels=[2*min_abs_lev],
-                        close=True, show=False,
-                        contour_color='gray', fig=fig, vector_color="black", plot_colorbar=False,
-                        vector_scale=4)
+            fig = plot_function(contours=imagep, colors=np.log10(imagetau), vectors=imagepang,
+                       vectors_values=None, min_rel_level=0.05,
+                       vinc=4, contour_color="gray", vector_color="k", cmap="gist_rainbow",
+                       vector_enlarge_factor=8, colorbar_label=r"$\lg{\tau}$")
+            fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
             axes = fig.get_axes()[0]
             axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
                           weight='bold', ha='left', va='center', size=10)
-            fig.savefig(os.path.join(save_dir, "{}_observed_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            fig.savefig(os.path.join(save_dir, "{}_true_poltau_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            plt.close()
+
+            fig = plot_function(contours=imagep, colors=imagef, vectors=imagepang,
+                                vectors_values=None, min_rel_level=0.05,
+                                vinc=4, contour_color="gray", vector_color="k", cmap="gist_rainbow",
+                                vector_enlarge_factor=8, colorbar_label="FPOL")
+            fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
+            axes = fig.get_axes()[0]
+            axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
+                          weight='bold', ha='left', va='center', size=10)
+            fig.savefig(os.path.join(save_dir, "{}_true_polfrac_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            plt.close()
+
+            # # PPOL contours
+            # fig = iplot(contours=imagep, min_abs_level=min_abs_lev,
+            #             close=False, contour_color='gray', contour_linewidth=0.25)
+            # # Add single IPOL contour and vectors of the PANG
+            # fig = iplot(contours=imagei, vectors=imagepang,
+            #             vinc=4, contour_linewidth=1.0,
+            #             vectors_mask=colors_mask, abs_levels=[2*min_abs_lev],
+            #             close=True, show=False,
+            #             contour_color='gray', fig=fig, vector_color="black", plot_colorbar=False,
+            #             vector_scale=4)
+            # axes = fig.get_axes()[0]
+            # axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
+            #               weight='bold', ha='left', va='center', size=10)
+            # fig.savefig(os.path.join(save_dir, "{}_observed_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
 
 
 
 if __name__ == "__main__":
-    txt_dir = "/home/ilya/github/bk_transfer/Release"
-    save_dir = "/home/ilya/github/bk_transfer/pics/flares"
+    txt_dir = "/home/ilya/data/flares/pol"
+    save_dir = "/home/ilya/data/flares/pol"
     z = 1.0
     plot = True
     match_resolution = False
@@ -385,9 +408,9 @@ if __name__ == "__main__":
     n_along = 400
     n_across = 80
 
-    basename = "test"
-    ts_obs_days = np.linspace(-400.0, 8*360, 20)
-    # ts_obs_days = [0.0]
+    basename = "pol_0"
+    # ts_obs_days = np.linspace(-400.0, 8*360, 20)
+    ts_obs_days = [-400.0]
 
     flare_params = [(2.0, 0.0, 0.0, 0.2)]
     flare_shape = 20.0
