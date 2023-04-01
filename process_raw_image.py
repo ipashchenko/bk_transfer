@@ -7,6 +7,7 @@ import astropy.units as u
 sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from image import plot as iplot
 import matplotlib
+matplotlib.use("TkAgg")
 label_size = 20
 matplotlib.rcParams['xtick.labelsize'] = label_size
 matplotlib.rcParams['ytick.labelsize'] = label_size
@@ -35,7 +36,7 @@ def plot_function(contours=None, colors=None, vectors=None, vectors_values=None,
          vectors_mask=None, color_clim=None, outfile=None, outdir=None, close=False,
          colorbar_label=None, show=True, contour_color='k', vector_color="k", plot_colorbar=True,
          max_vector_value_length=5., mas_in_pixel=None, vector_enlarge_factor=1.0,
-         label_size=14, figsize=(20, 5), fig=None):
+         label_size=14, figsize=(20, 5), fig=None, contour_linewidth=1.0, quiver_linewidth=1.0, plot_title=None):
     """
     :param contours: (optional)
         Numpy 2D array (possibly masked) that should be plotted using contours.
@@ -121,6 +122,8 @@ def plot_function(contours=None, colors=None, vectors=None, vectors_values=None,
     else:
         ax = fig.get_axes()[0]
 
+    if plot_title:
+        title = ax.set_title(plot_title, fontsize='large')
     # Plot contours
     if contours is not None:
         if abs_levels is None:
@@ -137,7 +140,7 @@ def plot_function(contours=None, colors=None, vectors=None, vectors_values=None,
                     raise Exception("Not enough information for levels")
                 abs_levels = [-min_abs_level] + [min_abs_level * k ** i for i in
                                                  range(n_max)]
-        co = ax.contour(y, x, contours, abs_levels, colors=contour_color)
+        co = ax.contour(y, x, contours, abs_levels, colors=contour_color, linewidths=contour_linewidth)
     if colors is not None:
         im = ax.imshow(colors, interpolation='none',
                        origin='lower', extent=[y[0], y[-1], x[0], x[-1]],
@@ -160,11 +163,11 @@ def plot_function(contours=None, colors=None, vectors=None, vectors_values=None,
         vec = ax.quiver(y[::vinc], x[::vinc], u[::vinc, ::vinc],
                         v[::vinc, ::vinc], angles='uv',
                         units='width', headwidth=0., headlength=0., scale=scale,
-                        width=0.0025, headaxislength=0., pivot='middle',
-                        scale_units='width', color=vector_color)
+                        width=0.001, headaxislength=0., pivot='middle',
+                        scale_units='width', color=vector_color, linewidths=quiver_linewidth, edgecolors='k')
 
     # Set equal aspect
-    ax.set_aspect('equal')
+    ax.set_aspect('auto')
 
     if colors is not None:
         if plot_colorbar:
@@ -310,6 +313,11 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
                        n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
                        ts_obs_days, flare_params, flare_shape,
                        Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s):
+    resolutions = np.logspace(lg_pixsize_min_mas, lg_pixsize_max_mas, n_along)
+    pixsize_array = np.tile(resolutions, n_across).reshape(n_across, n_along).T
+    factor = (pixsize_array/np.min(pixsize_array))**2
+
+
     if match_resolution:
         lg_pixel_size_mas_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas-np.log10(8.6/2.3)}
         lg_pixel_size_mas_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas-np.log10(8.6/2.3)}
@@ -328,9 +336,9 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
         if plot:
             # fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 12))
             # fig, axes = plt.subplots(1, 1)
-            imagei = np.loadtxt(imagei_txt)
-            imageq = np.loadtxt(imageq_txt)
-            imageu = np.loadtxt(imageu_txt)
+            imagei = np.loadtxt(imagei_txt)/factor.T
+            imageq = np.loadtxt(imageq_txt)/factor.T
+            imageu = np.loadtxt(imageu_txt)/factor.T
             imagetau = np.loadtxt(imagetau_txt)
 
             min_abs_lev = 0.001*np.max(imagei)
@@ -359,42 +367,34 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
             imagetau[tau_mask] = np.nan
 
             fig = plot_function(contours=imagep, colors=np.log10(imagetau), vectors=imagepang,
-                       vectors_values=None, min_rel_level=0.05,
-                       vinc=4, contour_color="gray", vector_color="k", cmap="gist_rainbow",
-                       vector_enlarge_factor=8, colorbar_label=r"$\lg{\tau}$")
+                       vectors_values=None, min_rel_level=0.05, color_clim=[-1, 2],
+                       vinc=10, contour_color="gray", vector_color="k", cmap="gist_rainbow",
+                       vector_enlarge_factor=8, colorbar_label=r"$\lg{\tau}$", contour_linewidth=1.0,
+                                quiver_linewidth=0.01, plot_title="{:05.1f} months".format((1+z)*t_obs_days/30))
             fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
-            axes = fig.get_axes()[0]
-            axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
-                          weight='bold', ha='left', va='center', size=10)
             fig.savefig(os.path.join(save_dir, "{}_true_poltau_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            plt.show()
             plt.close()
 
             fig = plot_function(contours=imagep, colors=imagef, vectors=imagepang,
                                 vectors_values=None, min_rel_level=0.05,
-                                vinc=4, contour_color="gray", vector_color="k", cmap="gist_rainbow",
-                                vector_enlarge_factor=8, colorbar_label="FPOL")
+                                vinc=10, contour_color="gray", vector_color="k", cmap="gist_rainbow",
+                                vector_enlarge_factor=8, colorbar_label="FPOL", contour_linewidth=1.0,
+                                quiver_linewidth=0.01, plot_title="{:05.1f} months".format((1+z)*t_obs_days/30))
             fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
-            axes = fig.get_axes()[0]
-            axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
-                          weight='bold', ha='left', va='center', size=10)
             fig.savefig(os.path.join(save_dir, "{}_true_polfrac_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            plt.show()
             plt.close()
 
-            # # PPOL contours
-            # fig = iplot(contours=imagep, min_abs_level=min_abs_lev,
-            #             close=False, contour_color='gray', contour_linewidth=0.25)
-            # # Add single IPOL contour and vectors of the PANG
-            # fig = iplot(contours=imagei, vectors=imagepang,
-            #             vinc=4, contour_linewidth=1.0,
-            #             vectors_mask=colors_mask, abs_levels=[2*min_abs_lev],
-            #             close=True, show=False,
-            #             contour_color='gray', fig=fig, vector_color="black", plot_colorbar=False,
-            #             vector_scale=4)
-            # axes = fig.get_axes()[0]
-            # axes.annotate("{:05.1f} months".format((1+z)*t_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
-            #               weight='bold', ha='left', va='center', size=10)
-            # fig.savefig(os.path.join(save_dir, "{}_observed_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
-
+            fig = plot_function(contours=imagei, colors=imagep, vectors=imagepang,
+                                vectors_values=None, min_rel_level=0.05,
+                                vinc=10, contour_color="gray", vector_color="k", cmap="gist_rainbow",
+                                vector_enlarge_factor=8, colorbar_label="PPOL, Jy/pixel", contour_linewidth=1.0,
+                                quiver_linewidth=0.01, plot_title="{:05.1f} months".format((1+z)*t_obs_days/30))
+            fig = plot_function(contours=imagei, abs_levels=[0.01*np.max(imagei)], fig=fig)
+            fig.savefig(os.path.join(save_dir, "{}_true_pol_{}_{:.1f}.png".format(basename, "u", t_obs_days)), dpi=600, bbox_inches="tight")
+            plt.show()
+            plt.close()
 
 
 if __name__ == "__main__":
@@ -403,10 +403,10 @@ if __name__ == "__main__":
     z = 1.0
     plot = True
     match_resolution = False
-    lg_pixsize_min_mas = -2.5
-    lg_pixsize_max_mas = -0.5
-    n_along = 400
-    n_across = 80
+    lg_pixsize_min_mas = -4.
+    lg_pixsize_max_mas = -1.
+    n_along = 1200
+    n_across = 100
 
     basename = "pol_0"
     # ts_obs_days = np.linspace(-400.0, 8*360, 20)

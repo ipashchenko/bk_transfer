@@ -76,6 +76,7 @@ def create_movie_raw(basename, files_dir):
     os.chdir(files_dir)
     os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_true_poltau_u_*.png` {basename}_raw_poltau.gif")
     os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_true_polfrac_u_*.png` {basename}_raw_polfrac.gif")
+    os.system(f"convert -delay 50 -loop 0 `ls -tr {basename}_true_pol_u_*.png` {basename}_raw_pol.gif")
     os.chdir(cwd)
 
 
@@ -88,6 +89,13 @@ def create_movie_clean(basename, files_dir):
 
 def clear_pics(basename, files_dir):
     files = glob.glob(os.path.join(files_dir, f"{basename}_true_poltau_u_*.png"))
+    for fn in files:
+        try:
+            os.unlink(fn)
+        except FileNotFoundError:
+            pass
+
+    files = glob.glob(os.path.join(files_dir, f"{basename}_true_pol_u_*.png"))
     for fn in files:
         try:
             os.unlink(fn)
@@ -132,10 +140,10 @@ gamma_max = 1E+04
 
 # sys.exit(0)
 
-n_along = 500
+n_along = 1200
 n_across = 100
-lg_pixsize_min_mas = -3.0
-lg_pixsize_max_mas = -0.5
+lg_pixsize_min_mas = -4.0
+lg_pixsize_max_mas = -1.0
 match_resolution = False
 # TODO: Changing this => edit NField.cpp! ##############################################################################
 flare_shape = 10.0
