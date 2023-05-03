@@ -87,13 +87,14 @@ class BKNField: public NField {
 // component.
 class EquipartitionBKNfield : public NField {
     public:
-        EquipartitionBKNfield(ParticlesDistribution* particles, std::vector<ScalarBField*> bfields,
+        EquipartitionBKNfield(ParticlesDistribution* particles, std::vector<ScalarBField*> sbfields, std::vector<VectorBField*> vbfields,
                               Geometry* geometry_out, Geometry* geometry_in = nullptr, VField* vfield = nullptr,
                               double t_start = 0.0, double fraction = 1.0);
         double _nf(const Vector3d &point, double t = 0.0) const override;
     private:
         double t_start_;
-        std::vector<ScalarBField*> bfields_;
+		std::vector<ScalarBField*> sbfields_;
+		std::vector<VectorBField*> vbfields_;
         double fraction_;
 };
 

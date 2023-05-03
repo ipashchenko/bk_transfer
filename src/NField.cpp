@@ -163,21 +163,27 @@ void BKNField::set_spiral(double phase_0, double lambda_0, double amp_0) {
 
 
 
-EquipartitionBKNfield::EquipartitionBKNfield(ParticlesDistribution *particles, std::vector<ScalarBField*> bfields,
+EquipartitionBKNfield::EquipartitionBKNfield(ParticlesDistribution *particles, std::vector<ScalarBField*> sbfields,
+											 std::vector<VectorBField*> vbfields,
                                              Geometry *geometry_out, Geometry *geometry_in, VField *vfield,
                                              double t_start, double fraction):
         NField(true, particles, geometry_out, geometry_in, vfield),
         t_start_(t_start),
         fraction_(fraction) {
-    bfields_ = bfields;
+    sbfields_ = sbfields;
+	vbfields_ = vbfields;
 }
 
 double EquipartitionBKNfield::_nf(const Vector3d &point, double t) const {
     auto v = vfield_->vf(point);
     double b = 0.0;
-    for(auto bfield: bfields_) {
+    for(auto bfield: sbfields_) {
         b += bfield->bf_plasma_frame(point, v, t);
     }
+	for(auto bfield: vbfields_) {
+		Vector3d vb = bfield->bf_plasma_frame(point, v, t);
+		b += vb.norm();
+	}
     double raw_density = fraction_*particles_->get_equipartition_bsq_coefficient()*b*b;
     return raw_density;
 }
