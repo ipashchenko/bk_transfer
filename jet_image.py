@@ -98,6 +98,39 @@ def resolution(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along, n_across):
     return fig
 
 
+def resolution2(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along, n_across):
+    resolutions = np.logspace(lg_pixel_size_mas_min, lg_pixel_size_mas_max, n_along)
+    pixsize_array = np.tile(resolutions, n_across).reshape(n_across, n_along).T*u.mas
+
+    phi_app_max = np.arctan(np.sum(pixsize_array[-1, :int(n_across/2)]) / np.sum(pixsize_array[:, 0]))
+
+    image_size = np.max(np.cumsum(pixsize_array, axis=0)), np.max(np.cumsum(pixsize_array, axis=1))
+
+    print("Image size (along, across) : ", image_size)
+    print("Maximal apparent opening angle that can be imaged : ", phi_app_max.to(u.deg))
+
+    fig, axes = plt.subplots(1, 1)
+    # axes1 = axes.twinx()
+
+    axes.plot(np.arange(n_along), np.cumsum(pixsize_array[:, 0]), color="C0", lw=3)
+    axes.set_ylabel("Along distance, mas")
+    # axes1.tick_params("y", colors="C1")
+    axes.set_yscale("log")
+    axes.set_xscale("log")
+
+    # axes.plot(np.arange(n_along), np.cumsum(pixsize_array[:, 0]), color="C0", lw=3)
+    # axes.set_yscale("log")
+    axes.set_xlabel("N pixels")
+    # axes.grid()
+    # axes.minorticks_on()
+    # Customize the major grid
+    axes.grid(which='major', color="C1")
+    # Customize the minor grid
+    axes.grid(which='minor', linewidth=0.25)
+
+    return fig
+
+
 def resolution_pl(lg_pixel_size_mas_min, n_along, n_across):
     resolutions = np.sqrt(np.linspace(1, n_along, n_along))*10**lg_pixel_size_mas_min
     pixsize_array = np.tile(resolutions, n_across).reshape(n_across, n_along).T*u.mas

@@ -450,8 +450,7 @@ std::vector<double> run_on_analytic_params_kh(double redshift, double los_angle_
     nfields.push_back(&kh_Eb_nfield);
 
 
-    EquipartitionBKNfield bkg_nfield(&bkg_particles, sbfields, &geometry, nullptr,
-                                     vfield, 0.0, 0.005);
+    EquipartitionBKNfield bkg_nfield(&bkg_particles, sbfields, vbfields, &geometry, nullptr, vfield, 0.0, 0.005);
     nfields.push_back(&bkg_nfield);
 
 
@@ -724,12 +723,21 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     // =================================================================================================================
 
     // Setting B-field =================================================================================================
-    BKScalarBField bk_bfield(b_0, m_b, &geometry);
+	// FIXME: This was used for flares!
+//    BKScalarBField bk_bfield(b_0, m_b, &geometry);
 
     std::vector<VectorBField*> vbfields;
     std::vector<ScalarBField*> queiscent_sbfields;
     std::vector<ScalarBField*> flaring_sbfields;
-    queiscent_sbfields.push_back(&bk_bfield);
+//    queiscent_sbfields.push_back(&bk_bfield);
+	
+	
+	// We need polarization!
+//	ToroidalBField vector_bfield(b_0, m_b, true, 0.0, &geometry, nullptr);
+	HelicalConicalBField vector_bfield(b_0, m_b, 89.*M_PI/180., true, 0.0, &geometry, nullptr);
+//	ReversedPinchConicalBField vector_bfield(b_0, m_b, &geometry, 0.0, nullptr);
+//	RadialConicalBField vector_bfield(b_0, m_b, true, 0.0, &geometry, nullptr);
+	vbfields.push_back(&vector_bfield);
 
     double frac_amp, frac_amp_B, t_start_days, flare_width_pc;
     int num_flares = flare_params.size()/4;
@@ -750,22 +758,19 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
 
     // Setting components of N-fields ==================================================================================
     PowerLaw particles(s, gamma_min, "pairs");
-//    BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
-    EquipartitionBKNfield bk_stat_nfield(&particles, queiscent_sbfields, &geometry, nullptr, vfield);
+    BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
+//    EquipartitionBKNfield bk_stat_nfield(&particles, queiscent_sbfields, vbfields, &geometry, nullptr, vfield);
 
 	
 	// TODO: Flare N-field which declines faster than background N-field.
 	double n_0 = b_0*b_0*particles.get_equipartition_bsq_coefficient();
 	BKNField flare_base_nfield(n_0, 2*(s+2)/3, &particles, true, &geometry, nullptr, vfield);
 	
-	// We need polarization!
-	ToroidalBField vector_bfield(b_0, m_b, true, 0.0, &geometry, nullptr);
-//	ReversedPinchConicalBField vector_bfield(b_0, m_b, &geometry, 0.0, nullptr);
-//	RadialConicalBField vector_bfield(b_0, m_b, true, 0.0, &geometry, nullptr);
-	vbfields.push_back(&vector_bfield);
+	
+//	BKNField bk_stat_nfield(n_0, n, &particles, true, &geometry, nullptr, vfield);
 	
 	
-    std::vector<NField*> queiscent_nfields;
+	std::vector<NField*> queiscent_nfields;
     std::vector<NField*> flaring_nfields;
     queiscent_nfields.push_back(&bk_stat_nfield);
     flaring_nfields.push_back(&bk_stat_nfield);
@@ -1175,8 +1180,8 @@ int main(int argc, char *argv[]) {
 
         total_fluxes = run_on_analytic_params_t(redshift, los_angle_deg, cone_half_angle_deg,
                                                 b_0, m_b,
-                                                2.0, 10.0,
-                                                K_1, 2,
+                                                2.5, 10.0,
+                                                K_1, 1.5,
                                                 Gamma,
                                                 number_of_pixels_along, number_of_pixels_across,
                                                 lg_pixel_size_mas_start, lg_pixel_size_mas_stop,

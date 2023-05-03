@@ -10,7 +10,7 @@ from jet_image import JetImage, TwinJetImage
 from vlbi_utils import find_image_std, find_bbox, pol_mask, correct_ppol_bias
 sys.path.insert(0, '../ve/vlbi_errors')
 from uv_data import UVData
-from spydiff import clean_difmap
+from spydiff import clean_difmap, find_nw_beam
 from from_fits import create_clean_image_from_fits_file
 from image import plot as iplot
 sys.path.insert(0, '../stackemall')
@@ -19,15 +19,20 @@ from stack_utils import stat_of_masked
 
 freq_ghz = 15.4
 # Directory to save files
-save_dir = "/home/ilya/github/bk_transfer/results"
+save_dir = "/home/ilya/github/bk_transfer/results/new"
 # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
 template_uvfits = "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uvf"
 # Multiplicative factor for noise added to model visibilities.
-noise_scale_factor = 0.5
+noise_scale_factor = 1.0
 # Used in CLEAN
 mapsize = (512, 0.1)
+
+
+nw_beam = find_nw_beam(template_uvfits, "i", mapsize=mapsize)
+nw_beam_size = np.sqrt(nw_beam[0]*nw_beam[1])
+
 # Common beam
-common_beam = (0.7, 0.7, 0)
+common_beam = (nw_beam_size, nw_beam_size, 0)
 jetpol_run_directory = "/home/ilya/github/bk_transfer/Release"
 
 # C++ code run parameters

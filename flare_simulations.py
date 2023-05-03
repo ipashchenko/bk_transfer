@@ -71,6 +71,53 @@ def clear_fits(files_dir):
             pass
 
 
+def resize_images(basename, files_dir):
+    cwd = os.getcwd()
+    os.chdir(files_dir)
+
+    def run_for_files(files):
+        for fn in files:
+            os.system(f"convert -resize 15% {fn} small_{fn}")
+
+    files = glob.glob(f"{basename}_true_poltau_u_*.png")
+    # Or getctime for creation time
+    # files.sort(key=os.path.getmtime)
+    run_for_files(files)
+    files = glob.glob(f"{basename}_true_polfrac_u_*.png")
+    # files.sort(key=os.path.getmtime)
+    run_for_files(files)
+    files = glob.glob(f"{basename}_true_poli_u_*.png")
+    # files.sort(key=os.path.getmtime)
+    run_for_files(files)
+    files = glob.glob(f"{basename}_true_pol_u_*.png")
+    # files.sort(key=os.path.getmtime)
+    run_for_files(files)
+    os.chdir(cwd)
+
+
+def create_movie_raw_small(basename, files_dir, kind):
+    cwd = os.getcwd()
+    os.chdir(files_dir)
+
+    def get_files_list(kind):
+        files = glob.glob(f"small_{basename}_true_{kind}_u_*.png")
+        ns = list()
+        for fn in files:
+            n = fn.split("_")[-1][:-4]
+            ns.append(float(n))
+
+        ns = sorted(ns)
+        files = list()
+        for n in ns:
+            files.append(f"small_{basename}_true_{kind}_u_{n}.png")
+        return files
+
+    files = get_files_list(kind)
+    files = " ".join(files)
+    os.system(f"convert -delay 50 -loop 0 {files} {basename}_raw_{kind}_small.gif")
+    os.chdir(cwd)
+
+
 def create_movie_raw(basename, files_dir):
     cwd = os.getcwd()
     os.chdir(files_dir)
