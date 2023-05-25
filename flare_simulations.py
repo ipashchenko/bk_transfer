@@ -104,8 +104,8 @@ def clear_pics(basename, files_dir):
             pass
 
 
-redo = [False, True, True]
-calculon = False
+redo = [True, True, True]
+calculon = True
 basename = "ell"
 only_band = None
 redshift = 0.8
@@ -189,8 +189,8 @@ for i in range(n_sources):
 
     # Fixed times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    # ts_obs_days = np.linspace(-400.0, 9*360, 40)/(1+redshift)
-    ts_obs_days = np.array([0.0])
+    ts_obs_days = np.linspace(-400.0, 9*360, 40)/(1+redshift)
+    # ts_obs_days = np.array([0.0])
 
     # FIXME:
     # From real sources times
