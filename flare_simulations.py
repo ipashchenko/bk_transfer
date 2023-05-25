@@ -104,9 +104,9 @@ def clear_pics(basename, files_dir):
             pass
 
 
-redo = [True, True, True]
-calculon = True
-basename = "search"
+redo = [False, True, True]
+calculon = False
+basename = "ell"
 only_band = None
 redshift = 0.8
 K_1 = 5000.
@@ -141,8 +141,11 @@ mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
-extract_extended = False
+extract_extended = True
+use_elliptical = True
 use_scipy_for_extract_extended = False
+if use_scipy_for_extract_extended and use_elliptical:
+    raise Exception("Currently, Scipy can't be used to fit elliptical Gaussians.")
 beam_fractions = (1.0,)
 two_stage = False
 n_components = 4
@@ -163,18 +166,21 @@ else:
 # flare_params = [(0.0, 0.0, 0.0, 0.1)]
 # ts_obs_days = np.array([0.0])
 
-n_sources = 38
+n_sources = 1
 idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
     # First set
-    B_1 = 2.0
-    b = 1.25
+    # B_1 = 2.0
+    # b = 1.25
     # Second set
-    # B_1 = 0.7
-    # b = 1.0
+    B_1 = 0.7
+    b = 1.0
     Gamma = 10.
     LOS_coeff = 0.5
-    HOAngle_deg = 15.
+    # HOAngle_deg = 15.
+
+    # Testing elliptical
+    HOAngle_deg = 10.
 
     los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
     cone_half_angle_deg = np.round(np.rad2deg(np.arctan(np.tan(np.deg2rad(HOAngle_deg)) * np.sin(np.deg2rad(los_angle_deg)))), 2)
@@ -182,15 +188,16 @@ for i in range(n_sources):
     print(f"Cone HA (deg) = {cone_half_angle_deg}")
 
     # Fixed times
-    # ts_obs_days = np.linspace(-400.0, 9*360, 40)
-    # ts_obs_days = np.array([0.0])
+    # This will be multiplied on (1+z) to bring to the observer z = 0.
+    # ts_obs_days = np.linspace(-400.0, 9*360, 40)/(1+redshift)
+    ts_obs_days = np.array([0.0])
 
     # FIXME:
     # From real sources times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
+    # ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
     # Shift to sample flares right
-    ts_obs_days -= 400
+    # ts_obs_days -= 400
 
     flare_params = list()
 
@@ -201,11 +208,11 @@ for i in range(n_sources):
     amp_N = np.random.uniform(3, 10, size=1)[0]
     # amp_N = 0.0
     # Only N flare
-    # amp_B = 0.0
+    amp_B = 0.0
     # Equipartition flare
     # amp_B = np.sqrt(amp_N)
     # Increasing N, decreasing B flare
-    amp_B = -0.5
+    # amp_B = -0.5
     width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
@@ -270,7 +277,7 @@ for i in range(n_sources):
                                     ts_obs_days,
                                     noise_scale_factor, mapsizes_dict,
                                     plot_clean, only_plot_raw,
-                                    extract_extended, use_scipy_for_extract_extended, beam_fractions, two_stage,
+                                    extract_extended, use_scipy_for_extract_extended, use_elliptical, beam_fractions, two_stage,
                                     n_components,
                                     save_dir, exec_dir, path_to_script)
         create_movie_clean(source_basename, save_dir, only_band)

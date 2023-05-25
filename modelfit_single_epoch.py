@@ -25,6 +25,8 @@ if __name__ == "__main__":
                      # default=[1.353, 1.557, -65.65],  # default if nothing is provided
                      # default=[4.561, 5.734, -51.67],  # default if nothing is provided
                      )
+    CLI.add_argument("--use_elliptical",
+                     type=bool)
     CLI.add_argument("--save_dir",
                      type=str)
     CLI.add_argument("--path_to_script",
@@ -36,6 +38,12 @@ if __name__ == "__main__":
     save_dir = args.save_dir
     nw_beam_size = args.nw_beam_size
     path_to_script = args.path_to_script
+    use_elliptical = args.use_elliptical
+
+    print("==================")
+    print("Arguments parsed: ")
+    print("use_elliptical = ", use_elliptical)
+
 
     results = modelfit_core_wo_extending(fname,
                                          beam_fractions,
@@ -47,7 +55,7 @@ if __name__ == "__main__":
                                          use_brightest_pixel_as_initial_guess=True,
                                          estimate_rms=True,
                                          stokes="i",
-                                         use_ell=False, two_stage=False, use_scipy=False,
+                                         use_ell=use_elliptical, two_stage=False, use_scipy=False,
                                          nw_beam_size=nw_beam_size)
 
     # Flux of the core

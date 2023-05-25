@@ -7,7 +7,7 @@ import numpy as np
 from vlbi_utils import find_image_std, find_bbox, downscale_uvdata_by_freq
 sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from uv_data import UVData
-from components import CGComponent
+from components import CGComponent, EGComponent
 from spydiff import clean_difmap, modelfit_difmap, import_difmap_model, modelfit_core_wo_extending, find_nw_beam
 from image import plot as iplot
 from from_fits import create_clean_image_from_fits_file
@@ -20,7 +20,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                                 ts_obs_days = np.linspace(-400.0, 8*360, 20),
                                 noise_scale_factor = 1.0, mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)},
                                 plot_clean = True, only_plot_raw = False,
-                                extract_extended = True, use_scipy = False, beam_fractions = (1.0,), two_stage=True,
+                                extract_extended = True, use_scipy = False, use_elliptical = False, beam_fractions = (1.0,), two_stage=True,
                                 n_components=4,
                                 save_dir = "/home/ilya/github/bk_transfer/pics/flares",
                                 jetpol_run_directory = "/home/ilya/github/bk_transfer/Release",
@@ -49,6 +49,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         Use extraction of the extended emission to fit the core? (default: ``True``).
     :param use_scipy: (optional)
         Use scipy to fit core to the extracted from the extended emission data?
+    :param use_elliptical: (optional)
+        Use eeliptical component in extract extended approach? (default: ``False``)
     :param beam_fractions: (optional)
         Iterable of the beam fractions to use for extended emission extraction. (default: ``(1.0, )``)
     :param two_stage: (opitional)
@@ -82,6 +84,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
     core_fluxes_err = dict()
     core_sizes = dict()
     core_sizes_err = dict()
+    es = dict()
+    bpas = dict()
 
     std = None
     blc = None
@@ -104,6 +108,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         core_fluxes_err[freq_ghz] = list()
         core_sizes[freq_ghz] = list()
         core_sizes_err[freq_ghz] = list()
+        es[freq_ghz] = list()
+        bpas[freq_ghz] = list()
         nw_beam_size = None
         for epoch in epochs:
             if nw_beam_size is None:
@@ -153,7 +159,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 n_jobs = 44
             else:
                 n_jobs = 4
-            os.system(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --fname ::: {fnames}")
+            os.system(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --use_elliptical \"{use_elliptical}\" --fname ::: {fnames}")
 
 
 
@@ -181,6 +187,13 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                     # Size of the core
                     size = np.mean([results[str(frac)]['size'] for frac in beam_fractions])
                     rms_size = np.std([results[str(frac)]['size'] for frac in beam_fractions])
+
+                    # Ellipticity of the core
+                    if use_elliptical:
+                        e = np.mean([results[str(frac)]['e'] for frac in beam_fractions])
+                        bpa = np.mean([results[str(frac)]['bpa'] for frac in beam_fractions])
+                        es[freq_ghz].append(e)
+                        bpas[freq_ghz].append(bpa)
 
                     core_fluxes[freq_ghz].append(flux)
                     core_fluxes_err[freq_ghz].append(rms_flux)
@@ -262,7 +275,11 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
                 if extract_extended:
                     if len(beam_fractions) == 1:
-                        components = [CGComponent(core_fluxes[freq_ghz][i], core_positions[freq_ghz][i], 0, core_sizes[freq_ghz][i])]
+                        if not use_elliptical:
+                            components = [CGComponent(core_fluxes[freq_ghz][i], core_positions[freq_ghz][i], 0, core_sizes[freq_ghz][i])]
+                        else:
+                            components = [EGComponent(core_fluxes[freq_ghz][i], core_positions[freq_ghz][i], 0, core_sizes[freq_ghz][i], es[freq_ghz][i], bpas[freq_ghz][i])]
+
                         # components = import_difmap_model("it2.mdl", save_dir)
                     else:
                         components = None
