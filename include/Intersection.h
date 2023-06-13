@@ -1,4 +1,4 @@
-#ifndef BK_TRANSER_INTERCEPTION_H
+#ifndef BK_TRANSFER_INTERCEPTION_H
 #define BK_TRANSFER_INTERCEPTION_H
 
 #include <Eigen/Eigen>
