@@ -724,17 +724,17 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     // =================================================================================================================
 
     // Setting B-field =================================================================================================
-    BKScalarBField bk_bfield(b_0, m_b, &geometry);
+    BKScalarBField static_bk_sbfield(b_0, m_b, &geometry);
 
-    std::vector<VectorBField*> vbfields;
+    std::vector<VectorBField*> all_vbfields;
     std::vector<ScalarBField*> queiscent_sbfields;
-    std::vector<ScalarBField*> flaring_sbfields;
-	queiscent_sbfields.push_back(&bk_bfield);
-	flaring_sbfields.push_back(&bk_bfield);
+    std::vector<ScalarBField*> all_sbfields;
+	queiscent_sbfields.push_back(&static_bk_sbfield);
+	all_sbfields.push_back(&static_bk_sbfield);
 
     double frac_amp, frac_amp_B, t_start_days, flare_width_pc;
     int num_flares = flare_params.size()/4;
-    FlareBKBField* bk_flare_bfield;
+    FlareBKBField* flaring_sbfield;
     for(int i = 0; i < num_flares; i++){
         frac_amp = flare_params[4*i + 0];
         frac_amp_B = flare_params[4*i + 1];
@@ -742,28 +742,25 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
         // In sec
         t_start_days *= 24.0 * 60.0 * 60.0;
         flare_width_pc = flare_params[4*i + 3];
-        bk_flare_bfield = new FlareBKBField(&bk_bfield, frac_amp_B, t_start_days, flare_width_pc, vfield, &geometry, nullptr);
-        flaring_sbfields.push_back(bk_flare_bfield);
+		flaring_sbfield = new FlareBKBField(&static_bk_sbfield, frac_amp_B, t_start_days, flare_width_pc, vfield, &geometry, nullptr);
+        all_sbfields.push_back(flaring_sbfield);
     }
 
     // =================================================================================================================
 
     // Setting components of N-fields ==================================================================================
     PowerLaw particles(s, gamma_min, "pairs");
-//    BKNField bk_stat_nfield(K_1, n, &particles, true, &geometry);
-    EquipartitionBKNfield bk_stat_nfield(&particles, queiscent_sbfields, &geometry, nullptr, vfield);
-
+	// Equipartition N-field
+    EquipartitionBKNfield static_nfield(&particles, queiscent_sbfields, &geometry, nullptr, vfield);
 	
-	// TODO: Flare N-field which declines faster than background N-field.
+	// Flare N-field which declines faster than background N-field.
 	double n_0 = b_0*b_0*particles.get_equipartition_bsq_coefficient();
 	BKNField flare_base_nfield(n_0, 2*(s+2)/3, &particles, true, &geometry, nullptr, vfield);
 	
-    std::vector<NField*> queiscent_nfields;
-    std::vector<NField*> flaring_nfields;
-    queiscent_nfields.push_back(&bk_stat_nfield);
-    flaring_nfields.push_back(&bk_stat_nfield);
+    std::vector<NField*> all_nfields;
+    all_nfields.push_back(&static_nfield);
 
-    FlareBKNField* bk_flare_nfield;
+    FlareBKNField* flaring_nfield;
     for(int i = 0; i < num_flares; i++){
         frac_amp = flare_params[4*i + 0];
         frac_amp_B = flare_params[4*i + 1];
@@ -772,20 +769,20 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
         t_start_days *= 24.0 * 60.0 * 60.0;
         flare_width_pc = flare_params[4*i + 3];
 		// Using equipartition N-field as flare background
-        bk_flare_nfield = new FlareBKNField(&bk_stat_nfield, frac_amp, t_start_days, flare_width_pc, vfield,
-											nullptr, nullptr);
+        flaring_nfield = new FlareBKNField(&static_nfield, frac_amp, t_start_days, flare_width_pc, vfield,
+										   nullptr, nullptr);
 		// Using adiabatically declined N-field as flare background
-//		bk_flare_nfield = new FlareBKNField(&flare_base_nfield, frac_amp, t_start_days,flare_width_pc, vfield,nullptr, nullptr);
-        flaring_nfields.push_back(bk_flare_nfield);
+//		flaring_nfield = new FlareBKNField(&flare_base_nfield, frac_amp, t_start_days,flare_width_pc, vfield,nullptr, nullptr);
+        all_nfields.push_back(flaring_nfield);
     }
 
 
     // Quiscent jet
-//    Jet bkjet(&geometry, vfield, queiscent_sbfields, vbfields, queiscent_nfields);
+//    Jet bkjet(&geometry, vfield, queiscent_sbfields, all_vbfields, queiscent_nfields);
     // Flare N-only jet
-//	Jet bkjet(&geometry, vfield, queiscent_sbfields, vbfields, flaring_nfields);
+//	Jet bkjet(&geometry, vfield, queiscent_sbfields, all_vbfields, all_nfields);
 	// Flare B and N jet
-	Jet bkjet(&geometry, vfield, flaring_sbfields, vbfields, flaring_nfields);
+	Jet bkjet(&geometry, vfield, all_sbfields, all_vbfields, all_nfields);
 
 //    // FIXME: Put inside frequency loop for dep. on frequency
 //    // Setting parameters of pixels and image ==========================================================================
