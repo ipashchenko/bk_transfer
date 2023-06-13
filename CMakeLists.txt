@@ -6,6 +6,7 @@ include_directories("/usr/include/eigen3", "include")
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lz -std=c++14 -L/usr/lib/openmpi -lmpi_cxx -fopenmp -march=native -DNDEBUG -O2 -fext-numeric-literals")
 set(SOURCE_FILES src/main.cpp src/utils.cpp src/Pixel.cpp src/Ray.cpp
