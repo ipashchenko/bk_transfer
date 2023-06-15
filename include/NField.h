@@ -10,7 +10,7 @@
 
 using Eigen::Vector3d;
 
-const double l_eps_N = 0.001*pc;
+const double l_eps_N = 0.0001*pc;
 
 class NField {
         friend class Jet;
