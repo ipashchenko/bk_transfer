@@ -108,28 +108,32 @@ double VectorBField::get_tangled_fraction(const Vector3d &point, double t) const
 }
 
 Vector3d VectorBField::bf(const Vector3d &point, double t) const {
+	double r_border;
     double x = point[0];
     double y = point[1];
     double r_point = sqrt(x*x + y*y);
-//    std::cout << "r = " << r_point/pc << "\n";
-
-    if(geometry_out_) {
-        // Find radius of outer surface at given point
-        double r_border_out = geometry_out_->radius_at_given_distance(point);
-//        std::cout << "r_border = " << r_border_out/pc << "\n";
-        if (r_point >= r_border_out) {
-            return {0.0, 0.0, 0.0};
-        }
-    }
-    if(geometry_in_) {
-        // Find radius of inner surface at given point
-        std::cout << "NEVER =========================================== " << "\n";
-        double r_border_in = geometry_in_->radius_at_given_distance(point);
-        if (r_point < r_border_in) {
-            return {0.0, 0.0, 0.0};
-        }
-    }
-    return _bf(point, t);
+	
+	double factor = 1.0;
+	
+	if(geometry_out_)
+	{
+		// Find radius of outer surface at given point
+		r_border = geometry_out_->radius_at_given_distance(point);
+		if (r_point > r_border)
+		{
+			factor = exp(-pow(r_point - r_border, 2.0)/l_eps_B/l_eps_B);
+		}
+	}
+	if(geometry_in_)
+	{
+		// Find radius of inner surface at given point
+		r_border = geometry_in_->radius_at_given_distance(point);
+		if (r_point < r_border)
+		{
+			factor = exp(-pow(r_point - r_border, 2.0)/l_eps_B/l_eps_B);
+		}
+	}
+	return _bf(point, t)*factor;
 }
 
 Vector3d VectorBField::bf_plasma_frame(const Vector3d &point, Vector3d &v, double t) const {
