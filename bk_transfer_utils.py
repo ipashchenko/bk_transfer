@@ -146,6 +146,39 @@ def cos_theta_plasma(theta_obs, Gamma):
     return (np.cos(theta_obs) - beta(Gamma))/(1-beta(Gamma)*np.cos(theta_obs))
 
 
+def PA(phi, theta_los, delta):
+    """
+    Position Angle of the precessing jet.
+
+    :param phi:
+        Azimuthal angle [rad].
+    :param theta_los:
+        LOS angle of the precession axis [rad].
+    :param delta:
+        Precession amplitude angle around the axis [rad].
+    :return:
+        Position angle of the jet [rad], where ``0`` is when ``phi`` equals 0 or 180 degrees.
+    """
+    sqrt_part = np.sqrt(np.cos(phi)**2 + np.cos(theta_los)**2*np.sin(phi)**2)
+    return np.arctan(np.cos(theta_los)**2*np.sin(phi)*np.tan(delta) / (sqrt_part*(np.sin(theta_los) - np.cos(theta_los)**2*np.cos(phi)*np.tan(delta)/sqrt_part)))
+
+
+def theta_los_rot(phi, theta_los, delta):
+    """
+    LOS angle of the precessing jet.
+
+    :param phi:
+        Azimuthal angle [rad].
+    :param theta_los:
+        LOS angle of the precession axis [rad].
+    :param delta:
+        Precession amplitude angle around the axis [rad].
+    :return:
+        LOS angle of the jet at given precession phase [rad].
+    """
+    return np.arccos(np.sin(delta)*np.cos(phi)*np.sin(theta_los) + np.cos(delta)*np.cos(theta_los))
+
+
 def tb_pixel(flux, freq, size, z=0., D=1.):
     """
     Brightness temperature.
