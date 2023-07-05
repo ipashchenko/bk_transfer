@@ -105,8 +105,8 @@ def clear_pics(basename, files_dir):
 
 
 redo = [True, True, True]
-calculon = True
-basename = "ell"
+calculon = False
+basename = "new_extract_extended"
 only_band = None
 redshift = 0.8
 K_1 = 5000.
@@ -142,11 +142,11 @@ plot_raw = True
 plot_clean = True
 only_plot_raw = False
 extract_extended = True
-use_elliptical = True
+use_elliptical = False 
 use_scipy_for_extract_extended = False
 if use_scipy_for_extract_extended and use_elliptical:
     raise Exception("Currently, Scipy can't be used to fit elliptical Gaussians.")
-beam_fractions = (1.0,)
+beam_fractions = np.round(np.linspace(0.5, 1.5, 11), 2)
 two_stage = False
 n_components = 4
 
@@ -161,6 +161,10 @@ else:
     save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares"
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
 
+
+save_dir = os.path.join(save_dir, basename)
+if not os.path.exists(save_dir):
+    os.mkdir(save_dir)
 
 # n_sources = 1
 # flare_params = [(0.0, 0.0, 0.0, 0.1)]
@@ -263,23 +267,30 @@ for i in range(n_sources):
         print("==========================================")
         print(f"Processing raw image for {source_basename}")
         print("==========================================")
-        process_raw_images(source_basename, exec_dir, save_dir, redshift, plot_raw, match_resolution,
-                           n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-                           ts_obs_days, flare_params, flare_shape,
-                           Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s)
+        process_raw_images(basename=source_basename, txt_dir=exec_dir, save_dir=save_dir,
+                           z=redshift, plot=plot_raw, match_resolution=match_resolution,
+                           n_along=n_along, n_across=n_across,
+                           lg_pixsize_min_mas=lg_pixsize_min_mas, lg_pixsize_max_mas=lg_pixsize_max_mas,
+                           ts_obs_days=ts_obs_days, flare_params=flare_params, flare_shape=flare_shape,
+                           Gamma=Gamma, LOS_coeff=LOS_coeff, b=b, B_1=B_1, n=n,
+                           gamma_min=gamma_min, gamma_max=gamma_max, s=s)
         create_movie_raw(source_basename, save_dir)
 
     if redo[2]:
         print("==========================================")
         print(f"Generating and modelling visibilities for {source_basename}")
         print("==========================================")
-        make_and_model_visibilities(source_basename, only_band, redshift, lg_pixsize_min_mas, lg_pixsize_max_mas, n_along, n_across, match_resolution,
-                                    ts_obs_days,
-                                    noise_scale_factor, mapsizes_dict,
-                                    plot_clean, only_plot_raw,
-                                    extract_extended, use_scipy_for_extract_extended, use_elliptical, beam_fractions, two_stage,
-                                    n_components,
-                                    save_dir, exec_dir, path_to_script)
+        make_and_model_visibilities(basename=source_basename, only_band=only_band, z=redshift,
+                                    lg_pixsize_min_mas=lg_pixsize_min_mas, lg_pixsize_max_mas=lg_pixsize_max_mas,
+                                    n_along=n_along, n_across=n_across, match_resolution=match_resolution,
+                                    ts_obs_days=ts_obs_days,
+                                    noise_scale_factor=noise_scale_factor, mapsizes_dict=mapsizes_dict,
+                                    plot_clean=plot_clean, only_plot_raw=only_plot_raw,
+                                    extract_extended=extract_extended, use_scipy=use_scipy_for_extract_extended,
+                                    use_elliptical=use_elliptical, beam_fractions=beam_fractions, two_stage=two_stage,
+                                    n_components=n_components,
+                                    save_dir=save_dir, jetpol_run_directory=exec_dir, path_to_script=path_to_script,
+                                    calculon=calculon)
         create_movie_clean(source_basename, save_dir, only_band)
 
     clear_tobs(exec_dir)
