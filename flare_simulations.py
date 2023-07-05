@@ -232,11 +232,11 @@ for i in range(n_sources):
         # amp_N = 0.0
         amp_N = np.random.uniform(3, 10, size=1)[0]
         # Only N flare
-        # amp_B = 0.0
+        amp_B = 0.0
         # Equipartition flare
         # amp_B = np.sqrt(amp_N)
         # Increasing N, decreasing B flare
-        amp_B = -0.5
+        # amp_B = -0.5
         width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
