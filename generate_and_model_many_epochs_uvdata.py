@@ -151,7 +151,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
         if extract_extended:
             beam_fracs = " ".join([str(bf) for bf in beam_fractions])
-            fnames = " ".join(["template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch) for epoch in epochs])
+            fnames = " ".join([os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)) for epoch in epochs])
             script_dir = os.path.split(jetpol_run_directory)[0]
 
 
@@ -159,7 +159,9 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 n_jobs = 44
             else:
                 n_jobs = 4
-            os.system(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --use_elliptical \"{use_elliptical}\" --fname ::: {fnames}")
+            print("In generate_and_model use_elliptical = ", use_elliptical)
+            print(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --use_elliptical {use_elliptical} --fname ::: {fnames}")
+            os.system(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --use_elliptical {use_elliptical} --fname ::: {fnames}")
 
 
 
@@ -274,15 +276,12 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                     trc = (420, 305)
 
                 if extract_extended:
-                    if len(beam_fractions) == 1:
-                        if not use_elliptical:
-                            components = [CGComponent(core_fluxes[freq_ghz][i], core_positions[freq_ghz][i], 0, core_sizes[freq_ghz][i])]
-                        else:
-                            components = [EGComponent(core_fluxes[freq_ghz][i], core_positions[freq_ghz][i], 0, core_sizes[freq_ghz][i], es[freq_ghz][i], bpas[freq_ghz][i])]
-
-                        # components = import_difmap_model("it2.mdl", save_dir)
+                    if not use_elliptical:
+                        components = [CGComponent(core_fluxes[freq_ghz][i], core_positions[freq_ghz][i], 0, core_sizes[freq_ghz][i])]
                     else:
-                        components = None
+                        components = [EGComponent(core_fluxes[freq_ghz][i], core_positions[freq_ghz][i], 0, core_sizes[freq_ghz][i], es[freq_ghz][i], bpas[freq_ghz][i])]
+
+                    # components = import_difmap_model("it2.mdl", save_dir)
                 else:
                     components = import_difmap_model(os.path.join(save_dir, "out{}_{:.1f}.mdl".format(n_components, epoch)))
 
