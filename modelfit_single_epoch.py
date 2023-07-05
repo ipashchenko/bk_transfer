@@ -287,6 +287,7 @@ if __name__ == "__main__":
     #                                      use_ell=use_elliptical, two_stage=False, use_scipy=False,
     #                                      nw_beam_size=nw_beam_size)
 
+    fname = os.path.join(save_dir, fname)
     results = modelfit_core_wo_extending(fname, mapsize_clean=mapsize_clean, beam_fractions=beam_fractions,
                                          path_to_script=path_to_script,
                                          use_elliptical=use_elliptical,

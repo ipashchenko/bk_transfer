@@ -151,7 +151,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
         if extract_extended:
             beam_fracs = " ".join([str(bf) for bf in beam_fractions])
-            fnames = " ".join([os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)) for epoch in epochs])
+            fnames = " ".join(["template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch) for epoch in epochs])
             script_dir = os.path.split(jetpol_run_directory)[0]
 
 
