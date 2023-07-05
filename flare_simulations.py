@@ -105,8 +105,8 @@ def clear_pics(basename, files_dir):
 
 
 redo = [True, True, True]
-calculon = False
-basename = "new_extract_extended"
+calculon = True
+basename = "survey"
 only_band = None
 redshift = 0.8
 K_1 = 5000.
@@ -170,7 +170,7 @@ if not os.path.exists(save_dir):
 # flare_params = [(0.0, 0.0, 0.0, 0.1)]
 # ts_obs_days = np.array([0.0])
 
-n_sources = 1
+n_sources = 20
 idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
     # First set
@@ -193,15 +193,15 @@ for i in range(n_sources):
 
     # Fixed times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    ts_obs_days = np.linspace(-400.0, 9*360, 40)/(1+redshift)
+    # ts_obs_days = np.linspace(-400.0, 9*360, 40)/(1+redshift)
     # ts_obs_days = np.array([0.0])
 
     # FIXME:
     # From real sources times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    # ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
+    ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
     # Shift to sample flares right
-    # ts_obs_days -= 400
+    ts_obs_days -= 400
 
     flare_params = list()
 
@@ -222,7 +222,7 @@ for i in range(n_sources):
 
     # Maximal number of flares
     for i_fl in range(10):
-        # Waiting time 3 yrs
+        # Waiting time 2 yrs
         dt_yrs = 0.0
         while dt_yrs < 2.0:
             dt_yrs = np.random.exponential(2.0)
