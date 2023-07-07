@@ -120,7 +120,7 @@ def modelfit_core_wo_extending(uvfits, mapsize_clean, beam_fractions, path_to_sc
         uvdata = UVData(uvfits)
         freq_hz = uvdata.frequency
         # Find beam
-        bmaj, bmin, bpa = find_nw_beam(uvfits, stokes="i", mapsize=mapsize_clean, uv_range=None, working_dir=working_dir)
+        bmin, bmaj, bpa = find_nw_beam(uvfits, stokes="i", mapsize=mapsize_clean, uv_range=None, working_dir=working_dir)
         print("NW beam : {:.2f} mas, {:.2f} mas, {:.2f} deg".format(bmaj, bmin, bpa))
 
         # Find the brightest pixel
