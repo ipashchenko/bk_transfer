@@ -318,11 +318,12 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
     if only_band is None:
         CS = np.array(core_positions[2.3])-np.array(core_positions[8.6])
-        np.savetxt(os.path.join(save_dir, f"source_{basename}_CS.txt"), CS)
+        CS_err = np.hypot(core_positions_err[2.3], core_positions_err[8.6])
+        np.savetxt(os.path.join(save_dir, f"source_{basename}_CS.txt"), np.vstack((CS, CS_err)).T)
 
     np.savetxt(os.path.join(save_dir, f"source_{basename}_epochs.txt"), epochs*(1+z))
-    np.savetxt(os.path.join(save_dir, f"source_{basename}_S_2.txt"), core_fluxes[2.3])
-    np.savetxt(os.path.join(save_dir, f"source_{basename}_S_8.txt"), core_fluxes[8.6])
+    np.savetxt(os.path.join(save_dir, f"source_{basename}_S_2.txt"), np.vstack((core_fluxes[2.3], core_fluxes_err[2.3])).T)
+    np.savetxt(os.path.join(save_dir, f"source_{basename}_S_8.txt"), np.vstack((core_fluxes[8.6], core_fluxes_err[8.6])).T)
 
     fig, axes = plt.subplots(1, 1, figsize=(15, 15))
     axes.set_xlabel("Obs. Time, years")
