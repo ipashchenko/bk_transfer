@@ -266,13 +266,20 @@ for i in range(n_sources):
         print("==========================================")
         print(f"Processing raw image for {source_basename}")
         print("==========================================")
-        process_raw_images(basename=source_basename, txt_dir=exec_dir, save_dir=save_dir,
-                           z=redshift, plot=plot_raw, match_resolution=match_resolution,
-                           n_along=n_along, n_across=n_across,
-                           lg_pixsize_min_mas=lg_pixsize_min_mas, lg_pixsize_max_mas=lg_pixsize_max_mas,
-                           ts_obs_days=ts_obs_days, flare_params=flare_params, flare_shape=flare_shape,
-                           Gamma=Gamma, LOS_coeff=LOS_coeff, b=b, B_1=B_1, n=n,
-                           gamma_min=gamma_min, gamma_max=gamma_max, s=s)
+        try:
+            process_raw_images(basename=source_basename, txt_dir=exec_dir, save_dir=save_dir,
+                               z=redshift, plot=plot_raw, match_resolution=match_resolution,
+                               n_along=n_along, n_across=n_across,
+                               lg_pixsize_min_mas=lg_pixsize_min_mas, lg_pixsize_max_mas=lg_pixsize_max_mas,
+                               ts_obs_days=ts_obs_days, flare_params=flare_params, flare_shape=flare_shape,
+                               Gamma=Gamma, LOS_coeff=LOS_coeff, b=b, B_1=B_1, n=n,
+                               gamma_min=gamma_min, gamma_max=gamma_max, s=s)
+        # If for some epoch something went wrong
+        except:
+            clear_tobs(exec_dir)
+            clear_fits(save_dir)
+            clear_pics(basename, save_dir)
+            continue
         create_movie_raw(source_basename, save_dir)
 
     if redo[2]:
