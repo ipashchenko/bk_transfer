@@ -193,10 +193,9 @@ for i in range(n_sources):
 
     # Fixed times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    # ts_obs_days = np.linspace(-400.0, 9*360, 40)/(1+redshift)
+    # ts_obs_days = np.linspace(-400.0, 9*360, 4)/(1+redshift)
     # ts_obs_days = np.array([0.0])
 
-    # FIXME:
     # From real sources times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
     ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
@@ -280,17 +279,25 @@ for i in range(n_sources):
         print("==========================================")
         print(f"Generating and modelling visibilities for {source_basename}")
         print("==========================================")
-        make_and_model_visibilities(basename=source_basename, only_band=only_band, z=redshift,
-                                    lg_pixsize_min_mas=lg_pixsize_min_mas, lg_pixsize_max_mas=lg_pixsize_max_mas,
-                                    n_along=n_along, n_across=n_across, match_resolution=match_resolution,
-                                    ts_obs_days=ts_obs_days,
-                                    noise_scale_factor=noise_scale_factor, mapsizes_dict=mapsizes_dict,
-                                    plot_clean=plot_clean, only_plot_raw=only_plot_raw,
-                                    extract_extended=extract_extended, use_scipy=use_scipy_for_extract_extended,
-                                    use_elliptical=use_elliptical, beam_fractions=beam_fractions, two_stage=two_stage,
-                                    n_components=n_components,
-                                    save_dir=save_dir, jetpol_run_directory=exec_dir, path_to_script=path_to_script,
-                                    calculon=calculon)
+        try:
+            make_and_model_visibilities(basename=source_basename, only_band=only_band, z=redshift,
+                                        lg_pixsize_min_mas=lg_pixsize_min_mas, lg_pixsize_max_mas=lg_pixsize_max_mas,
+                                        n_along=n_along, n_across=n_across, match_resolution=match_resolution,
+                                        ts_obs_days=ts_obs_days,
+                                        noise_scale_factor=noise_scale_factor, mapsizes_dict=mapsizes_dict,
+                                        plot_clean=plot_clean, only_plot_raw=only_plot_raw,
+                                        extract_extended=extract_extended, use_scipy=use_scipy_for_extract_extended,
+                                        use_elliptical=use_elliptical, beam_fractions=beam_fractions, two_stage=two_stage,
+                                        n_components=n_components,
+                                        save_dir=save_dir, jetpol_run_directory=exec_dir, path_to_script=path_to_script,
+                                        calculon=calculon)
+        # If for some epoch something went wrong
+        except:
+            clear_tobs(exec_dir)
+            clear_fits(save_dir)
+            clear_pics(basename, save_dir)
+            continue
+
         create_movie_clean(source_basename, save_dir, only_band)
 
     clear_tobs(exec_dir)
