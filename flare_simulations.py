@@ -106,7 +106,7 @@ def clear_pics(basename, files_dir):
 
 redo = [True, True, True]
 calculon = True
-basename = "survey"
+basename = "comps_decreaseB"
 only_band = None
 redshift = 0.8
 K_1 = 5000.
@@ -141,8 +141,8 @@ mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
-extract_extended = True
-use_elliptical = False 
+extract_extended = False
+use_elliptical = False
 use_scipy_for_extract_extended = False
 if use_scipy_for_extract_extended and use_elliptical:
     raise Exception("Currently, Scipy can't be used to fit elliptical Gaussians.")
@@ -158,7 +158,7 @@ if not calculon:
 else:
     exec_dir = "/home/ilya/github/flares/bk_transfer/Release"
     parallels_run_file = "/home/ilya/github/flares/bk_transfer/parallels_run.txt"
-    save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares"
+    save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/survey"
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
 
 
@@ -170,7 +170,8 @@ if not os.path.exists(save_dir):
 # flare_params = [(0.0, 0.0, 0.0, 0.1)]
 # ts_obs_days = np.array([0.0])
 
-n_sources = 20
+n_sources = 40
+# n_sources = 1
 idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
     # First set
@@ -179,7 +180,7 @@ for i in range(n_sources):
     # Second set
     B_1 = 0.7
     b = 1.0
-    Gamma = 10.
+    Gamma = 15.
     LOS_coeff = 0.5
     # HOAngle_deg = 15.
 
@@ -193,7 +194,7 @@ for i in range(n_sources):
 
     # Fixed times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    # ts_obs_days = np.linspace(-400.0, 9*360, 4)/(1+redshift)
+    # ts_obs_days = np.linspace(-400.0, 10*360, 44)/(1+redshift)
     # ts_obs_days = np.array([0.0])
 
     # From real sources times
@@ -206,17 +207,21 @@ for i in range(n_sources):
 
     # First flare
     t_start_years = np.random.uniform(-1, 1., size=1)[0]
+    # t_start_years = 0.
     t_start_days = t_start_years*12*30
     # FIXME:
     amp_N = np.random.uniform(3, 10, size=1)[0]
+    # amp_N = 8.
     # amp_N = 0.0
     # Only N flare
-    amp_B = 0.0
+    # amp_B = 0.0
     # Equipartition flare
     # amp_B = np.sqrt(amp_N)
     # Increasing N, decreasing B flare
     # amp_B = -0.5
+    amp_B = 1./np.sqrt(1. + amp_N) - 1.
     width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
+    # width_pc = 0.1
     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
     # Maximal number of flares
@@ -231,11 +236,12 @@ for i in range(n_sources):
         # amp_N = 0.0
         amp_N = np.random.uniform(3, 10, size=1)[0]
         # Only N flare
-        amp_B = 0.0
+        # amp_B = 0.0
         # Equipartition flare
         # amp_B = np.sqrt(amp_N)
         # Increasing N, decreasing B flare
         # amp_B = -0.5
+        amp_B = 1./np.sqrt(1. + amp_N) - 1.
         width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 

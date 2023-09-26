@@ -216,7 +216,10 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         else:
             for i, epoch in enumerate(epochs):
                 if i == 0:
-                    mdl_fname = f"in_{n_components}_{freq_names[freq_ghz]}_last.mdl"
+                    if not use_elliptical:
+                        mdl_fname = f"in_{n_components}_{freq_names[freq_ghz]}_last.mdl"
+                    else:
+                        mdl_fname = f"in_{n_components}_{freq_names[freq_ghz]}_ell.mdl"
                 else:
                     mdl_fname = "out{}_{:.1f}.mdl".format(n_components, epochs[i-1])
                 modelfit_difmap("template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch),
@@ -235,7 +238,9 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 # Position of the core
                 r = np.hypot(core.p[1], core.p[2])
                 core_fluxes[freq_ghz].append(flux)
+                core_fluxes_err[freq_ghz].append(0.0)
                 core_positions[freq_ghz].append(r)
+                core_positions_err[freq_ghz].append(0.0)
 
         if plot_clean:
             for i, epoch in enumerate(epochs):
