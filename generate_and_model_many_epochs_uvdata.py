@@ -74,13 +74,12 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
     freqs_ghz = [2.3, 8.6]
     freq_names = {2.3: "S", 8.6: "X"}
     # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
+    # Originally used template
     # template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis.fits",
     #                    8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis.fits"}
     # These have smalllest beam
     template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2009_04_21_pus_vis.fits",
                        8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2009_04_21_pus_vis.fits"}
-    # template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis_doscat.fits",
-    #                    8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis_doscat.fits"}
     core_positions = dict()
     core_positions_err = dict()
     core_fluxes = dict()

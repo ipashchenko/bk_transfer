@@ -16,7 +16,8 @@ table2_file = "/home/ilya/data/rfc/J_MNRAS_485_1822_table2.fits"
 tab1 = pf.getdata(table1_file)
 tab2 = pf.getdata(table2_file)
 sources = tab1["J2000"]
-source_epochs = dict()
+source_times_dict = dict()
+source_epochs_dict = dict()
 all_cadences = list()
 for source in sources:
     source_idx = tab2["J2000"] == source
@@ -27,8 +28,11 @@ for source in sources:
     # Times relative to the first time (thus, first time will be always zero)
     dtimes = times - times[0]
     vdtimes = dtimes.value
-    source_epochs[str(source)] = vdtimes
+    source_times_dict[str(source)] = vdtimes
+    source_epochs_dict[str(source)] = epochs
 
+
+# sys.exit(0)
 
 def clear_txt_images(files_dir):
     files = glob.glob(os.path.join(files_dir, "jet_image_[i,tau]*_[X, S]_*.txt"))
