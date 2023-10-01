@@ -152,7 +152,7 @@ use_flare_param_files_from_other_run = False
 use_scipy_for_extract_extended = False
 if use_scipy_for_extract_extended and use_elliptical:
     raise Exception("Currently, Scipy can't be used to fit elliptical Gaussians.")
-beam_fractions = np.round(np.linspace(0.95, 1.05, 11), 2)
+beam_fractions = np.round(np.linspace(0.5, 1.5, 11), 2)
 two_stage = False
 n_components = 4
 
@@ -179,9 +179,11 @@ if not os.path.exists(save_dir):
 # ts_obs_days = np.array([0.0])
 
 # n_sources = 40
-n_sources = 1
-idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
+n_sources = 2
+# idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
+    source = sources[i]
+    print("Source = {}".format(source))
     # First set
     B_1 = 1.5
     b = 1.25
@@ -199,14 +201,15 @@ for i in range(n_sources):
 
     # Fixed times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    ts_obs_days = np.linspace(-400.0, 10*360, 44)/(1+redshift)
+    # ts_obs_days = np.linspace(-400.0, 10*360, 44)/(1+redshift)
     # ts_obs_days = np.array([0.0])
 
-    # # From real sources times
-    # # This will be multiplied on (1+z) to bring to the observer z = 0.
-    # ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
-    # # Shift to sample flares right
-    # ts_obs_days -= 400
+    # From real sources times
+    # This will be multiplied on (1+z) to bring to the observer z = 0.
+    ts_obs_days = source_times_dict[source]/(1+redshift)
+    epochs = source_epochs_dict[source]
+    # Shift to sample flares right
+    ts_obs_days -= 400
 
     if not use_flare_param_files_from_other_run:
         flare_params = list()

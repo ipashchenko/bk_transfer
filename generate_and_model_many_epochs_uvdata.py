@@ -18,6 +18,8 @@ import matplotlib.pyplot as plt
 def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                                 lg_pixsize_min_mas=-2.5, lg_pixsize_max_mas=-0.5, n_along = 400, n_across = 80, match_resolution = False,
                                 ts_obs_days = np.linspace(-400.0, 8*360, 20),
+                                source = None,
+                                epochs = None,
                                 noise_scale_factor = 1.0, mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)},
                                 plot_clean = True, only_plot_raw = False,
                                 extract_extended = True, use_scipy = False, use_elliptical = False, beam_fractions = (1.0,), two_stage=True,
@@ -69,7 +71,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         lg_pixsize_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas}
         lg_pixsize_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas}
 
-    epochs = ts_obs_days
+    times_obs_days = ts_obs_days
     rot_angle_deg = -90.0
     freqs_ghz = [2.3, 8.6]
     freq_names = {2.3: "S", 8.6: "X"}
@@ -78,8 +80,9 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
     # template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis.fits",
     #                    8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis.fits"}
     # These have smalllest beam
-    template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2009_04_21_pus_vis.fits",
-                       8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2009_04_21_pus_vis.fits"}
+    # template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2009_04_21_pus_vis.fits",
+    #                    8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2009_04_21_pus_vis.fits"}
+    # beam_sizes_dict = dict()
     core_positions = dict()
     core_positions_err = dict()
     core_fluxes = dict()
@@ -104,6 +107,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
     for freq_ghz in freqs_ghz:
         if only_band is not None and only_band != freq_names[freq_ghz]:
             continue
+        # beam_sizes_dict[freq_ghz] = list()
         core_positions[freq_ghz] = list()
         core_positions_err[freq_ghz] = list()
         core_fluxes[freq_ghz] = list()
@@ -112,11 +116,19 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         core_sizes_err[freq_ghz] = list()
         es[freq_ghz] = list()
         bpas[freq_ghz] = list()
-        nw_beam_size = None
-        for epoch in epochs:
-            if nw_beam_size is None:
-                nw_beam = find_nw_beam(template_uvfits[freq_ghz], "i", mapsize=mapsizes_dict[freq_ghz])
-                nw_beam_size = np.sqrt(nw_beam[0]*nw_beam[1])
+        for epoch, time_obs_days in zip(epochs, times_obs_days):
+
+            print(f"Working with real data for epoch {epoch}")
+            # Find name suffix
+            to_check = glob.glob(f"/home/ilya/data/rfc/{source}/{source}_X_{epoch}_*_vis.fits")[0]
+            name_suffix = (os.path.split(to_check)[-1]).split("_")[-2]
+            template_uvfits = {2.3: f"/home/ilya/data/rfc/{source}/{source}_S_{epoch}_{name_suffix}_vis.fits",
+                               8.6: f"/home/ilya/data/rfc/{source}/{source}_X_{epoch}_{name_suffix}_vis.fits"}
+
+            print("Using templates: ", template_uvfits)
+            nw_beam = find_nw_beam(template_uvfits[freq_ghz], "i", mapsize=mapsizes_dict[freq_ghz])
+            nw_beam_size = np.sqrt(nw_beam[0]*nw_beam[1])
+            # beam_sizes_dict[freq_ghz].append(nw_beam_size)
             uvdata = UVData(template_uvfits[freq_ghz])
             downscale_uvdata_by_freq_flag = downscale_uvdata_by_freq(uvdata)
             noise = uvdata.noise(average_freq=False, use_V=False)
@@ -128,7 +140,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                           lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
                           jet_side=True, rot=np.deg2rad(rot_angle_deg))
 
-            image_file = "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], epoch)
+            image_file = "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], time_obs_days)
             image = np.loadtxt(image_file)
             print(f"Flux = {np.sum(image)}")
 
@@ -144,16 +156,17 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
             # if only_plot_raw:
             #     continue
 
-            jm.load_image_stokes("I", "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], epoch), scale=1.0)
+            jm.load_image_stokes("I", "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], time_obs_days), scale=1.0)
             uvdata.zero_data()
             uvdata.substitute([jm])
             uvdata.noise_add(noise)
-            uvdata.save(os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)), rewrite=True, downscale_by_freq=True)
+            uvdata.save(os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], time_obs_days)), rewrite=True, downscale_by_freq=True)
 
 
         if extract_extended:
             beam_fracs = " ".join([str(bf) for bf in beam_fractions])
-            fnames = " ".join(["template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch) for epoch in epochs])
+            # beam_sizes = " ".join([str(bs) for bs in beam_sizes_dict[freq_ghz]])
+            fnames = " ".join(["template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], time_obs_days) for time_obs_days in times_obs_days])
             script_dir = os.path.split(jetpol_run_directory)[0]
 
 
@@ -162,8 +175,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
             else:
                 n_jobs = 4
             print("In generate_and_model use_elliptical = ", use_elliptical)
-            print(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --use_elliptical {use_elliptical} --fname ::: {fnames}")
-            os.system(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --use_elliptical {use_elliptical} --fname ::: {fnames}")
+            print(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --use_elliptical {use_elliptical} --fname ::: {fnames}")
+            os.system(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --use_elliptical {use_elliptical} --fname ::: {fnames}")
 
 
 
@@ -174,8 +187,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
 
             # Gather results
-            for epoch in epochs:
-                fname = "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)
+            for time_obs_days in times_obs_days:
+                fname = "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], time_obs_days)
                 base = fname.split(".")[:-1]
                 base = ".".join(base)
                 with open(os.path.join(save_dir, f"{base}_core_modelfit_result.json"), "r") as fo:
@@ -216,22 +229,22 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
             nw_beam_size = None
 
         else:
-            for i, epoch in enumerate(epochs):
+            for i, time_obs_days in enumerate(times_obs_days):
                 if i == 0:
                     if not use_elliptical:
                         mdl_fname = f"in_{n_components}_{freq_names[freq_ghz]}_last.mdl"
                     else:
                         mdl_fname = f"in_{n_components}_{freq_names[freq_ghz]}_ell.mdl"
                 else:
-                    mdl_fname = "out{}_{:.1f}.mdl".format(n_components, epochs[i-1])
-                modelfit_difmap("template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch),
-                                mdl_fname=mdl_fname, out_fname="out{}_{:.1f}.mdl".format(n_components, epoch), niter=200, stokes='i',
+                    mdl_fname = "out{}_{:.1f}.mdl".format(n_components, times_obs_days[i-1])
+                modelfit_difmap("template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], time_obs_days),
+                                mdl_fname=mdl_fname, out_fname="out{}_{:.1f}.mdl".format(n_components, time_obs_days), niter=200, stokes='i',
                                 path=save_dir, mdl_path=save_dir, out_path=save_dir,
                                 show_difmap_output=False,
                                 save_dirty_residuals_map=False,
                                 dmap_name=None, dmap_size=(1024, 0.1))
 
-                components = import_difmap_model("out{}_{:.1f}.mdl".format(n_components, epoch), save_dir)
+                components = import_difmap_model("out{}_{:.1f}.mdl".format(n_components, time_obs_days), save_dir)
                 # Find closest to phase center component
                 comps = sorted(components, key=lambda x: np.hypot(x.p[1], x.p[2]))
                 core = comps[0]
@@ -245,13 +258,13 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 core_positions_err[freq_ghz].append(0.0)
 
         if plot_clean:
-            for i, epoch in enumerate(epochs):
+            for i, time_obs_days in enumerate(times_obs_days):
 
-                outfname = "model_cc_i_{}_{:.1f}.fits".format(freq_names[freq_ghz], epoch)
+                outfname = "model_cc_i_{}_{:.1f}.fits".format(freq_names[freq_ghz], time_obs_days)
                 if os.path.exists(os.path.join(save_dir, outfname)):
                     os.unlink(os.path.join(save_dir, outfname))
 
-                clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
+                clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], time_obs_days), path=save_dir,
                              outfname=outfname, outpath=save_dir, stokes="i",
                              mapsize_clean=(512, 0.2), path_to_script=path_to_script,
                              show_difmap_output=False)
@@ -290,7 +303,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
 
                     # components = import_difmap_model("it2.mdl", save_dir)
                 else:
-                    components = import_difmap_model(os.path.join(save_dir, "out{}_{:.1f}.mdl".format(n_components, epoch)))
+                    components = import_difmap_model(os.path.join(save_dir, "out{}_{:.1f}.mdl".format(n_components, time_obs_days)))
 
                 # IPOL contours
                 # Beam must be in deg
@@ -299,9 +312,9 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                             min_abs_level=4*std, blc=blc, trc=trc, beam=beam_deg, close=True, show_beam=True, show=False,
                             contour_color='gray', contour_linewidth=0.25, components=components)
                 axes = fig.get_axes()[0]
-                axes.annotate("{:05.1f} months".format((1+z)*epoch/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
+                axes.annotate("{:05.1f} months".format((1+z)*time_obs_days/30), xy=(0.03, 0.9), xycoords="axes fraction", color="gray",
                               weight='bold', ha='left', va='center', size=10)
-                fig.savefig(os.path.join(save_dir, "{}_observed_i_{}_{:.1f}.png".format(basename, freq_names[freq_ghz], epoch)), dpi=600, bbox_inches="tight")
+                fig.savefig(os.path.join(save_dir, "{}_observed_i_{}_{:.1f}.png".format(basename, freq_names[freq_ghz], time_obs_days)), dpi=600, bbox_inches="tight")
 
 
     if only_plot_raw:
@@ -328,7 +341,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         CS_err = np.hypot(core_positions_err[2.3], core_positions_err[8.6])
         np.savetxt(os.path.join(save_dir, f"source_{basename}_CS.txt"), np.vstack((CS, CS_err)).T)
 
-    np.savetxt(os.path.join(save_dir, f"source_{basename}_epochs.txt"), epochs*(1+z))
+    np.savetxt(os.path.join(save_dir, f"source_{basename}_epochs.txt"), times_obs_days*(1+z))
     np.savetxt(os.path.join(save_dir, f"source_{basename}_S_2.txt"), np.vstack((core_fluxes[2.3], core_fluxes_err[2.3])).T)
     np.savetxt(os.path.join(save_dir, f"source_{basename}_S_8.txt"), np.vstack((core_fluxes[8.6], core_fluxes_err[8.6])).T)
 
@@ -344,30 +357,30 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
     axes.plot([], [], color="C1", label=r"$S_{\rm core,2 GHz}$")
 
     if only_band is None:
-        axes.plot(epochs*(1+z)/30/12, CS, "--", label="CS", color="black")
-        axes.scatter(epochs*(1+z)/30/12, CS, color="black")
+        axes.plot(times_obs_days*(1+z)/30/12, CS, "--", label="CS", color="black")
+        axes.scatter(times_obs_days*(1+z)/30/12, CS, color="black")
 
     if only_band is None:
-        axes.plot(epochs*(1+z)/30/12, core_positions[8.6], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
-        axes.scatter(epochs*(1+z)/30/12, core_positions[8.6], color="C0")
-        axes2.plot(epochs*(1+z)/30/12, core_fluxes[8.6], color="C0")
-        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[8.6], color="C0")
-        axes.plot(epochs*(1+z)/30/12, core_positions[2.3], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
-        axes.scatter(epochs*(1+z)/30/12, core_positions[2.3], color="C1")
-        axes2.plot(epochs*(1+z)/30/12, core_fluxes[2.3], color="C1")
-        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[2.3], color="C1")
+        axes.plot(times_obs_days*(1+z)/30/12, core_positions[8.6], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
+        axes.scatter(times_obs_days*(1+z)/30/12, core_positions[8.6], color="C0")
+        axes2.plot(times_obs_days*(1+z)/30/12, core_fluxes[8.6], color="C0")
+        axes2.scatter(times_obs_days*(1+z)/30/12, core_fluxes[8.6], color="C0")
+        axes.plot(times_obs_days*(1+z)/30/12, core_positions[2.3], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
+        axes.scatter(times_obs_days*(1+z)/30/12, core_positions[2.3], color="C1")
+        axes2.plot(times_obs_days*(1+z)/30/12, core_fluxes[2.3], color="C1")
+        axes2.scatter(times_obs_days*(1+z)/30/12, core_fluxes[2.3], color="C1")
 
     if only_band is not None and only_band == freq_names[8.6]:
-        axes.plot(epochs*(1+z)/30/12, core_positions[8.6], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
-        axes.scatter(epochs*(1+z)/30/12, core_positions[8.6], color="C0")
-        axes2.plot(epochs*(1+z)/30/12, core_fluxes[8.6], color="C0")
-        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[8.6], color="C0")
+        axes.plot(times_obs_days*(1+z)/30/12, core_positions[8.6], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
+        axes.scatter(times_obs_days*(1+z)/30/12, core_positions[8.6], color="C0")
+        axes2.plot(times_obs_days*(1+z)/30/12, core_fluxes[8.6], color="C0")
+        axes2.scatter(times_obs_days*(1+z)/30/12, core_fluxes[8.6], color="C0")
 
     if only_band is not None and only_band == freq_names[2.3]:
-        axes.plot(epochs*(1+z)/30/12, core_positions[2.3], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
-        axes.scatter(epochs*(1+z)/30/12, core_positions[2.3], color="C1")
-        axes2.plot(epochs*(1+z)/30/12, core_fluxes[2.3], color="C1")
-        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[2.3], color="C1")
+        axes.plot(times_obs_days*(1+z)/30/12, core_positions[2.3], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
+        axes.scatter(times_obs_days*(1+z)/30/12, core_positions[2.3], color="C1")
+        axes2.plot(times_obs_days*(1+z)/30/12, core_fluxes[2.3], color="C1")
+        axes2.scatter(times_obs_days*(1+z)/30/12, core_fluxes[2.3], color="C1")
 
     axes.legend()
     axes2.set_ylim([0, None])

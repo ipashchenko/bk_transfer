@@ -252,11 +252,13 @@ if __name__ == "__main__":
                      type=float,
                      default=[1024, 0.1],  # default if nothing is provided
                      )
-    CLI.add_argument("--nw_beam_size",  # name on the CLI - drop the `--` for positional/required parameters
-                     type=float
-                     # default=[1.353, 1.557, -65.65],  # default if nothing is provided
-                     # default=[4.561, 5.734, -51.67],  # default if nothing is provided
-                     )
+    # CLI.add_argument("--nw_beam_size",  # name on the CLI - drop the `--` for positional/required parameters
+    #                  type=float,
+    #                  nargs="*",
+    #                  default=1.0,
+    #                  # default=[1.353, 1.557, -65.65],  # default if nothing is provided
+    #                  # default=[4.561, 5.734, -51.67],  # default if nothing is provided
+    #                  )
     CLI.add_argument("--use_elliptical",
                      type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     CLI.add_argument("--save_dir",
@@ -267,7 +269,7 @@ if __name__ == "__main__":
 
     fname = args.fname
     save_dir = args.save_dir
-    nw_beam_size = args.nw_beam_size
+    # nw_beam_size = args.nw_beam_size
     path_to_script = args.path_to_script
     use_elliptical = args.use_elliptical
     mapsize_clean=args.mapsize_clean
