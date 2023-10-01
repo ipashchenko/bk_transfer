@@ -106,7 +106,8 @@ def clear_pics(basename, files_dir):
 
 redo = [True, True, True]
 calculon = True
-basename = "comps_decreaseB"
+# basename = "comps_decreaseB_same_flare_params"
+basename = "survey"
 only_band = None
 redshift = 0.8
 K_1 = 5000.
@@ -141,12 +142,13 @@ mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
-extract_extended = False
+extract_extended = True
 use_elliptical = False
+use_flare_param_files_from_other_run = False
 use_scipy_for_extract_extended = False
 if use_scipy_for_extract_extended and use_elliptical:
     raise Exception("Currently, Scipy can't be used to fit elliptical Gaussians.")
-beam_fractions = np.round(np.linspace(0.5, 1.5, 11), 2)
+beam_fractions = np.round(np.linspace(0.95, 1.05, 11), 2)
 two_stage = False
 n_components = 4
 
@@ -154,11 +156,13 @@ if not calculon:
     exec_dir = "/home/ilya/github/bk_transfer/Release"
     parallels_run_file = "/home/ilya/github/bk_transfer/parallels_run.txt"
     save_dir = "/home/ilya/github/bk_transfer/pics/flares"
+    flare_param_files_dir = "/home/ilya/github/bk_transfer/pics/flares"
     path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms"
 else:
     exec_dir = "/home/ilya/github/flares/bk_transfer/Release"
     parallels_run_file = "/home/ilya/github/flares/bk_transfer/parallels_run.txt"
     save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/survey"
+    flare_param_files_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/survey/comps"
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
 
 
@@ -170,22 +174,19 @@ if not os.path.exists(save_dir):
 # flare_params = [(0.0, 0.0, 0.0, 0.1)]
 # ts_obs_days = np.array([0.0])
 
-n_sources = 40
-# n_sources = 1
+# n_sources = 40
+n_sources = 1
 idxs = np.random.choice(np.arange(len(sources), dtype=int), size=n_sources, replace=False)
 for i in range(n_sources):
     # First set
-    # B_1 = 2.0
-    # b = 1.25
+    B_1 = 1.5
+    b = 1.25
     # Second set
-    B_1 = 0.7
-    b = 1.0
-    Gamma = 15.
+    # B_1 = 0.7
+    # b = 1.0
+    Gamma = 21.
     LOS_coeff = 0.5
-    # HOAngle_deg = 15.
-
-    # Testing elliptical
-    HOAngle_deg = 10.
+    HOAngle_deg = 20.
 
     los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
     cone_half_angle_deg = np.round(np.rad2deg(np.arctan(np.tan(np.deg2rad(HOAngle_deg)) * np.sin(np.deg2rad(los_angle_deg)))), 2)
@@ -194,61 +195,68 @@ for i in range(n_sources):
 
     # Fixed times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    # ts_obs_days = np.linspace(-400.0, 10*360, 44)/(1+redshift)
+    ts_obs_days = np.linspace(-400.0, 10*360, 44)/(1+redshift)
     # ts_obs_days = np.array([0.0])
 
-    # From real sources times
-    # This will be multiplied on (1+z) to bring to the observer z = 0.
-    ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
-    # Shift to sample flares right
-    ts_obs_days -= 400
+    # # From real sources times
+    # # This will be multiplied on (1+z) to bring to the observer z = 0.
+    # ts_obs_days = source_epochs[sources[idxs[i]]]/(1+redshift)
+    # # Shift to sample flares right
+    # ts_obs_days -= 400
 
-    flare_params = list()
+    if not use_flare_param_files_from_other_run:
+        flare_params = list()
 
-    # First flare
-    t_start_years = np.random.uniform(-1, 1., size=1)[0]
-    # t_start_years = 0.
-    t_start_days = t_start_years*12*30
-    # FIXME:
-    amp_N = np.random.uniform(3, 10, size=1)[0]
-    # amp_N = 8.
-    # amp_N = 0.0
-    # Only N flare
-    # amp_B = 0.0
-    # Equipartition flare
-    # amp_B = np.sqrt(amp_N)
-    # Increasing N, decreasing B flare
-    # amp_B = -0.5
-    amp_B = 1./np.sqrt(1. + amp_N) - 1.
-    width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
-    # width_pc = 0.1
-    flare_params.append((amp_N, amp_B, t_start_days, width_pc))
-
-    # Maximal number of flares
-    for i_fl in range(10):
-        # Waiting time 2 yrs
-        dt_yrs = 0.0
-        while dt_yrs < 2.0:
-            dt_yrs = np.random.exponential(2.0)
-        t_start_years += dt_yrs
+        # First flare
+        # t_start_years = np.random.uniform(-1, 1., size=1)[0]
+        t_start_years = 0.
         t_start_days = t_start_years*12*30
         # FIXME:
+        # amp_N = np.random.uniform(3, 10, size=1)[0]
+        amp_N = 5.
         # amp_N = 0.0
-        amp_N = np.random.uniform(3, 10, size=1)[0]
         # Only N flare
-        # amp_B = 0.0
+        amp_B = 0.0
         # Equipartition flare
         # amp_B = np.sqrt(amp_N)
         # Increasing N, decreasing B flare
         # amp_B = -0.5
-        amp_B = 1./np.sqrt(1. + amp_N) - 1.
-        width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
+        # amp_B = 1./np.sqrt(1. + amp_N) - 1.
+        # width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
+        width_pc = 0.15
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
-        if t_start_days > ts_obs_days[-1]:
-            break
+        # Maximal number of flares
+        # for i_fl in range(10):
+        #     # Waiting time 2 yrs
+        #     dt_yrs = 0.0
+        #     while dt_yrs < 2.0:
+        #         dt_yrs = np.random.exponential(2.0)
+        #     t_start_years += dt_yrs
+        #     t_start_days = t_start_years*12*30
+        #     # FIXME:
+        #     # amp_N = 0.0
+        #     amp_N = np.random.uniform(3, 10, size=1)[0]
+        #     # Only N flare
+        #     # amp_B = 0.0
+        #     # Equipartition flare
+        #     # amp_B = np.sqrt(amp_N)
+        #     # Increasing N, decreasing B flare
+        #     # amp_B = -0.5
+        #     amp_B = 1./np.sqrt(1. + amp_N) - 1.
+        #     width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
+        #     flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+        #
+        #     if t_start_days > ts_obs_days[-1]:
+        #         break
 
-    np.savetxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"), np.atleast_2d(flare_params))
+        np.savetxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"), np.atleast_2d(flare_params))
+    else:
+        flare_params = np.loadtxt(os.path.join(flare_param_files_dir, f"flares_param_source_{i}.txt"))
+        # Convert 2D array to list of lists
+        flare_params = flare_params.tolist()
+        # Save as it was generated independently
+        np.savetxt(os.path.join(save_dir, f"flares_param_source_{i}.txt"), np.atleast_2d(flare_params))
 
     if redo[0]:
         clear_txt_images(exec_dir)
@@ -292,27 +300,27 @@ for i in range(n_sources):
         print("==========================================")
         print(f"Generating and modelling visibilities for {source_basename}")
         print("==========================================")
-        try:
-            make_and_model_visibilities(basename=source_basename, only_band=only_band, z=redshift,
-                                        lg_pixsize_min_mas=lg_pixsize_min_mas, lg_pixsize_max_mas=lg_pixsize_max_mas,
-                                        n_along=n_along, n_across=n_across, match_resolution=match_resolution,
-                                        ts_obs_days=ts_obs_days,
-                                        noise_scale_factor=noise_scale_factor, mapsizes_dict=mapsizes_dict,
-                                        plot_clean=plot_clean, only_plot_raw=only_plot_raw,
-                                        extract_extended=extract_extended, use_scipy=use_scipy_for_extract_extended,
-                                        use_elliptical=use_elliptical, beam_fractions=beam_fractions, two_stage=two_stage,
-                                        n_components=n_components,
-                                        save_dir=save_dir, jetpol_run_directory=exec_dir, path_to_script=path_to_script,
-                                        calculon=calculon)
+        # try:
+        make_and_model_visibilities(basename=source_basename, only_band=only_band, z=redshift,
+                                    lg_pixsize_min_mas=lg_pixsize_min_mas, lg_pixsize_max_mas=lg_pixsize_max_mas,
+                                    n_along=n_along, n_across=n_across, match_resolution=match_resolution,
+                                    ts_obs_days=ts_obs_days,
+                                    noise_scale_factor=noise_scale_factor, mapsizes_dict=mapsizes_dict,
+                                    plot_clean=plot_clean, only_plot_raw=only_plot_raw,
+                                    extract_extended=extract_extended, use_scipy=use_scipy_for_extract_extended,
+                                    use_elliptical=use_elliptical, beam_fractions=beam_fractions, two_stage=two_stage,
+                                    n_components=n_components,
+                                    save_dir=save_dir, jetpol_run_directory=exec_dir, path_to_script=path_to_script,
+                                    calculon=calculon)
         # If for some epoch something went wrong
-        except:
-            clear_tobs(exec_dir)
-            clear_fits(save_dir)
-            clear_pics(basename, save_dir)
-            continue
+        # except:
+        #     # clear_tobs(exec_dir)
+        #     clear_fits(save_dir)
+        #     clear_pics(basename, save_dir)
+        #     continue
 
         create_movie_clean(source_basename, save_dir, only_band)
 
-    clear_tobs(exec_dir)
+    # clear_tobs(exec_dir)
     clear_fits(save_dir)
     # clear_pics(basename, save_dir)

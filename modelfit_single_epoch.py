@@ -155,6 +155,11 @@ def modelfit_core_wo_extending(uvfits, mapsize_clean, beam_fractions, path_to_sc
                             out_fname=os.path.join(working_dir, "hybrid_fitted.mdl"),
                             niter=100, stokes='i', show_difmap_output=True)
 
+
+            # DEBUG
+            shutil.copy(os.path.join(working_dir, "hybrid_fitted.mdl"), os.path.join(save_dir, "hybrid_fitted.mdl"))
+            
+
             # Extract core parameters
             with open(os.path.join(working_dir, "hybrid_fitted.mdl"), "r") as fo:
                 lines = fo.readlines()
