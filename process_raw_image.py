@@ -136,16 +136,10 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
             "core_flux": core_flux, "jet_flux": jet_flux}
 
 
-def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
-                       n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-                       ts_obs_days, flare_params, flare_shape,
-                       Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s):
-    if match_resolution:
-        lg_pixel_size_mas_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas-np.log10(8.6/2.3)}
-        lg_pixel_size_mas_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas-np.log10(8.6/2.3)}
-    else:
-        lg_pixel_size_mas_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas}
-        lg_pixel_size_mas_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas}
+def process_raw_images(basename=None, txt_dir=None, save_dir=None, z=None, plot=None,
+                       n_along=None, n_across=None, lg_pixsize_min_mas=None, lg_pixsize_max_mas=None,
+                       ts_obs_days=None, flare_params=None, flare_shape=None,
+                       Gamma=None, LOS_coeff=None, b=None, B_1=None, n=None, gamma_min=None, gamma_max=None, s=None):
 
     theta_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
     N_1 = equipartition_bsq_coefficient(s, gamma_min, gamma_max)*B_1**2
@@ -190,9 +184,9 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
             # plt.show()
         taux_txt = os.path.join(txt_dir, "jet_image_tau_X_{:.1f}.txt".format(t_obs_days))
         taus_txt = os.path.join(txt_dir, "jet_image_tau_S_{:.1f}.txt".format(t_obs_days))
-        resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixel_size_mas_min[8.6], lg_pixel_size_mas_max[8.6],
+        resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixsize_min_mas[8.6], lg_pixsize_max_mas[8.6],
                                       n_along, n_across)
-        ress = get_proj_core_position(images_txt, taus_txt, z, lg_pixel_size_mas_min[2.3], lg_pixel_size_mas_max[2.3],
+        ress = get_proj_core_position(images_txt, taus_txt, z, lg_pixsize_min_mas[2.3], lg_pixsize_max_mas[2.3],
                                       n_along, n_across)
         corex_positions.append(resx["tau_1_1_mas"])
         cores_positions.append(ress["tau_1_1_mas"])
@@ -322,34 +316,3 @@ def process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
     fig.savefig(os.path.join(save_dir, "{}_Bc_Nc_true_Xband.png".format(basename)), bbox_inches="tight")
     plt.show()
 
-
-if __name__ == "__main__":
-    txt_dir = "/home/ilya/github/bk_transfer/Release"
-    save_dir = "/home/ilya/github/bk_transfer/pics/flares"
-    z = 1.0
-    plot = True
-    match_resolution = False
-    lg_pixsize_min_mas = -2.5
-    lg_pixsize_max_mas = -0.5
-    n_along = 400
-    n_across = 80
-
-    basename = "test"
-    ts_obs_days = np.linspace(-400.0, 8*360, 20)
-    # ts_obs_days = [0.0]
-
-    flare_params = [(2.0, 0.0, 0.0, 0.2)]
-    flare_shape = 20.0
-    Gamma = 10.0
-    LOS_coeff = 0.5
-    b = 1.0
-    B_1 = 2.0
-    n = 2.0
-    gamma_min = 10.
-    gamma_max = 1E+04
-    s = 2.
-
-    process_raw_images(basename, txt_dir, save_dir, z, plot, match_resolution,
-                       n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-                       ts_obs_days, flare_params, flare_shape,
-                       Gamma, LOS_coeff, b, B_1, n, gamma_min, gamma_max, s)

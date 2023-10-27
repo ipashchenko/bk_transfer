@@ -190,7 +190,7 @@ def modelfit_core_wo_extending(uvfits, mapsize_clean, beam_fractions, path_to_sc
                         elif type_ == "2":
                             component = (flux, ra, dec, major, axial, phi)
                         else:
-                            raise Exception("Component must be Circualr or Elliptical Gaussian!")
+                            raise Exception("Component must be Circular or Elliptical Gaussian!")
                         components.append(component)
                 if len(components) > 1:
                     raise Exception("There should be only one core component!")

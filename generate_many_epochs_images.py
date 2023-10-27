@@ -4,30 +4,18 @@ import sys
 import numpy as np
 
 
-def generate_txt_images(redshift, B_1, m_b, K_1, Gamma,
-                        LOS_coeff, HOAngle_deg,
-                        n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-                        flare_params, ts_obs_days,
-                        exec_dir, parallels_run_file, calculon):
+def generate_txt_images(redshift=None, B_1=None, m_b=None, K_1=None, Gamma=None,
+                        LOS_coeff=None, HOAngle_deg=None,
+                        n_along=None, n_across=None, lg_pixsize_min_mas=None, lg_pixsize_max_mas=None,
+                        flare_params=None, ts_obs_days=None,
+                        exec_dir=None, parallels_run_file=None, n_jobs=None):
     """
-    :param redshift:
-    :param B_1:
-    :param K_1:
-    :param m_b:
-    :param Gamma:
     :param LOS_coeff:
         1 for superluminal speed max or 0.5 for mode.
     :param HOAngle_deg:
          The median full opening angle is 20 deg, tan(alpha) = tan(alpha_app) * sin(theta).
-    :param n_along:
-    :param n_across:
-    :param lg_pixsize_min_mas:
-    :param lg_pixsize_max_mas:
     :param flare_params:
         Iterable of (frac.amp.N, frac.amp.B, t_start[days], width[pc])
-    :param ts_obs_days:
-    :param exec_dir:
-    :param parallels_run_file:
     """
 
     los_angle_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
@@ -47,36 +35,4 @@ def generate_txt_images(redshift, B_1, m_b, K_1, Gamma,
             fo.write("\n")
 
     os.chdir(exec_dir)
-    n_jobs = 4
-    if calculon:
-        n_jobs = 44
     os.system("parallel --files --results t_obs_{12}" + f" --joblog log --jobs {n_jobs} -a {parallels_run_file} -n 1 -m --colsep ' ' \"./bk_transfer\"")
-
-
-if __name__ == "__main__":
-    redshift = 1.0
-    B_1 = 1.0
-    m_b = 1.0
-    K_1 = 500.
-    Gamma = 10.
-    LOS_coeff = 0.5
-    HOAngle_deg = 15.
-    n_along = 400
-    n_across = 80
-    lg_pixsize_min_mas = -2.5
-    lg_pixsize_max_mas = -0.5
-    flare_params = [(10.0, 0.0, 0.0, 0.1), (5.0, 0.0, 5*30*12, 0.2)]
-    ts_obs_days = np.linspace(-400.0, 12*360, 20)
-    calculon = False
-    if not calculon:
-        exec_dir = "/home/ilya/github/bk_transfer/Release"
-        parallels_run_file = "/home/ilya/github/bk_transfer/parallels_run.txt"
-    else:
-        exec_dir = "/home/ilya/github/flares/bk_transfer/Release"
-        parallels_run_file = "/home/ilya/github/flares/bk_transfer/parallels_run.txt"
-
-    generate_txt_images(redshift, B_1, m_b, K_1, Gamma,
-                        LOS_coeff, HOAngle_deg,
-                        n_along, n_across, lg_pixsize_min_mas, lg_pixsize_max_mas,
-                        flare_params, ts_obs_days,
-                        exec_dir, parallels_run_file, calculon)

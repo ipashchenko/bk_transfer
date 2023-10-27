@@ -8,36 +8,24 @@ from vlbi_utils import find_image_std, find_bbox, downscale_uvdata_by_freq
 sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
 from uv_data import UVData
 from components import CGComponent, EGComponent
-from spydiff import clean_difmap, modelfit_difmap, import_difmap_model, modelfit_core_wo_extending, find_nw_beam
+from spydiff import (clean_difmap, modelfit_difmap, import_difmap_model, modelfit_core_wo_extending, find_nw_beam,
+                     make_uvfits_with_core_at_zero)
 from image import plot as iplot
 from from_fits import create_clean_image_from_fits_file
 from jet_image import JetImage
 import matplotlib.pyplot as plt
 
 
-def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
-                                lg_pixsize_min_mas=-2.5, lg_pixsize_max_mas=-0.5, n_along = 400, n_across = 80, match_resolution = False,
-                                ts_obs_days = np.linspace(-400.0, 8*360, 20),
-                                noise_scale_factor = 1.0, mapsizes_dict = {2.3: (1024, 0.1,), 8.6: (1024, 0.1,)},
-                                plot_clean = True, only_plot_raw = False,
-                                extract_extended = True, use_scipy = False, use_elliptical = False, beam_fractions = (1.0,), two_stage=True,
-                                n_components=4,
-                                save_dir = "/home/ilya/github/bk_transfer/pics/flares",
-                                jetpol_run_directory = "/home/ilya/github/bk_transfer/Release",
-                                path_to_script = "/home/ilya/github/bk_transfer/scripts/script_clean_rms",
-                                calculon=True):
+def make_and_model_visibilities(basename = None, only_band = None, z = None, freqs_ghz = None, freq_names = None,
+                                lg_pixsize_min_mas = None, lg_pixsize_max_mas = None, n_along = None, n_across = None,
+                                ts_obs_days = None, template_uvfits=None, noise_scale_factor = 1.0,
+                                mapsizes_dict = None, plot_clean = True, only_plot_raw = False,
+                                extract_extended = True, use_scipy = False, use_elliptical = False,
+                                beam_fractions = (1.0,), two_stage=True, n_components=None, save_dir = None,
+                                jetpol_run_directory = None, path_to_script = None, n_jobs = None,
+                                dump_visibilities_for_registration_testing=False,
+                                dump_visibilities_directory=None):
     """
-    :param basename:
-    :param only_band:
-    :param z:
-    :param lg_pixsize_min_mas:
-    :param lg_pixsize_max_mas:
-    :param n_along:
-    :param n_across:
-    :param match_resolution:
-    :param ts_obs_days:
-    :param noise_scale_factor:
-        Multiplicative factor for noise added to model visibilities.
     :param mapsizes_dict:
         Dictionary with keys - frequencies in GHz (e.g. 2.3) and values - CLEAN map parameters for imaging to extract
         the extended emission.
@@ -62,25 +50,12 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         Directory with C++ generated txt-files with model images.
     :param path_to_script:
     """
-    if match_resolution:
-        lg_pixsize_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas-np.log10(8.6/2.3)}
-        lg_pixsize_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas-np.log10(8.6/2.3)}
-    else:
-        lg_pixsize_min = {2.3: lg_pixsize_min_mas, 8.6: lg_pixsize_min_mas}
-        lg_pixsize_max = {2.3: lg_pixsize_max_mas, 8.6: lg_pixsize_max_mas}
-
     epochs = ts_obs_days
     rot_angle_deg = -90.0
-    freqs_ghz = [2.3, 8.6]
-    freq_names = {2.3: "S", 8.6: "X"}
-    # Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
-    # Originally used template
-    # template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2017_10_21_pus_vis.fits",
-    #                    8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2017_10_21_pus_vis.fits"}
-    # These have smalllest beam
-    template_uvfits = {2.3: "/home/ilya/data/rfc/J0102+5824/J0102+5824_S_2009_04_21_pus_vis.fits",
-                       8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2009_04_21_pus_vis.fits"}
+
     core_positions = dict()
+    core_ras = dict()
+    core_decs = dict()
     core_positions_err = dict()
     core_fluxes = dict()
     core_fluxes_err = dict()
@@ -105,6 +80,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
         if only_band is not None and only_band != freq_names[freq_ghz]:
             continue
         core_positions[freq_ghz] = list()
+        core_ras[freq_ghz] = list()
+        core_decs[freq_ghz] = list()
         core_positions_err[freq_ghz] = list()
         core_fluxes[freq_ghz] = list()
         core_fluxes_err[freq_ghz] = list()
@@ -125,7 +102,7 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 noise.update({baseline: noise_scale_factor*baseline_noise_std})
 
             jm = JetImage(z=z, n_along=n_along, n_across=n_across,
-                          lg_pixel_size_mas_min=lg_pixsize_min[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max[freq_ghz],
+                          lg_pixel_size_mas_min=lg_pixsize_min_mas[freq_ghz], lg_pixel_size_mas_max=lg_pixsize_max_mas[freq_ghz],
                           jet_side=True, rot=np.deg2rad(rot_angle_deg))
 
             image_file = "{}/jet_image_{}_{}_{:.1f}.txt".format(jetpol_run_directory, "i", freq_names[freq_ghz], epoch)
@@ -156,22 +133,9 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
             fnames = " ".join(["template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch) for epoch in epochs])
             script_dir = os.path.split(jetpol_run_directory)[0]
 
-
-            if calculon:
-                n_jobs = 44
-            else:
-                n_jobs = 4
             print("In generate_and_model use_elliptical = ", use_elliptical)
             print(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --use_elliptical {use_elliptical} --fname ::: {fnames}")
             os.system(f"parallel -k --jobs {n_jobs} python {script_dir}/modelfit_single_epoch.py --beam_fractions \"{beam_fracs}\" --mapsize_clean \"{mapsizes_dict[freq_ghz][0]} {mapsizes_dict[freq_ghz][1]}\" --save_dir \"{save_dir}\" --path_to_script \"{path_to_script}\"  --nw_beam_size \"{nw_beam_size}\" --use_elliptical {use_elliptical} --fname ::: {fnames}")
-
-
-
-
-            # sys.exit(0)
-
-
-
 
             # Gather results
             for epoch in epochs:
@@ -185,8 +149,11 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                     rms_flux = np.std([results[str(frac)]['flux'] for frac in beam_fractions])
 
                     # Position of the core
-                    r = np.mean([np.hypot(results[str(frac)]['ra'], results[str(frac)]['dec']) for frac in beam_fractions])
+                    r = np.mean([np.hypot(results[str(frac)]['ra'], 0.0) for frac in beam_fractions])
                     rms_r = np.std([np.hypot(results[str(frac)]['ra'], results[str(frac)]['dec']) for frac in beam_fractions])
+
+                    ra = np.mean([-results[str(frac)]['ra'] for frac in beam_fractions])
+                    dec = np.mean([-results[str(frac)]['dec'] for frac in beam_fractions])
 
                     # Size of the core
                     size = np.mean([results[str(frac)]['size'] for frac in beam_fractions])
@@ -203,6 +170,8 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                     core_fluxes_err[freq_ghz].append(rms_flux)
                     core_positions[freq_ghz].append(r)
                     core_positions_err[freq_ghz].append(rms_r)
+                    core_ras[freq_ghz].append(ra)
+                    core_decs[freq_ghz].append(dec)
                     core_sizes[freq_ghz].append(size)
                     core_sizes_err[freq_ghz].append(rms_size)
 
@@ -239,10 +208,26 @@ def make_and_model_visibilities(basename = "test", only_band=None, z = 1.0,
                 flux = core.p[0]
                 # Position of the core
                 r = np.hypot(core.p[1], core.p[2])
+                ra = -core.p[1]
+                dec = -core.p[2]
                 core_fluxes[freq_ghz].append(flux)
                 core_fluxes_err[freq_ghz].append(0.0)
                 core_positions[freq_ghz].append(r)
                 core_positions_err[freq_ghz].append(0.0)
+                core_ras[freq_ghz].append(ra)
+                core_decs[freq_ghz].append(dec)
+
+
+        if dump_visibilities_for_registration_testing:
+            if dump_visibilities_directory is None:
+                dump_visibilities_directory = save_dir
+            for i, epoch in enumerate(epochs):
+                in_uvfits = os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch))
+                out_uvfits = os.path.join(dump_visibilities_directory, "shifted_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch))
+                make_uvfits_with_core_at_zero(in_uvfits, out_uvfits,
+                                              # core_ra=-core_ras[freq_ghz][i], core_dec=-core_decs[freq_ghz][i],
+                                              core_ra=-core_ras[freq_ghz][i], core_dec=0.0,
+                                              show_difmap_output=True)
 
         if plot_clean:
             for i, epoch in enumerate(epochs):
