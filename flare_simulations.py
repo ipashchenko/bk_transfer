@@ -183,7 +183,7 @@ else:
     exec_dir = "/home/ilya/github/flares/bk_transfer/Release"
     parallels_run_file = "/home/ilya/github/flares/bk_transfer/parallels_run.txt"
     save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/dump"
-    flare_param_files_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/survey/comps"
+    flare_param_files_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/dump"
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
     n_jobs = 44
 
@@ -320,7 +320,7 @@ for i in range(n_sources):
         #     clear_fits(save_dir)
         #     clear_pics(basename, save_dir)
         #     continue
-        # create_movie_raw(source_basename, save_dir)
+        create_movie_raw(source_basename, save_dir)
 
     if redo[2]:
         print("==========================================")
