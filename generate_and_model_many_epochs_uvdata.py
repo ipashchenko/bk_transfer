@@ -24,7 +24,8 @@ def make_and_model_visibilities(basename = None, only_band = None, z = None, fre
                                 beam_fractions = (1.0,), two_stage=True, n_components=None, save_dir = None,
                                 jetpol_run_directory = None, path_to_script = None, n_jobs = None,
                                 dump_visibilities_for_registration_testing=False,
-                                dump_visibilities_directory=None):
+                                dump_visibilities_directory=None,
+                                mapsize_clean_plot=(512, 0.2)):
     """
     :param mapsizes_dict:
         Dictionary with keys - frequencies in GHz (e.g. 2.3) and values - CLEAN map parameters for imaging to extract
@@ -238,7 +239,7 @@ def make_and_model_visibilities(basename = None, only_band = None, z = None, fre
 
                 clean_difmap(fname="template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch), path=save_dir,
                              outfname=outfname, outpath=save_dir, stokes="i",
-                             mapsize_clean=(512, 0.2), path_to_script=path_to_script,
+                             mapsize_clean=mapsize_clean_plot, path_to_script=path_to_script,
                              show_difmap_output=False)
                              # dfm_model=os.path.join(save_dir, "model_cc_i.mdl"))
 
@@ -263,9 +264,15 @@ def make_and_model_visibilities(basename = None, only_band = None, z = None, fre
                 if freq_ghz == 8.6:
                     blc = (240, 230)
                     trc = (400, 285)
-                else:
+                elif freq_ghz == 2.3:
                     blc = (220, 210)
                     trc = (420, 305)
+                elif freq_ghz == 15.4:
+                    blc = (550, 550)
+                    trc = (800, 550)
+                elif freq_ghz == 8.1:
+                    blc = (550, 550)
+                    trc = (800, 550)
 
                 if extract_extended:
                     if not use_elliptical:
@@ -308,14 +315,17 @@ def make_and_model_visibilities(basename = None, only_band = None, z = None, fre
     #     print("Core flux : {:.2f}+/-{:.2f} Jy".format(flux, rms_flux))
     #     print("Core position : {:.2f}+/-{:.2f} mas".format(r, rms_r))
 
+    low_freq_ghz = min(freqs_ghz)
+    high_freq_ghz = max(freqs_ghz)
+
     if only_band is None:
-        CS = np.array(core_positions[2.3])-np.array(core_positions[8.6])
-        CS_err = np.hypot(core_positions_err[2.3], core_positions_err[8.6])
+        CS = np.array(core_positions[low_freq_ghz])-np.array(core_positions[high_freq_ghz])
+        CS_err = np.hypot(core_positions_err[low_freq_ghz], core_positions_err[high_freq_ghz])
         np.savetxt(os.path.join(save_dir, f"source_{basename}_CS.txt"), np.vstack((CS, CS_err)).T)
 
     np.savetxt(os.path.join(save_dir, f"source_{basename}_epochs.txt"), epochs*(1+z))
-    np.savetxt(os.path.join(save_dir, f"source_{basename}_S_2.txt"), np.vstack((core_fluxes[2.3], core_fluxes_err[2.3])).T)
-    np.savetxt(os.path.join(save_dir, f"source_{basename}_S_8.txt"), np.vstack((core_fluxes[8.6], core_fluxes_err[8.6])).T)
+    np.savetxt(os.path.join(save_dir, f"source_{basename}_{freq_names[low_freq_ghz]}_{low_freq_ghz}.txt"), np.vstack((core_fluxes[low_freq_ghz], core_fluxes_err[low_freq_ghz])).T)
+    np.savetxt(os.path.join(save_dir, f"source_{basename}_{freq_names[high_freq_ghz]}_{high_freq_ghz}.txt"), np.vstack((core_fluxes[high_freq_ghz], core_fluxes_err[high_freq_ghz])).T)
 
     fig, axes = plt.subplots(1, 1, figsize=(15, 15))
     axes.set_xlabel("Obs. Time, years")

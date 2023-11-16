@@ -692,11 +692,12 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
     double los_angle = los_angle_deg*M_PI/180.0;
 
     // Observed frequencies in GHz
-	std::vector<double> nu_observed_ghz{2.3, 8.6};
+//	std::vector<double> nu_observed_ghz{2.3, 8.6};
+	std::vector<double> nu_observed_ghz{8.1, 15.4};
 //	std::vector<double> nu_observed_ghz{15.4};
     double min_nu_ghz = *std::min_element(nu_observed_ghz.begin(), nu_observed_ghz.end());
-	std::vector<std::string> nu_observed_band{"S", "X"};
-//	std::vector<std::string> nu_observed_band{"u"};
+//	std::vector<std::string> nu_observed_band{"S", "X"};
+	std::vector<std::string> nu_observed_band{"x", "u"};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;

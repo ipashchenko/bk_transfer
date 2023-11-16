@@ -118,7 +118,8 @@ dump_visibilities_for_registration_testing = True
 redshift = 0.8
 K_1 = 5000.
 
-freq_names = {2.3: "S", 8.6: "X"}
+# freq_names = {2.3: "S", 8.6: "X"}
+freq_names = {8.1: "x", 15.4: "u"}
 freqs_ghz = tuple(freq_names.keys())
 n_along = 600
 n_across = 100
@@ -144,6 +145,9 @@ else:
 template_uvfits = {2.3: "/home/ilya/data/rfc/J2203+3145/J2203+3145_S_2007_04_30_sok_vis.fits",
                    8.6: "/home/ilya/data/rfc/J2203+3145/J2203+3145_X_2007_04_30_sok_vis.fits"}
 
+templa_uvfits = {15.4: "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uvf",
+                 8.1: "/home/ilya/github/bk_transfer/uvfits/1458+718.x.2006_09_06.uvf"}
+
 # TODO: Changing this => edit main.cpp! ################################################################################
 n = 2.0
 s = 2.
@@ -157,7 +161,8 @@ flare_shape = 10.0
 ########################################################################################################################
 
 noise_scale_factor = 1.0
-mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
+# mapsizes_dict = {2.3: (2048, 0.05,), 8.6: (2048, 0.05,)}
+mapsizes_dict = {15.4: (2048, 0.05,), 8.1: (2048, 0.05,)}
 plot_raw = True
 plot_clean = True
 only_plot_raw = False
@@ -182,7 +187,8 @@ if not calculon:
 else:
     exec_dir = "/home/ilya/github/flares/bk_transfer/Release"
     parallels_run_file = "/home/ilya/github/flares/bk_transfer/parallels_run.txt"
-    save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/dump"
+    # TODO: Make dir
+    save_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/dump_MOJAVE"
     flare_param_files_dir = "/home/ilya/github/flares/bk_transfer/pics/flares/dump"
     path_to_script = "/home/ilya/github/flares/bk_transfer/scripts/script_clean_rms"
     n_jobs = 44
@@ -221,7 +227,7 @@ for i in range(n_sources):
 
     # Fixed times
     # This will be multiplied on (1+z) to bring to the observer z = 0.
-    ts_obs_days = np.linspace(-400.0, 10*360, 44)/(1+redshift)
+    ts_obs_days = np.linspace(-400.0, 10*360, 4)/(1+redshift)
     # ts_obs_days = np.array([0.0])
 
     # # From real sources times
@@ -234,8 +240,8 @@ for i in range(n_sources):
         flare_params = list()
 
         # First flare
-        t_start_years = np.random.uniform(-1, 1., size=1)[0]
-        # t_start_years = 0.
+        # t_start_years = np.random.uniform(-1, 1., size=1)[0]
+        t_start_years = -3.
         t_start_days = t_start_years*12*30
         # FIXME:
         amp_N = np.random.uniform(3, 10, size=1)[0]
@@ -253,11 +259,11 @@ for i in range(n_sources):
         flare_params.append((amp_N, amp_B, t_start_days, width_pc))
 
         # Maximal number of flares
-        for i_fl in range(10):
+        for i_fl in range(1):
             # Waiting time 2 yrs
             dt_yrs = 0.0
-            while dt_yrs < 2.0:
-                dt_yrs = np.random.exponential(2.0)
+            # while dt_yrs < 2.0:
+            #     dt_yrs = np.random.exponential(2.0)
             t_start_years += dt_yrs
             t_start_days = t_start_years*12*30
             # FIXME:
@@ -340,7 +346,8 @@ for i in range(n_sources):
                                     save_dir=save_dir, jetpol_run_directory=exec_dir, path_to_script=path_to_script,
                                     n_jobs=n_jobs,
                                     dump_visibilities_for_registration_testing=dump_visibilities_for_registration_testing,
-                                    dump_visibilities_directory=dump_visibilities_directory)
+                                    dump_visibilities_directory=dump_visibilities_directory,
+                                    mapsize_clean_plot=(1024, 0.1))
         # If for some epoch something went wrong
         # except:
         #     # clear_tobs(exec_dir)
