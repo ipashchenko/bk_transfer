@@ -126,7 +126,8 @@ def make_and_model_visibilities(basename = None, only_band = None, z = None, fre
             uvdata.zero_data()
             uvdata.substitute([jm])
             uvdata.noise_add(noise)
-            uvdata.save(os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)), rewrite=True, downscale_by_freq=True)
+            # FIXME: for MOJAVE data ``downscale_by_freq = False``, while for rfc - ``True``
+            uvdata.save(os.path.join(save_dir, "template_{}_{:.1f}.uvf".format(freq_names[freq_ghz], epoch)), rewrite=True, downscale_by_freq=False)
 
 
         if extract_extended:
