@@ -136,10 +136,16 @@ def get_proj_core_position(image_txt, tau_txt, z, lg_pixel_size_mas_min, lg_pixe
             "core_flux": core_flux, "jet_flux": jet_flux}
 
 
-def process_raw_images(basename=None, txt_dir=None, save_dir=None, z=None, plot=None,
+def process_raw_images(basename=None, freq_names=None, txt_dir=None, save_dir=None, z=None, plot=None,
                        n_along=None, n_across=None, lg_pixsize_min_mas=None, lg_pixsize_max_mas=None,
                        ts_obs_days=None, flare_params=None, flare_shape=None,
                        Gamma=None, LOS_coeff=None, b=None, B_1=None, n=None, gamma_min=None, gamma_max=None, s=None):
+
+    freqs_ghz = tuple(freq_names.keys())
+    low_freq_ghz = min(freqs_ghz)
+    high_freq_ghz = max(freqs_ghz)
+    low_freq_band = freq_names[low_freq_ghz]
+    high_freq_band = freq_names[high_freq_ghz]
 
     theta_deg = np.round(np.rad2deg(np.arcsin(LOS_coeff/Gamma)), 2)
     N_1 = equipartition_bsq_coefficient(s, gamma_min, gamma_max)*B_1**2
@@ -157,16 +163,16 @@ def process_raw_images(basename=None, txt_dir=None, save_dir=None, z=None, plot=
     N_core_X = list()
     for t_obs_days in ts_obs_days:
         print("Processing raw images for T[days] = {:.1f}".format(t_obs_days))
-        imagex_txt = os.path.join(txt_dir, "jet_image_i_X_{:.1f}.txt".format(t_obs_days))
-        images_txt = os.path.join(txt_dir, "jet_image_i_S_{:.1f}.txt".format(t_obs_days))
+        imagex_txt = os.path.join(txt_dir, "jet_image_i_{}_{:.1f}.txt".format(high_freq_band, t_obs_days))
+        images_txt = os.path.join(txt_dir, "jet_image_i_{}_{:.1f}.txt".format(low_freq_band, t_obs_days))
 
         # convert -delay 10 -loop 0 `ls -tr tobs*.png` animation.gif
         if plot:
             fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 12))
             imagex = np.loadtxt(imagex_txt)
             images = np.loadtxt(images_txt)
-            print("Total flux S = {:.2f} Jy".format(np.sum(images)))
-            print("Total flux X = {:.2f} Jy".format(np.sum(imagex)))
+            print("Total flux {} = {:.2f} Jy".format(low_freq_band, np.sum(images)))
+            print("Total flux {} = {:.2f} Jy".format(high_freq_band, np.sum(imagex)))
             images[images == 0] = np.nan
             imagex[imagex == 0] = np.nan
             axes[0].matshow(images, cmap="inferno", aspect="auto")
@@ -182,11 +188,11 @@ def process_raw_images(basename=None, txt_dir=None, save_dir=None, z=None, plot=
             plt.savefig(os.path.join(save_dir, "{}_raw_nupixel_{:.1f}.png".format(basename, t_obs_days*(1+z))))
             plt.close()
             # plt.show()
-        taux_txt = os.path.join(txt_dir, "jet_image_tau_X_{:.1f}.txt".format(t_obs_days))
-        taus_txt = os.path.join(txt_dir, "jet_image_tau_S_{:.1f}.txt".format(t_obs_days))
-        resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixsize_min_mas[8.6], lg_pixsize_max_mas[8.6],
+        taux_txt = os.path.join(txt_dir, "jet_image_tau_{}_{:.1f}.txt".format(high_freq_band, t_obs_days))
+        taus_txt = os.path.join(txt_dir, "jet_image_tau_{}_{:.1f}.txt".format(low_freq_band, t_obs_days))
+        resx = get_proj_core_position(imagex_txt, taux_txt, z, lg_pixsize_min_mas[high_freq_ghz], lg_pixsize_max_mas[high_freq_ghz],
                                       n_along, n_across)
-        ress = get_proj_core_position(images_txt, taus_txt, z, lg_pixsize_min_mas[2.3], lg_pixsize_max_mas[2.3],
+        ress = get_proj_core_position(images_txt, taus_txt, z, lg_pixsize_min_mas[low_freq_ghz], lg_pixsize_max_mas[low_freq_ghz],
                                       n_along, n_across)
         corex_positions.append(resx["tau_1_1_mas"])
         cores_positions.append(ress["tau_1_1_mas"])

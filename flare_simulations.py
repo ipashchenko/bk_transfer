@@ -142,11 +142,11 @@ else:
 #                    8.6: "/home/ilya/data/rfc/J0102+5824/J0102+5824_X_2009_04_21_pus_vis.fits"}
 
 # Sokolovsky's
-template_uvfits = {2.3: "/home/ilya/data/rfc/J2203+3145/J2203+3145_S_2007_04_30_sok_vis.fits",
-                   8.6: "/home/ilya/data/rfc/J2203+3145/J2203+3145_X_2007_04_30_sok_vis.fits"}
+# template_uvfits = {2.3: "/home/ilya/data/rfc/J2203+3145/J2203+3145_S_2007_04_30_sok_vis.fits",
+#                    8.6: "/home/ilya/data/rfc/J2203+3145/J2203+3145_X_2007_04_30_sok_vis.fits"}
 
-templa_uvfits = {15.4: "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uvf",
-                 8.1: "/home/ilya/github/bk_transfer/uvfits/1458+718.x.2006_09_06.uvf"}
+template_uvfits = {15.4: "/home/ilya/github/bk_transfer/uvfits/1458+718.u.2006_09_06.uvf",
+                   8.1: "/home/ilya/github/bk_transfer/uvfits/1458+718.x.2006_09_06.uvf"}
 
 # TODO: Changing this => edit main.cpp! ################################################################################
 n = 2.0
@@ -313,7 +313,7 @@ for i in range(n_sources):
         print(f"Processing raw image for {source_basename}")
         print("==========================================")
         # try:
-        process_raw_images(basename=source_basename, txt_dir=exec_dir, save_dir=save_dir,
+        process_raw_images(basename=source_basename, freq_names=freq_names, txt_dir=exec_dir, save_dir=save_dir,
                            z=redshift, plot=plot_raw,
                            n_along=n_along, n_across=n_across,
                            lg_pixsize_min_mas=lg_pixsize_min, lg_pixsize_max_mas=lg_pixsize_max,
