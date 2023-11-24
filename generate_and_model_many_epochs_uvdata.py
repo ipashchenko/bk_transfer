@@ -262,18 +262,18 @@ def make_and_model_visibilities(basename = None, only_band = None, z = None, fre
                     if trc[0] == ipol.shape: trc = (trc[0]-1, trc[1])
                     if trc[1] == ipol.shape: trc = (trc[0], trc[1]-1)
 
-                if freq_ghz == 8.6:
-                    blc = (240, 230)
-                    trc = (400, 285)
-                elif freq_ghz == 2.3:
-                    blc = (220, 210)
-                    trc = (420, 305)
-                elif freq_ghz == 15.4:
-                    blc = (550, 550)
-                    trc = (800, 550)
-                elif freq_ghz == 8.1:
-                    blc = (550, 550)
-                    trc = (800, 550)
+                # if freq_ghz == 8.6:
+                #     blc = (240, 230)
+                #     trc = (400, 285)
+                # elif freq_ghz == 2.3:
+                #     blc = (220, 210)
+                #     trc = (420, 305)
+                # elif freq_ghz == 15.4:
+                #     blc = (550, 550)
+                #     trc = (800, 550)
+                # elif freq_ghz == 8.1:
+                #     blc = (550, 550)
+                #     trc = (800, 550)
 
                 if extract_extended:
                     if not use_elliptical:
@@ -344,26 +344,26 @@ def make_and_model_visibilities(basename = None, only_band = None, z = None, fre
         axes.scatter(epochs*(1+z)/30/12, CS, color="black")
 
     if only_band is None:
-        axes.plot(epochs*(1+z)/30/12, core_positions[8.6], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
-        axes.scatter(epochs*(1+z)/30/12, core_positions[8.6], color="C0")
-        axes2.plot(epochs*(1+z)/30/12, core_fluxes[8.6], color="C0")
-        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[8.6], color="C0")
-        axes.plot(epochs*(1+z)/30/12, core_positions[2.3], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
-        axes.scatter(epochs*(1+z)/30/12, core_positions[2.3], color="C1")
-        axes2.plot(epochs*(1+z)/30/12, core_fluxes[2.3], color="C1")
-        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[2.3], color="C1")
+        axes.plot(epochs*(1+z)/30/12, core_positions[high_freq_ghz], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
+        axes.scatter(epochs*(1+z)/30/12, core_positions[high_freq_ghz], color="C0")
+        axes2.plot(epochs*(1+z)/30/12, core_fluxes[high_freq_ghz], color="C0")
+        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[high_freq_ghz], color="C0")
+        axes.plot(epochs*(1+z)/30/12, core_positions[low_freq_ghz], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
+        axes.scatter(epochs*(1+z)/30/12, core_positions[low_freq_ghz], color="C1")
+        axes2.plot(epochs*(1+z)/30/12, core_fluxes[low_freq_ghz], color="C1")
+        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[low_freq_ghz], color="C1")
 
-    if only_band is not None and only_band == freq_names[8.6]:
-        axes.plot(epochs*(1+z)/30/12, core_positions[8.6], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
-        axes.scatter(epochs*(1+z)/30/12, core_positions[8.6], color="C0")
-        axes2.plot(epochs*(1+z)/30/12, core_fluxes[8.6], color="C0")
-        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[8.6], color="C0")
+    if only_band is not None and only_band == freq_names[high_freq_ghz]:
+        axes.plot(epochs*(1+z)/30/12, core_positions[high_freq_ghz], "--", label=r"$r_{\rm 8 GHz}$", color="C0")
+        axes.scatter(epochs*(1+z)/30/12, core_positions[high_freq_ghz], color="C0")
+        axes2.plot(epochs*(1+z)/30/12, core_fluxes[high_freq_ghz], color="C0")
+        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[high_freq_ghz], color="C0")
 
-    if only_band is not None and only_band == freq_names[2.3]:
-        axes.plot(epochs*(1+z)/30/12, core_positions[2.3], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
-        axes.scatter(epochs*(1+z)/30/12, core_positions[2.3], color="C1")
-        axes2.plot(epochs*(1+z)/30/12, core_fluxes[2.3], color="C1")
-        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[2.3], color="C1")
+    if only_band is not None and only_band == freq_names[low_freq_ghz]:
+        axes.plot(epochs*(1+z)/30/12, core_positions[low_freq_ghz], "--", label=r"$r_{\rm 2 GHz}$", color="C1")
+        axes.scatter(epochs*(1+z)/30/12, core_positions[low_freq_ghz], color="C1")
+        axes2.plot(epochs*(1+z)/30/12, core_fluxes[low_freq_ghz], color="C1")
+        axes2.scatter(epochs*(1+z)/30/12, core_fluxes[low_freq_ghz], color="C1")
 
     axes.legend()
     axes2.set_ylim([0, None])

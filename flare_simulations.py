@@ -241,7 +241,28 @@ for i in range(n_sources):
 
         # First flare
         # t_start_years = np.random.uniform(-1, 1., size=1)[0]
-        t_start_years = -3.
+        t_start_years = -6.
+        t_start_days = t_start_years*12*30
+        # FIXME:
+        amp_N = np.random.uniform(3, 10, size=1)[0]
+        # amp_N = 5.
+        # amp_N = 0.0
+        # Only N flare
+        amp_B = 0.0
+        # Equipartition flare
+        # amp_B = np.sqrt(amp_N)
+        # Increasing N, decreasing B flare
+        # amp_B = -0.5
+        # amp_B = 1./np.sqrt(1. + amp_N) - 1.
+        width_pc = np.random.uniform(0.1, 0.2, size=1)[0]
+        # width_pc = 0.15
+        flare_params.append((amp_N, amp_B, t_start_days, width_pc))
+
+
+
+        # Second flare
+        # t_start_years = np.random.uniform(-1, 1., size=1)[0]
+        t_start_years = 0.
         t_start_days = t_start_years*12*30
         # FIXME:
         amp_N = np.random.uniform(3, 10, size=1)[0]
@@ -261,7 +282,7 @@ for i in range(n_sources):
         # Maximal number of flares
         for i_fl in range(1):
             # Waiting time 2 yrs
-            dt_yrs = 3.0
+            dt_yrs = 6.0
             # while dt_yrs < 2.0:
             #     dt_yrs = np.random.exponential(2.0)
             t_start_years += dt_yrs
