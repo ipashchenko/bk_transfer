@@ -1,6 +1,10 @@
 # Project exclude paths
+/.cache/
+/.idea/
+/__pycache__/
 /cmake-build-debug/
 /papers
+/scripts
 /results
 /pics
 /lttd
@@ -9,3 +13,9 @@
 *.gif
 /vak
 *.png
+*.txt
+*.uvf
+*.fits
+*.mdl
+*.pkl
+*.json
