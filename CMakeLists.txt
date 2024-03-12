@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lz -std=c++14 -L/usr/lib/openmpi -lmpi_cxx -fopenmp -march=native -DNDEBUG -O2 -fext-numeric-literals")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lz -std=c++14 -L/usr/lib/openmpi -fopenmp -march=native -DNDEBUG -O2 -fext-numeric-literals")
 set(SOURCE_FILES src/main.cpp src/utils.cpp src/Pixel.cpp src/Ray.cpp
         src/Image.cpp src/ImagePlane.cpp src/Geometry.cpp src/Cone.cpp src/Cylinder.cpp src/Parabaloid.cpp
         include/MyExceptions.h include/logspace.h include/linspace.h src/Intersection.cpp src/BField.cpp
