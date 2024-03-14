@@ -82,9 +82,8 @@ class BKNField: public NField {
 
 
 
-
 // Here we need V-field to transfer B-field to plasma frame via B' = B_lab/Gamma. Here we assume dominating transverse
-// component.
+// component for scalar B_field.
 class EquipartitionBKNfield : public NField {
     public:
         EquipartitionBKNfield(ParticlesDistribution* particles, std::vector<ScalarBField*> sbfields, std::vector<VectorBField*> vbfields,
