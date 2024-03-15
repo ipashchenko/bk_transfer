@@ -380,21 +380,18 @@ int main(int argc, char *argv[]) {
         }
 
         // FIXME: 4 debug run
-//        flare_params.push_back(5.0);
-//        flare_params.push_back(0.0);
-//        flare_params.push_back(0.0);
-//        flare_params.push_back(0.2);
-//        double redshift = 1.0;
-//        double los_angle_deg = 5.0;
-//        double cone_half_angle_deg = 1.0;
-//        double b_0 = 0.85;
-//        double K_1 = 500.;
-//        double Gamma = 8.6;
-//        int number_of_pixels_along = 400;
-//        int number_of_pixels_across = 80;
-//        double lg_pixel_size_mas_start = -2.5;
-//        double lg_pixel_size_mas_stop = -0.5;
-//        double t_obs = 1000.;
+//        double redshift = 0.1;
+//        double los_angle_deg = 90.0;
+//		double R_cyl_pc = 0.7;
+//        double b_0 = 0.1;
+//		double m = 0.0;
+//        double Gamma = 1.1;
+//        int number_of_pixels_along = 200;
+//        int number_of_pixels_across = 100;
+//        double lg_pixel_size_mas_start = -2.;
+//        double lg_pixel_size_mas_stop = -2.;
+//		double s = 2.5;
+//		double gamma_min = 10.0;
 
         total_fluxes = run_on_analytic_params_t(redshift, los_angle_deg, R_cyl_pc,
                                                 b_0, m_b,
