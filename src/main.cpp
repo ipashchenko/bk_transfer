@@ -47,10 +47,9 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
 
     // Observed frequencies in GHz
 //	std::vector<double> nu_observed_ghz{2.3, 8.6};
-	std::vector<double> nu_observed_ghz{15.4};
+	std::vector<double> nu_observed_ghz{15.4, 12.1, 8.4, 8.1};
     double min_nu_ghz = *std::min_element(nu_observed_ghz.begin(), nu_observed_ghz.end());
-//	std::vector<std::string> nu_observed_band{"S", "X"};
-	std::vector<std::string> nu_observed_band{"u"};
+	std::vector<std::string> nu_observed_band{"u", "j", "y", "x"};
     std::vector<double> total_fluxes;
     // Frequencies in the BH frame in Hz
     std::vector<double> nu_bh;
@@ -331,6 +330,7 @@ std::vector<double> run_on_analytic_params_t(double redshift, double los_angle_d
 
 // To quickly show J + CJ images for freq_ghz GHz:
 // j = np.loadtxt("jet_image_i_{}.txt".format(freq_ghz)); cj = np.loadtxt("cjet_image_i_{}.txt".format(freq_ghz)); jcj = np.hstack((cj[::, ::-1], j)); plt.matshow(jcj, aspect="auto");plt.colorbar(); plt.show()
+// ./bk_transfer 0.1, 90, 0.7, 0.1, 0., 1.1, 200, 100, -2, -2
 int main(int argc, char *argv[]) {
 
     std::vector<double> total_fluxes;
