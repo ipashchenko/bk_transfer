@@ -19,3 +19,5 @@
 *.mdl
 *.pkl
 *.json
+*.so
+difmap.log*
