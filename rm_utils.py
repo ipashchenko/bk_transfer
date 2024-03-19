@@ -4,6 +4,8 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 import numpy as np
+import astropy.units as u
+import astropy.constants as const
 import matplotlib
 # matplotlib.use("TkAgg")
 import scienceplots
@@ -17,7 +19,7 @@ except OSError:
     pass
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cycler import cycler
-from vlbi_utils import find_image_std, find_bbox, downscale_uvdata_by_freq
+from vlbi_utils import find_image_std, find_bbox, rotate_difmap_model, downscale_uvdata_by_freq
 from generate_and_model_many_epochs_uvdata import find_iqu_image_std, pol_mask
 from jet_image import JetImage, convert_difmap_model_file_to_CCFITS
 sys.path.insert(0, '/home/ilya/github/ve/vlbi_errors')
@@ -44,8 +46,30 @@ matplotlib.rcParams['ps.fonttype'] = 42
 
 
 
-do_not_reclean = False
+reclean = True
 jetpol_run_directory = "/home/ilya/github/bk_transfer/cmake-build-debug"
+redshift = 0.1
+noise_scale_factor = 1.0
+lg_pixsize_min = -2.
+lg_pixsize_max = -2.
+n_along = 300
+n_across = 200
+rot_angle_deg = -107.0
+# First - highest
+freqs_ghz = [15.4, 12.1, 8.4, 8.1]
+freq_names = {15.4: "u", 12.1: "j", 8.4: "y", 8.1: "x"}
+names_freq = {i:k for (k, i) in freq_names.items()}
+mapsizes_dict = {8.1: (1024, 0.1),
+                 8.4: (1024, 0.1),
+                 12.1: (1024, 0.1),
+                 15.4: (1024, 0.1)}
+common_mapsize = (1024, 0.1)
+common_mapsize_x2 = (int(common_mapsize[0]*2), common_mapsize[1])
+path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
+# Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
+template_uvfits_dict = {"u": "1458+718.u.2006_09_06.uvf", "j": "1458+718.j.2006_09_06.uvf",
+                        "y": "1458+718.y.2006_09_06.uvf", "x": "1458+718.x.2006_09_06.uvf"}
+template_uvfits_dir = "/home/ilya/github/bk_transfer/uvfits"
 # cwd = os.getcwd()
 # os.chdir(jetpol_run_directory)
 # os.system("./bk_transfer 0.1, 90, 0.7, 0.1, 0., 1.1, 200, 100, -2, -2")
@@ -58,10 +82,10 @@ stokes = ("i", "q", "u")
 #          │                Plotting raw model images                 │
 #          ╰──────────────────────────────────────────────────────────╯
 tau_fr_image = np.loadtxt(os.path.join(jetpol_run_directory, tau_fr_file))
-# FIXME: lambda squared, RM in rad/m^2
-rm_image = 0.5*tau_fr_image/(0.02**2)
+lambda_min = (const.c/(max(freqs_ghz)*u.GHz)).to(u.m).value
+rm_image = 0.5*tau_fr_image/(lambda_min**2)
 fig, axes = plt.subplots(1, 1)
-im = axes.matshow(tau_fr_image, cmap="bwr")
+im = axes.matshow(tau_fr_image, cmap="bwr", origin="lower")
 divider = make_axes_locatable(axes)
 cax = divider.append_axes("right", size="5%", pad=0.00)
 cb = fig.colorbar(im, cax=cax)
@@ -73,7 +97,7 @@ plt.show()
 
 
 fig, axes = plt.subplots(1, 1)
-im = axes.matshow(rm_image, cmap="bwr")
+im = axes.matshow(rm_image, cmap="bwr", origin="lower")
 divider = make_axes_locatable(axes)
 cax = divider.append_axes("right", size="5%", pad=0.00)
 cb = fig.colorbar(im, cax=cax)
@@ -94,27 +118,6 @@ plt.show()
 #          ╭──────────────────────────────────────────────────────────╮
 #          │                   Plotting VLBI images                   │
 #          ╰──────────────────────────────────────────────────────────╯
-redshift = 0.1
-noise_scale_factor = 1.0
-lg_pixsize_min = -2.
-lg_pixsize_max = -2.
-n_along = 200
-n_across = 100
-rot_angle_deg = 0.0
-freqs_ghz = [15.4, 12.1, 8.4, 8.1]
-freq_names = {15.4: "u", 12.1: "j", 8.4: "y", 8.1: "x"}
-names_freq = {i:k for (k, i) in freq_names.items()}
-mapsizes_dict = {8.1: (1024, 0.1),
-                 8.4: (1024, 0.1),
-                 12.1: (1024, 0.1),
-                 15.4: (1024, 0.1)}
-common_mapsize = (1024, 0.1)
-common_mapsize_x2 = (int(common_mapsize[0]*2), common_mapsize[1])
-path_to_script = "/home/ilya/github/bk_transfer/scripts/final_clean_nw"
-# Some template UVFITS with full polarization. Its uv-coverage and noise will be used while creating fake data
-template_uvfits_dict = {"u": "1458+718.u.2006_09_06.uvf", "j": "1458+718.j.2006_09_06.uvf",
-                        "y": "1458+718.y.2006_09_06.uvf", "x": "1458+718.x.2006_09_06.uvf"}
-template_uvfits_dir = "/home/ilya/github/bk_transfer/uvfits"
 
 # Find common uv-range
 uvrange_x = get_uvrange(os.path.join(template_uvfits_dir, template_uvfits_dict["x"]))
@@ -138,17 +141,19 @@ common_beam = (common_beam, common_beam, 0)
 #          │        Plot of model images at highest frequency         │
 #          ╰──────────────────────────────────────────────────────────╯
 freq_ghz = np.max(freqs_ghz)
+lambda_min = (const.c/(freq_ghz*u.GHz)).to(u.m).value
 i_image = np.loadtxt(os.path.join(jetpol_run_directory, 'jet_image_i_{}.txt'.format(freq_names[freq_ghz])))
 q_image = np.loadtxt(os.path.join(jetpol_run_directory, 'jet_image_q_{}.txt'.format(freq_names[freq_ghz])))
 u_image = np.loadtxt(os.path.join(jetpol_run_directory, 'jet_image_u_{}.txt'.format(freq_names[freq_ghz])))
 v_image = np.loadtxt(os.path.join(jetpol_run_directory, 'jet_image_v_{}.txt'.format(freq_names[freq_ghz])))
 tau_image = np.loadtxt(os.path.join(jetpol_run_directory, 'jet_image_tau_{}.txt'.format(freq_names[freq_ghz])))
 tau_fr_image = np.loadtxt(os.path.join(jetpol_run_directory, 'jet_image_taufr_{}.txt'.format(freq_names[freq_ghz])))
-rm_image = 0.5*tau_fr_image/(0.02**2)
+rm_image = 0.5*tau_fr_image/(lambda_min**2)
 l_image = np.loadtxt(os.path.join(jetpol_run_directory, 'jet_image_l_{}.txt'.format(freq_names[freq_ghz])))
 p_image = np.sqrt(q_image**2 + u_image**2)
 fpol_image = p_image/i_image
 # alpha_image = np.log(i_image_low/i_image_high)/np.log(freq_ghz_low/freq_ghz_high)
+# FIXME: Check sign!
 chi_image = 0.5*np.arctan2(u_image, q_image) - 0.5*tau_fr_image
 
 # Just plotting picture
@@ -231,6 +236,7 @@ for freq_ghz in freqs_ghz:
 
     uvdata.zero_data()
     uvdata.substitute([jm_i, jm_q, jm_u])
+    uvdata.rotate_evpa(np.deg2rad(rot_angle_deg))
     uvdata.noise_add(noise)
     uvdata.save(os.path.join(save_dir, "template_{}.uvf".format(freq_names[freq_ghz])), rewrite=True, downscale_by_freq=False)
 
@@ -242,17 +248,20 @@ for freq_ghz in freqs_ghz:
         print("      Saving model image (Stokes {}, frequency {} GHz) to difmap format...".format(stk, freq_ghz))
         print("======================================================================================")
         jm.save_image_to_difmap_format(os.path.join(save_dir, "model_dfm_{}_{}.mdl".format(stk.lower(), freq_names[freq_ghz])))
+        # Rotate
+        rotate_difmap_model(os.path.join(save_dir, "model_dfm_{}_{}.mdl".format(stk.lower(), freq_names[freq_ghz])),
+                            os.path.join(save_dir, "model_dfm_{}_{}_rotated.mdl".format(stk.lower(), freq_names[freq_ghz])),
+                            PA_deg=-rot_angle_deg)
         print("======================================================================================")
         print("     Convolving with common beam ({} mas, {} mas, {} deg) and saving to FITS file...".format(*common_beam))
         print("======================================================================================")
-        convert_difmap_model_file_to_CCFITS(os.path.join(save_dir, "model_dfm_{}_{}.mdl".format(stk.lower(), freq_names[freq_ghz])),
+        convert_difmap_model_file_to_CCFITS(os.path.join(save_dir, "model_dfm_{}_{}_rotated.mdl".format(stk.lower(), freq_names[freq_ghz])),
                                             stk, common_mapsize_x2, common_beam, template_uvfits,
                                             os.path.join(save_dir, "convolved_{}_{}.fits".format(stk.lower(), freq_names[freq_ghz])))
 
 #          ╭──────────────────────────────────────────────────────────╮
 #          │               Plot convolved model images                │
 #          ╰──────────────────────────────────────────────────────────╯
-        # TODO:
 convolved_images_dict = dict()
 convolved_pang_arrays = list()
 convolved_ipol_arrays = list()
@@ -268,6 +277,8 @@ for freq_ghz in freqs_ghz:
     ipol = convolved_images_dict[freq_ghz]["i"].image
     qpol = convolved_images_dict[freq_ghz]["q"].image
     upol = convolved_images_dict[freq_ghz]["u"].image
+    ppol = np.hypot(qpol, upol)
+    fpol = ppol/ipol
     convolved_ipol_arrays.append(ipol)
     convolved_pang_arrays.append(0.5*np.arctan2(upol, qpol))
 
@@ -277,6 +288,7 @@ ipol = convolved_images_dict[max_freq]["i"].image
 qpol = convolved_images_dict[max_freq]["q"].image
 upol = convolved_images_dict[max_freq]["u"].image
 ppol = np.hypot(qpol, upol)
+fpol = ppol/ipol
 colors_mask = ppol < ppol.max()*0.001
 rm_image, sigma_rotm_array, rotm_chisq_array = rotm_map(np.array(freqs_ghz)*1e9, convolved_pang_arrays, s_chis=None,
                                                           mask=colors_mask, outfile=None, outdir=None,
@@ -295,8 +307,22 @@ fig = iplot(ipol, rm_image, x=convolved_images_dict[max_freq]["i"].x, y=convolve
             beam=common_beam, close=True, colorbar_label=r"RM, rad/m$^2$", show_beam=True, show=False,
             contour_color='black', plot_colorbar=True,
             contour_linewidth=0.25, cmap="bwr")
-fig.savefig(os.path.join(save_dir, "RM_Icontours_convolved.png"), dpi=600, bbox_inches="tight")
+fig.savefig(os.path.join(save_dir, "RM_Icontours_convolved_{}.png".format(freq_names[max_freq])), dpi=600, bbox_inches="tight")
 
+
+# PPOL contours
+fig = iplot(contours=ppol, x=convolved_images_dict[max_freq]["i"].x, y=convolved_images_dict[max_freq]["i"].y,
+            min_abs_level=0.001*ppol.max(),
+            blc=blc, trc=trc, beam=common_beam, close=False, fig=None,
+            contour_color='gray', contour_linewidth=0.25, plot_colorbar=False)
+# Add single IPOL contour and vectors of the PANG
+fig = iplot(contours=ipol, colors=fpol,
+            x=convolved_images_dict[max_freq]["i"].x, y=convolved_images_dict[max_freq]["i"].y,
+            contour_linewidth=1.0, color_clim=[0, 0.75], cmap="jet", colorbar_label=r"$FPOL$",
+            colors_mask=colors_mask, abs_levels=[2*0.0001*ipol.max()], blc=blc, trc=trc,
+            beam=common_beam, close=True, show_beam=True, show=False,
+            contour_color='gray', fig=fig)
+fig.savefig(os.path.join(save_dir, "FPOL_convolved_{}.png".format(freq_names[max_freq])), dpi=600, bbox_inches="tight")
 
 #          ╭──────────────────────────────────────────────────────────╮
 #          │         CLEAN synthetic uv-data (original beams)         │
@@ -307,7 +333,7 @@ for freq_ghz in freqs_ghz:
     outfname_q = "model_cc_q_{}.fits".format(freq_names[freq_ghz])
     outfname_u = "model_cc_u_{}.fits".format(freq_names[freq_ghz])
 
-    if not do_not_reclean:
+    if reclean:
         if os.path.exists(os.path.join(save_dir, outfname_i)):
             os.unlink(os.path.join(save_dir, outfname_i))
 
@@ -366,14 +392,15 @@ for freq_ghz in freqs_ghz:
     print("Plotting beam (deg) = ", beam_deg)
     # PPOL contours
     fig = iplot(contours=ppol, x=ccimage_i.x, y=ccimage_i.y, min_abs_level=ppol_quantile,
-                blc=blc, trc=trc, beam=beam_deg, close=False,
+                blc=blc, trc=trc, beam=beam_deg, close=False, fig=None,
                 contour_color='gray', contour_linewidth=0.25, plot_colorbar=False)
-    # Add single IPOL contour and vectors of the PANG
-    fig = iplot(contours=ipol, vectors=pang,
+    # Add single IPOL contour, FPOL and vectors of the PANG
+    fig = iplot(contours=ipol, colors=fpol, vectors=pang, colors_mask=masks_dict["P"], cmap="jet",
+                color_clim=[0, 0.75], colorbar_label=r"$FPOL$",
                 x=ccimage_i.x, y=ccimage_i.y, vinc=4, contour_linewidth=1.0,
                 vectors_mask=masks_dict["P"], abs_levels=[2*std], blc=blc, trc=trc,
                 beam=beam, close=True, show_beam=True, show=False,
-                contour_color='gray', fig=fig, vector_color="black", plot_colorbar=False,
+                contour_color='gray', fig=fig, vector_color="black", plot_colorbar=True,
                 vector_scale=4)
     fig.savefig(os.path.join(save_dir, "observed_pol_{}.png".format(freq_names[freq_ghz])), dpi=600, bbox_inches="tight")
 
@@ -387,7 +414,7 @@ for freq_ghz in freqs_ghz:
     outfname_q = "model_cc_q_{}_common_beam.fits".format(freq_names[freq_ghz])
     outfname_u = "model_cc_u_{}_common_beam.fits".format(freq_names[freq_ghz])
 
-    if not do_not_reclean:
+    if reclean:
         if os.path.exists(os.path.join(save_dir, outfname_i)):
             os.unlink(os.path.join(save_dir, outfname_i))
 
@@ -457,7 +484,7 @@ common_imask = np.logical_or.reduce([ccimages[freq]["masks"]["I"] for freq in fr
 # FIXME: Check if the fit is linear!!!
 rotm_array, sigma_rotm_array, rotm_chisq_array = rotm_map(np.array(freqs_ghz)*1e9, pang_arrays, sigma_pang_arrays,
                                                           mask=common_pmask, outfile=None, outdir=None,
-                                                          mask_on_chisq=True, plot_pxls=None, outfile_pxls=None)
+                                                          mask_on_chisq=False, plot_pxls=None, outfile_pxls=None)
 spix_array, sigma_spix_array, spix_chisq_array = spix_map(np.array(freqs_ghz)*1e9, ipol_arrays, sigma_ipol_arrays,
                                                           mask=common_imask, outfile=None, outdir=None,
                                                           mask_on_chisq=False, ampcal_uncertainties=None)
