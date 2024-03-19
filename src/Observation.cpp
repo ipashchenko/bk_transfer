@@ -74,7 +74,7 @@ void Observation::observe(int n, double tau_max, double dt_max, double tau_min, 
     auto image_size = getImageSize();
 	vector<Pixel>& pixels = imagePlane->getPixels();
 	vector<Ray>& rays = imagePlane->getRays();
-	omp_set_num_threads(1);
+	omp_set_num_threads(4);
 
     // FIXME: Debug
 //    unsigned long int j = 63;
