@@ -5,7 +5,7 @@
 
 double ParticlesDistribution::k_F_c(Vector3d &b, Vector3d &n_los, double nu, double n) const {
     double cos_theta = b.dot(n_los)/b.norm();
-    return 2.*pi*nu_p(n)*nu_p(n)*nu_b_value(b)*cos_theta/(c*nu*nu);
+    return -2.*pi*nu_p(n)*nu_p(n)*nu_b_value(b)*cos_theta/(c*nu*nu);
 }
 
 double ParticlesDistribution::k_C_c(Vector3d &b, Vector3d &n_los, double nu, double n) const {
